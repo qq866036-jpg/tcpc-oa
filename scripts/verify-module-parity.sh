@@ -9,6 +9,7 @@
 # 用法：
 #   bash scripts/verify-module-parity.sh receipt
 #   bash scripts/verify-module-parity.sh receipt --theme /srv/git/worktrees/dev-tcpc/main
+#   bash scripts/verify-module-parity.sh receipt --expect-theme-absent   # 迁入完成后：主题侧不得再有实现
 #
 # 退出码：0 = 一致；1 = 有差异 / 缺目录；2 = 用法错误。
 set -uo pipefail
@@ -16,13 +17,16 @@ set -uo pipefail
 MODULE="${1:-}"
 shift || true
 
+EXPECT_ABSENT=0
+
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 THEME="${ZW_OA_THEME:-/srv/git/worktrees/dev-tcpc/main}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --theme) THEME="${2:-}"; shift 2 ;;
-    -h|--help) sed -n '2,20p' "$0"; exit 0 ;;
+    --expect-theme-absent) EXPECT_ABSENT=1; shift ;;
+    -h|--help) sed -n '2,24p' "$0"; exit 0 ;;
     *) echo "未知参数：$1" >&2; exit 2 ;;
   esac
 done
@@ -60,6 +64,33 @@ fi
 
 DIFF_ARGS=(-r --brief)
 [[ -n "$THEME_SHIM" ]] && DIFF_ARGS+=(--exclude="$THEME_SHIM")
+
+# TASK-2320「迁入完成」模式：主题侧不得再存在该模块的实现副本（防"回退逻辑复活"），
+# 只允许留 shim 一个文件。检查顺序：先确认插件侧齐全，再确认主题侧已清空。
+if [[ "$EXPECT_ABSENT" -eq 1 ]]; then
+  miss=0
+  for f in receipt-helpers.php receipt-create.php receipt-ledger.php receipt-bootstrap.php receipt-storage.php; do
+    [[ -f "$OA_DIR/$f" ]] || { echo "✗ 插件侧缺文件：$OA_DIR/$f" >&2; miss=1; }
+  done
+  [[ -n "$THEME_SHIM" && -f "$THEME_DIR/$THEME_SHIM" ]] || { echo "✗ 主题侧 shim 缺失：$THEME_DIR/$THEME_SHIM（fail-closed 提示不能删）" >&2; miss=1; }
+  leftover=""
+  while IFS= read -r f; do
+    base="$(basename "$f")"
+    [[ "$base" == "$THEME_SHIM" ]] && continue
+    leftover+="$base "
+  done < <(find "$THEME_DIR" -maxdepth 1 -type f -name '*.php' 2>/dev/null)
+  if [[ -n "$leftover" ]]; then
+    echo "✗ 主题侧仍有模块实现副本：$leftover（迁入完成后必须删除，否则重新变成双份实现）" >&2
+    miss=1
+  fi
+  if [[ "$miss" -eq 0 ]]; then
+    n="$(find "$OA_DIR" -type f | wc -l)"
+    echo "✓ POST-MIGRATION OK：插件侧 $n 个文件齐全；主题侧仅剩 shim（$THEME_SHIM），无实现副本"
+    exit 0
+  fi
+  exit 1
+fi
+
 if out="$(diff "${DIFF_ARGS[@]}" "$THEME_DIR" "$OA_DIR" 2>&1)"; then
   n="$(find "$OA_DIR" -type f | wc -l)"
   echo "✓ DIFF=0（$n 个文件逐字节一致$( [[ -n "$THEME_SHIM" ]] && echo "；已排除 1 个主题 shim" )）"
