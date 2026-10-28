@@ -77,12 +77,15 @@ else
   tmp="$(mktemp -d)"
   if git archive HEAD | tar -x -C "$tmp" 2>/dev/null; then
     miss=0
-    for f in VERSION MIN_THEME tcpc-oa.php docs/contract-tcpc-oa.md; do
-      [ -f "$tmp/$f" ] || { bad "归档缺 $f"; miss=1; }
+    # 产物必须含运行时入口；治理/发版物料不再进产物（见 .gitattributes 的 export-ignore）
+    for f in tcpc-oa.php uninstall.php includes/load-list.php; do
+      [ -f "$tmp/$f" ] || { bad "归档缺运行时文件：$f"; miss=1; }
     done
-    arc_ver="$(tr -d ' \t\r\n' < "$tmp/VERSION" 2>/dev/null || true)"
-    [ "$arc_ver" = "$ver_file" ] || bad "归档 VERSION=[$arc_ver] 与工作区=[$ver_file] 不一致"
-    [ "$miss" -eq 0 ] && ok "归档内容与版本一致"
+    # 反向断言：治理文件一旦出现在产物里就判红（防 export-ignore 被误删 / 被人手工加回来）
+    for f in AGENTS.md README.md CHANGELOG.md VERSION MIN_THEME workbench/load.sh scripts/plugin-switch-oa.sh docs/contract-tcpc-oa.md .githooks/pre-commit tests; do
+      [ -e "$tmp/$f" ] && { bad "归档含治理文件（不应上线）：$f"; miss=1; }
+    done
+    [ "$miss" -eq 0 ] && ok "产物只有运行时代码（治理文件已全部 export-ignore）"
   else
     bad "git archive 失败（仓库尚无提交？）"
   fi

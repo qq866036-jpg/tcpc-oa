@@ -1,0 +1,27 @@
+# tcpc-oa 产物瘦身（TASK-2320 / CHG-430 后续）：`git archive HEAD` 即发版产物。
+#
+# 为什么必须排除：插件目录在 webroot 内，实测公网可直读 `.sh` / `.md` / 纯文本文件
+# （`scripts/plugin-switch-oa.sh` 200 返回完整源码；`AGENTS.md`、`docs/contract-tcpc-oa.md` 亦 200）。
+# PHP 会被执行（无源码泄漏），但发版脚本/治理文档属于"运维说明书"，不应随产物上线。
+#
+# 原则：产物只含**运行时**（tcpc-oa.php + includes/），其余一律 export-ignore。
+# 对应判据：scripts/ci-check.sh ⑤（归档必须只有运行时代码、且不得含治理文件）。
+
+# 治理与接入层
+AGENTS.md          export-ignore
+workbench/         export-ignore
+docs/              export-ignore
+scripts/           export-ignore
+tests/             export-ignore
+.githooks/         export-ignore
+.github/           export-ignore
+
+# 发版物料（运行时不读文件，版本在 PHP 常量里）
+VERSION            export-ignore
+MIN_THEME          export-ignore
+README.md          export-ignore
+CHANGELOG.md       export-ignore
+
+# 仓库自身元文件
+.gitignore         export-ignore
+.gitattributes     export-ignore

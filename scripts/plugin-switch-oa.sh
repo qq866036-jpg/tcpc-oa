@@ -99,10 +99,15 @@ STAGING="$PLUGINS_ROOT/.${PLUGIN_SLUG}-staging-${STAMP}"
 run mkdir -p "$STAGING"
 if [[ "$DRY" -eq 0 ]]; then
   git archive HEAD | tar -x -C "$STAGING" || fail "构建失败"
-  for f in tcpc-oa.php VERSION MIN_THEME; do
-    [[ -f "$STAGING/$f" ]] || fail "构建缺 $f"
+  # 产物只应含运行时（.gitattributes 已 export-ignore 治理/发版物料）；
+  # 这里同时做正向与反向断言，防"漏排除"把 .sh/.md 又发上线（实测曾公网可读）。
+  for f in tcpc-oa.php uninstall.php includes/load-list.php; do
+    [[ -f "$STAGING/$f" ]] || fail "构建缺运行时文件：$f"
   done
-  echo "  ✓ 产物齐全：$(find "$STAGING" -type f | wc -l) 个文件"
+  for f in AGENTS.md README.md workbench scripts docs .githooks tests VERSION MIN_THEME; do
+    [[ -e "$STAGING/$f" ]] && fail "构建含治理文件（不应上线）：$f"
+  done
+  echo "  ✓ 产物齐全：$(find "$STAGING" -type f | wc -l) 个文件（仅运行时代码）"
 fi
 
 # ── ④ 备份 ───────────────────────────────────────────────────────────────────
