@@ -13,7 +13,18 @@ if (!defined('ABSPATH')) { exit; }
 
 // TASK-954：数据访问层（表名 / 存在性 / 内容哈希）抽到前端后台共用文件，
 // 避免仅在 is_admin() 时加载导致前端签署判定取不到哈希。
-require_once __DIR__ . '/../policy-platform/policy-platform-data.php';
+// TASK-2320 · W1-1（迁入修正）：本文件原在主题 `inc/admin/`，用 `__DIR__ . '/../policy-platform/'`
+// 懒加载数据层；迁入本插件后同一表达式解析到 `includes/policy-platform/` —— 该目录**不存在**
+// ⇒ `enabled=true` 那一刻 `require_once` 直接 fatal（后台白屏）。
+// 按 Q-A2 口径，数据访问层 `inc/policy-platform/policy-platform-data.php` **仍留主题**，并且由主题
+// `functions.php` 在装载阶段**无条件**加载（前端+后台都加载）⇒ 本插件**不需要也不得**自行拼主题
+// 内部路径（`scripts/ci-check.sh` ③ 反向依赖守卫：插件内出现主题目录系函数或模板路径常量即判红，
+// 只允许调主题契约函数）。数据层函数在本文件**被调用时**（后台菜单/页面渲染）必然已就绪：
+// 插件装载早于主题，但**调用晚于**主题装载。
+// 若主题后续提供契约自举函数，则优先调用，保持单点维护（当前主题未提供，故为空操作）。
+if (function_exists('zw_oa_policy_data_bootstrap')) {
+    zw_oa_policy_data_bootstrap();
+}
 
 // TASK-1598 / SPEC-93 · T7（R-12①）：适用模块的**键校验 / 长度 fail-closed**唯一实现在
 // `scripts/migrate-policy-rule-modules.php` 的库函数内（`zw_policy_rule_modules_*`），
