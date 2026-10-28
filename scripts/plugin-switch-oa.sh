@@ -110,8 +110,10 @@ say "备份在线版本"
 # 铁律 19：先取《章程》官网页正文哈希（**发版前**），发版后必须一致。
 BHZC_BEFORE=""
 if [[ "$DRY" -eq 0 ]]; then
-  BHZC_BEFORE="$(curl -sS -L --max-time 20 "${SMOKE_BASE%/}/bhzc" 2>/dev/null | md5sum | awk '{print $1}')"
-  echo "  · /bhzc 发版前哈希：$BHZC_BEFORE"
+  # 用**页面正文（DB post_content）**的哈希，而不是整页 HTML 哈希：整页含 nonce/统计/时间戳等动态片段，
+  # 两次抓取必然不同（首次演练实测：同一秒内两次 md5 就不同）⇒ 那样的判据只会恒红。
+  BHZC_BEFORE="$(wp eval 'echo md5((string) get_post(64)->post_content);' --path="$WP_PATH" --allow-root 2>/dev/null || true)"
+  echo "  · /bhzc 正文（DB）发版前哈希：${BHZC_BEFORE:-<取不到>}"
 fi
 BACKUP_DIR="$BACKUP_ROOT/pre-switch-$STAMP"
 if [[ -d "$PLUGIN_DIR" ]]; then
@@ -165,11 +167,15 @@ check_url "/login" "登录"
 check_url "/privacy-policy/"
 # 铁律 19：章程官网页正文不得变化（发版前后哈希对比）
 check_url "/bhzc"
-BHZC_AFTER="$(curl -sS -L --max-time 20 "${SMOKE_BASE%/}/bhzc" 2>/dev/null | md5sum | awk '{print $1}')"
+BHZC_AFTER="$(wp eval 'echo md5((string) get_post(64)->post_content);' --path="$WP_PATH" --allow-root 2>/dev/null || true)"
 if [[ -n "$BHZC_BEFORE" && "$BHZC_BEFORE" != "$BHZC_AFTER" ]]; then
-  fail "/bhzc 正文哈希变化（铁律 19 违规）：before=$BHZC_BEFORE after=$BHZC_AFTER"
+  fail "/bhzc 正文（DB）哈希变化（铁律 19 违规）：before=$BHZC_BEFORE after=$BHZC_AFTER"
 fi
-echo "  ✓ /bhzc 正文未变化（$BHZC_AFTER）"
+if [[ -z "$BHZC_BEFORE" ]]; then
+  echo "  ⚠ /bhzc 正文哈希取不到（wp eval 失败）⇒ 未验证，**不作为放行依据**"
+else
+  echo "  ✓ /bhzc 正文（DB）未变化（$BHZC_AFTER）"
+fi
 
 say "发版完成：v$VERSION（备份 $BACKUP_DIR）"
 say "回滚命令：bash scripts/plugin-switch-oa.sh --rollback $STAMP"
