@@ -103,6 +103,17 @@ if not roles:
 print("   角色：" + "，".join(roles))
 PY
 
+echo "==> ②b 号段归属校验（分仓管理 · TASK-2398 / CHG-431）"
+# 判定唯一实现在主题仓；本仓只做来源加载（workbench/repo-space.sh）。
+# 口径：任务号前缀必须等于 docs/ops/repos.yml 里本仓的 space（oa = OA）。
+# shellcheck source=workbench/repo-space.sh
+. "$(dirname "${BASH_SOURCE[0]}")/repo-space.sh"
+if ! zw_assert_task_space "$REPO" "$TASK"; then
+  echo "✗ 开工门禁拒绝：号段与本仓不符（fail-closed）。" >&2
+  exit 1
+fi
+echo "   号段归属：$(zw_repo_space_for_path "$REPO")（本仓 root=$REPO）"
+
 echo "==> ③ 主题开工 marker 交叉校验"
 WT="$BASE/task-$TASK"
 if [[ ! -d "$WT" ]]; then

@@ -28,6 +28,18 @@ if [[ "$SUBJECT" =~ ^(fixup!|squash!|amend!) ]]; then
   exit 0
 fi
 
+# ④ 分仓号段（TASK-2398 / CHG-431）：任务号前缀必须等于本仓 space
+#    唯一实现在主题仓；本仓只加载来源。清单不可读 / 本仓未登记 ⇒ fail-closed。
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+# shellcheck source=workbench/repo-space.sh
+. "$(dirname "${BASH_SOURCE[0]}")/repo-space.sh"
+for _zw_t in $TASKS; do
+  if ! zw_assert_task_space "$REPO_ROOT" "$_zw_t"; then
+    echo "✗ commit-msg：号段与本仓不符（fail-closed）。" >&2
+    exit 1
+  fi
+done
+
 if [[ -z "${TASKS// /}" ]]; then
   cat >&2 <<EOF
 ✗ commit-msg：提交信息缺少 TASK 号。
