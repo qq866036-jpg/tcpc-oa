@@ -40,7 +40,9 @@ if (!function_exists('tcpc_oa_modules')) {
                 'bootstrap'  => 'receipt-bootstrap.php',
                 'flag'       => 'TCPC_OA_ENABLE_RECEIPT',
                 'theme_path' => 'inc/receipt',
-                'enabled'    => false, // 见文件头「骨架期纪律」
+                // TASK-2320 增量十四：代码侧启用（第一把钥匙）；第二把钥匙（常量或 option
+                // `tcpc_oa_enable_receipt`）未满足时仍**不加载** ⇒ 默认零行为。
+                'enabled'    => true,
                 'note'       => '依赖：政策库（zw_policy_source/zw_policy_issue）+ 组织架构部委字典；本模块自带 1 张编号计数表',
             ),
             // 后续模块（按迁移顺序占位，未迁入前保持注释）：
@@ -70,7 +72,13 @@ if (!function_exists('tcpc_oa_module_enabled')) {
             return false;
         }
         $flag = (string) ($meta['flag'] ?? '');
-        return $flag !== '' && defined($flag) && constant($flag);
+        if ($flag !== '' && defined($flag) && constant($flag)) {
+            return true;
+        }
+        // 第二把钥匙的另一种载体：option（`wp option update tcpc_oa_enable_<module> 1`）。
+        // 便于灰度与**一键回滚**：把 option 置 0 即恢复主题接管，不必改文件、不必回滚代码。
+        $opt = 'tcpc_oa_enable_' . (string) $module;
+        return function_exists('get_option') && (int) get_option($opt, 0) === 1;
     }
 }
 
