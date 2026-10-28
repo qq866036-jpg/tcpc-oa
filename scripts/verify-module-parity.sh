@@ -37,16 +37,32 @@ case "$MODULE" in
   *) echo "✗ 未登记模块：$MODULE（先在本脚本与 includes/load-list.php 登记）" >&2; exit 2 ;;
 esac
 
+# 主题侧**有意差异**（shim）：插件接管入口只能存在于主题侧；若照抄进插件会自我 require 递归。
+# 因此 parity 时排除，并反向断言插件副本**不含**该 shim。
+THEME_SHIM=""
+case "$MODULE" in
+  receipt) THEME_SHIM="receipt-bootstrap.php" ;;
+esac
+
 [[ -d "$OA_DIR" ]]    || { echo "✗ 本仓模块目录不存在：$OA_DIR" >&2; exit 1; }
 [[ -d "$THEME_DIR" ]] || { echo "✗ 主题目录不存在：$THEME_DIR（主题工作区路径对吗？--theme）" >&2; exit 1; }
 
 echo "== 模块 parity：$MODULE"
 echo "   本仓：$OA_DIR"
 echo "   主题：$THEME_DIR"
+if [[ -n "$THEME_SHIM" ]]; then
+  echo "   · 排除主题 shim：$THEME_SHIM（有意差异；插件副本不得含 shim）"
+  if grep -q "TCPC_OA_DIR" "$OA_DIR/$THEME_SHIM" 2>/dev/null; then
+    echo "✗ 插件副本含主题 shim（会自我 require 递归）：$OA_DIR/$THEME_SHIM" >&2
+    exit 1
+  fi
+fi
 
-if out="$(diff -r --brief "$THEME_DIR" "$OA_DIR" 2>&1)"; then
+DIFF_ARGS=(-r --brief)
+[[ -n "$THEME_SHIM" ]] && DIFF_ARGS+=(--exclude="$THEME_SHIM")
+if out="$(diff "${DIFF_ARGS[@]}" "$THEME_DIR" "$OA_DIR" 2>&1)"; then
   n="$(find "$OA_DIR" -type f | wc -l)"
-  echo "✓ DIFF=0（$n 个文件逐字节一致）"
+  echo "✓ DIFF=0（$n 个文件逐字节一致$( [[ -n "$THEME_SHIM" ]] && echo "；已排除 1 个主题 shim" )）"
   exit 0
 fi
 
