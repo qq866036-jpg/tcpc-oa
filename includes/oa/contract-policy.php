@@ -114,7 +114,13 @@ if (!function_exists('zw_oa_policy_check')) {
                 'available' => true,
             );
         }
-        $r = (array) zw_policy_check((string) $ctx, (array) $payload);
+        // TASK-2395（fail-open 修复，与主题壳同口径）：真实挂点 `branch-leaders.php` 传的是
+        // **数组上下文**；旧实现一律 `(string) $ctx` ⇒ 上下文变字面量 "Array" ⇒ 引擎按
+        // 「非数组 ⇒ 空上下文」处理 ⇒ 判定恒 pass、hits 恒空（条款挂点静默失效）。
+        // 加固：数组原样透传；字符串保留旧调用形态（向后兼容）。
+        $r = is_array($ctx)
+            ? (array) zw_policy_check($ctx, (array) $payload)
+            : (array) zw_policy_check((string) $ctx, (array) $payload);
         // 形状与旧实现兼容：**保留 hits/其它既有键**（调用方读 $result['hits']），只追加契约元信息。
         $r['available'] = true;
         $r['version']   = ZW_OA_POLICY_API_VERSION;
