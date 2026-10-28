@@ -105,20 +105,20 @@ if (!function_exists('zw_oa_policy_check')) {
             );
         }
         if (!function_exists('zw_policy_check')) {
+            // 引擎在但判定器缺：保持旧形状（hits 为空），并标 accessor_missing。
             return array(
+                'hits'      => array(),
                 'allowed'   => false,
                 'reasons'   => array('accessor_missing'),
                 'version'   => ZW_OA_POLICY_API_VERSION,
                 'available' => true,
             );
         }
-        $r = zw_policy_check((string) $ctx, (array) $payload);
-        return array(
-            'allowed'   => is_array($r) && !empty($r['allowed']),
-            'reasons'   => is_array($r) && isset($r['reasons']) ? (array) $r['reasons'] : array(),
-            'version'   => ZW_OA_POLICY_API_VERSION,
-            'available' => true,
-        );
+        $r = (array) zw_policy_check((string) $ctx, (array) $payload);
+        // 形状与旧实现兼容：**保留 hits/其它既有键**（调用方读 $result['hits']），只追加契约元信息。
+        $r['available'] = true;
+        $r['version']   = ZW_OA_POLICY_API_VERSION;
+        return $r;
     }
 }
 
