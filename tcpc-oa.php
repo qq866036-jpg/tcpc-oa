@@ -34,3 +34,19 @@ if (!defined('TCPC_OA_MIN_THEME')) {
     // 与 MIN_THEME 文件同源；发版脚本会校验两者一致。
     define('TCPC_OA_MIN_THEME', '1.1.572');
 }
+
+/**
+ * 模块装载（TASK-2320 P2 正式迁入的第一个模块：收文管理）。
+ *
+ * 纪律：**双钥匙**才装载 —— ① `includes/load-list.php` 里该模块 `enabled=true`；
+ * ② 常量开关（如 `TCPC_OA_ENABLE_RECEIPT`）为真。默认两者都不满足 ⇒ 本插件加载后
+ * 对站点**零行为**（骨架期/灰度期安全）。
+ *
+ * 启用必须在「主题侧 shim + 插件部署」同一发布窗口完成，否则会出现两份加载。
+ */
+if (file_exists(TCPC_OA_DIR . '/includes/load-list.php')) {
+    require_once TCPC_OA_DIR . '/includes/load-list.php';
+    if (function_exists('tcpc_oa_load_modules')) {
+        tcpc_oa_load_modules();
+    }
+}

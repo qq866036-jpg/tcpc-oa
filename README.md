@@ -36,11 +36,23 @@ bash scripts/plugin-switch-oa.sh --rollback <ts>   # 回滚（先 deactivate 再
 
 > `--no-smoke` 仅供救援；**发布场景不得使用**（跳过冒烟不作为放行依据）。
 
-## 目录（规划）
+## 模块迁入（P2 · 严格 diff=0）
+
+模块代码可先迁入本仓并保持与主题**逐字节一致**，但**默认不启用**（`includes/load-list.php` 的
+`enabled=false` + 常量开关，双钥匙）。启用必须与「主题侧 shim + 插件部署」同一发布窗口。
+
+```bash
+bash scripts/verify-module-parity.sh receipt --theme /srv/git/worktrees/dev-tcpc/main  # 必须 DIFF=0
+```
+
+已迁入（**未启用**）：`includes/receipt/`（收文管理，11 文件 / 6,675 行，DIFF=0 已验证）。
+
+## 目录
 
 ```
-tcpc-oa.php          插件入口（当前仅声明版本，不加载业务）
-includes/            业务模块（doc / receipt / policy / secretariat / org / files）——迁入前为空
+tcpc-oa.php          插件入口（骨架期只装载 load-list；模块靠双钥匙，默认不加载）
+includes/load-list.php  模块清单（目录 / 入口 / 开关 / 主题对应目录 / 启用状态）
+includes/receipt/    收文管理（已迁入，enabled=false）
 docs/                契约、说明
 workbench/           工作台卫星接入（load / preflight / finish / hooks）
 tests/               本仓单测（迁入后）

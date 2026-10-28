@@ -6,6 +6,13 @@
 
 - `scripts/plugin-switch-oa.sh`：P3 发版通道（版本三方 + `MIN_THEME` 兼容矩阵 + `git archive HEAD` 构建 +
   备份 + 原子交换 + 冒烟 + `--rollback`）。冒烟含 `/bhzc` 正文哈希前后一致（铁律 19）。
+- **收文管理迁入（未启用）**：`includes/receipt/` 11 文件 / 6,675 行，与主题 `inc/receipt` **DIFF=0**；
+  `includes/load-list.php` 登记模块 + 双钥匙开关（`enabled=false` 且 `TCPC_OA_ENABLE_RECEIPT` 未定义 ⇒ 零加载）。
+- `scripts/verify-module-parity.sh`：模块迁入的 diff=0 唯一判据工具。
+
+### Notes
+
+- 收文启用须与主题侧 shim + 插件部署同一发布窗口；在此之前本插件对站点零行为。
 
 ## [0.1.0] - 2026-10-28
 
