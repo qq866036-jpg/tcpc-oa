@@ -50,3 +50,12 @@ if (file_exists(TCPC_OA_DIR . '/includes/load-list.php')) {
         tcpc_oa_load_modules();
     }
 }
+
+/**
+ * 契约 A · 规则引擎骨架（TASK-2320）：默认**不加载**，只有显式置
+ * `TCPC_OA_LOAD_CONTRACT_SKELETON` 时才 require —— 骨架期对生产零影响。
+ */
+if (defined('TCPC_OA_LOAD_CONTRACT_SKELETON') && TCPC_OA_LOAD_CONTRACT_SKELETON
+    && file_exists(TCPC_OA_DIR . '/includes/oa/contract-policy.php')) {
+    require_once TCPC_OA_DIR . '/includes/oa/contract-policy.php';
+}
