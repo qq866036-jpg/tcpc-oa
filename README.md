@@ -21,8 +21,20 @@
 
 ## 安装 / 发版 / 回滚
 
-骨架期**尚未部署**。发版通道 `scripts/plugin-switch-oa.sh` 在 P3 阶段落地（含版本三方校验、
-`MIN_THEME` 校验、备份、原子交换、冒烟与回滚演练）。
+骨架期**尚未部署**（生产 `plugins/` 下无本插件 ⇒ 站点零影响）。唯一发版入口：
+
+```bash
+bash scripts/plugin-switch-oa.sh --dry-run    # 先看将要做什么（不落盘）
+bash scripts/plugin-switch-oa.sh              # 正式发版：版本三方 + MIN_THEME + 备份 + 原子交换 + 冒烟
+bash scripts/plugin-switch-oa.sh --rollback <ts>   # 回滚（先 deactivate 再还原备份）
+```
+
+判据：① `VERSION == TCPC_OA_VERSION == Version 头`；② 在线主题 `VERSION >= MIN_THEME`；
+③ 产物只来自 `git archive HEAD`（工作区脏则拒发）；④ 备份到 `/root/tcpc-oa-plugin-backups/pre-switch-<ts>/`；
+⑤ 冒烟：插件已激活 + 运行时常量 == 发版版本 + `/login`、`/privacy-policy/`、`/bhzc` 均 200，且
+**`/bhzc` 正文哈希与发版前一致**（铁律 19：章程官网页只读）。
+
+> `--no-smoke` 仅供救援；**发布场景不得使用**（跳过冒烟不作为放行依据）。
 
 ## 目录（规划）
 

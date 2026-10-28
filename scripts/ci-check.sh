@@ -61,7 +61,7 @@ echo "== ④ 骨架完整性"
 missing=0
 for f in AGENTS.md workbench/load.sh workbench/preflight.sh workbench/finish.sh workbench/install-hooks.sh \
          workbench/pre-commit.sh workbench/commit-msg.sh workbench/task-space.sh \
-         docs/contract-tcpc-oa.md MIN_THEME README.md CHANGELOG.md tcpc-oa.php; do
+         docs/contract-tcpc-oa.md MIN_THEME README.md CHANGELOG.md tcpc-oa.php scripts/plugin-switch-oa.sh; do
   if [ ! -f "$f" ]; then bad "缺文件：$f"; missing=1; fi
 done
 [ "$missing" -eq 0 ] && ok "骨架文件齐全"

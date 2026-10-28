@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- `scripts/plugin-switch-oa.sh`：P3 发版通道（版本三方 + `MIN_THEME` 兼容矩阵 + `git archive HEAD` 构建 +
+  备份 + 原子交换 + 冒烟 + `--rollback`）。冒烟含 `/bhzc` 正文哈希前后一致（铁律 19）。
+
 ## [0.1.0] - 2026-10-28
 
 ### Added
