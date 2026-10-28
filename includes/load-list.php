@@ -45,6 +45,17 @@ if (!function_exists('tcpc_oa_modules')) {
                 'enabled'    => true,
                 'note'       => '依赖：政策库（zw_policy_source/zw_policy_issue）+ 组织架构部委字典；本模块自带 1 张编号计数表',
             ),
+            'policy' => array(
+                'label'      => 'AI法务部（写侧/管理面）',
+                'dir'        => 'includes/policy',
+                'bootstrap'  => 'policy-platform-admin.php',
+                'flag'       => 'TCPC_OA_ENABLE_POLICY',
+                'theme_path' => 'inc/policy-platform + inc/admin/policy-platform-*.php',
+                // 迁移中：代码已按 DIFF=0 迁入（7 文件 / 5,776 行），但**不启用** ——
+                // 判定/读侧仍留主题（Q-A2 口径），且管理面入口切换须与主题 shim 同窗口。
+                'enabled'    => false,
+                'note'       => '判定引擎与条款读侧留主题；本模块只含管理面(admin/consent/content-review/document-center/cron/rule-engine/module-map)',
+            ),
             // 后续模块（按迁移顺序占位，未迁入前保持注释）：
             // 'policy'      => array('label' => 'AI法务部（写侧+管理面）', 'theme_path' => 'inc/policy-platform + inc/admin/policy-platform-*.php'),
             // 'doc'         => array('label' => '发文管理', 'theme_path' => 'inc/admin/doc'),
