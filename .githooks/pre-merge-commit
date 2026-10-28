@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# 工作台合并提交门禁入口（git 默认不对合并提交跑 pre-commit）
+#
+# 注意：实测 git 2.43 —— 本钩子执行时 MERGE_HEAD 尚未写入，故显式传 --merge，
+#       让 workbench/pre-commit.sh 跳过 marker（合并提交仍跑 ci-check --precommit）。
+set -euo pipefail
+ROOT="$(git rev-parse --show-toplevel)"
+exec bash "$ROOT/workbench/pre-commit.sh" --merge

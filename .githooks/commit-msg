@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# 工作台提交信息门禁入口（安装：bash workbench/install-hooks.sh）
+set -euo pipefail
+ROOT="$(git rev-parse --show-toplevel)"
+exec bash "$ROOT/workbench/commit-msg.sh" "$1"
