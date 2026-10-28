@@ -59,3 +59,8 @@ if (defined('TCPC_OA_LOAD_CONTRACT_SKELETON') && TCPC_OA_LOAD_CONTRACT_SKELETON
     && file_exists(TCPC_OA_DIR . '/includes/oa/contract-policy.php')) {
     require_once TCPC_OA_DIR . '/includes/oa/contract-policy.php';
 }
+// 契约 C1~C3 · 发文读面骨架（同一开关，默认不加载）。
+if (defined('TCPC_OA_LOAD_CONTRACT_SKELETON') && TCPC_OA_LOAD_CONTRACT_SKELETON
+    && file_exists(TCPC_OA_DIR . '/includes/oa/contract-doc.php')) {
+    require_once TCPC_OA_DIR . '/includes/oa/contract-doc.php';
+}
