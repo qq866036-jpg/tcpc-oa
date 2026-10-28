@@ -75,10 +75,16 @@ echo "   已清 marker"
 
 echo
 echo "✓ 插件侧收口完成：$MARKER_TASK"
+# TASK-2320 / CHG-430（审计发现）：原先打印的命令**不带 --repo**，导致主题 metrics 的 repo 字段永远是空的
+# （实测 2436 条记录 0 条含 repo）。此处按本仓工作区目录名自动推导仓名并带上，避免靠人记得手敲。
+OA_REPO_NAME="${ZW_WORKBENCH_REPO:-$(basename "$(dirname "$(git rev-parse --show-toplevel 2>/dev/null || pwd)")")}"
+if [[ -f "$MARKER_THEME_WORKTREE/../main/docs/ops/repos.yml" ]] && ! grep -q "name: $OA_REPO_NAME" "$MARKER_THEME_WORKTREE/../main/docs/ops/repos.yml" 2>/dev/null; then
+  echo "  ⚠ 仓名 ${OA_REPO_NAME} 未登记在主题 docs/ops/repos.yml（仍会带上 --repo，请补登记）"
+fi
 echo "  下一步（主题侧，必做）："
 if [[ -n "$MARKER_THEME_WORKTREE" && -d "$MARKER_THEME_WORKTREE" ]]; then
-  echo "    cd $MARKER_THEME_WORKTREE && bash scripts/workbench-finish.sh \"$NOTE\""
+  echo "    cd $MARKER_THEME_WORKTREE && bash scripts/workbench-finish.sh \"$NOTE\" --repo $OA_REPO_NAME"
   echo "  主题侧收口会把 metrics/台账/工作台页写回主题仓；插件提交信息里带 $MARKER_TASK。"
 else
-  echo "   主题任务工作树不存在：$MARKER_THEME_WORKTREE —— 补建后再跑主题 workbench-finish.sh"
+  echo "   主题任务工作树不存在：$MARKER_THEME_WORKTREE —— 补建后再跑主题 workbench-finish.sh --repo $OA_REPO_NAME"
 fi
