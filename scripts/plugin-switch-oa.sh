@@ -110,7 +110,7 @@ say "备份在线版本"
 # 铁律 19：先取《章程》官网页正文哈希（**发版前**），发版后必须一致。
 BHZC_BEFORE=""
 if [[ "$DRY" -eq 0 ]]; then
-  BHZC_BEFORE="$(curl -sS --max-time 20 "${SMOKE_BASE%/}/bhzc" 2>/dev/null | md5sum | awk '{print $1}')"
+  BHZC_BEFORE="$(curl -sS -L --max-time 20 "${SMOKE_BASE%/}/bhzc" 2>/dev/null | md5sum | awk '{print $1}')"
   echo "  · /bhzc 发版前哈希：$BHZC_BEFORE"
 fi
 BACKUP_DIR="$BACKUP_ROOT/pre-switch-$STAMP"
@@ -148,7 +148,9 @@ LIVE_CONST="$(wp eval 'echo defined("TCPC_OA_VERSION") ? TCPC_OA_VERSION : "";' 
 [[ "$LIVE_CONST" = "$VERSION" ]] || fail "运行时常量($LIVE_CONST) != 发版版本($VERSION)"
 echo "  ✓ 运行时常量 = $VERSION"
 
-CURL=(-sS --max-time 20 -o /tmp/zw-oa-smoke.body -w '%{http_code}')
+# -L：生产有 apex→www 与 slug 规范化的 301（如 /privacy-policy/ → /privacy-policy），
+# 不跟随会把 301 误判成"冒烟失败"（首次演练实测踩过）。
+CURL=(-sS -L --max-time 20 -o /tmp/zw-oa-smoke.body -w '%{http_code}')
 [[ -n "$SMOKE_HOST" ]] && CURL+=(-H "Host: $SMOKE_HOST")
 check_url() { # check_url <path> <must-contain>
   local path="$1" needle="${2:-}" code
@@ -163,7 +165,7 @@ check_url "/login" "登录"
 check_url "/privacy-policy/"
 # 铁律 19：章程官网页正文不得变化（发版前后哈希对比）
 check_url "/bhzc"
-BHZC_AFTER="$(curl -sS --max-time 20 "${SMOKE_BASE%/}/bhzc" 2>/dev/null | md5sum | awk '{print $1}')"
+BHZC_AFTER="$(curl -sS -L --max-time 20 "${SMOKE_BASE%/}/bhzc" 2>/dev/null | md5sum | awk '{print $1}')"
 if [[ -n "$BHZC_BEFORE" && "$BHZC_BEFORE" != "$BHZC_AFTER" ]]; then
   fail "/bhzc 正文哈希变化（铁律 19 违规）：before=$BHZC_BEFORE after=$BHZC_AFTER"
 fi
