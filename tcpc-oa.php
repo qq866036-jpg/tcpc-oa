@@ -55,12 +55,16 @@ if (file_exists(TCPC_OA_DIR . '/includes/load-list.php')) {
  * 契约 A · 规则引擎骨架（TASK-2320）：默认**不加载**，只有显式置
  * `TCPC_OA_LOAD_CONTRACT_SKELETON` 时才 require —— 骨架期对生产零影响。
  */
-if (defined('TCPC_OA_LOAD_CONTRACT_SKELETON') && TCPC_OA_LOAD_CONTRACT_SKELETON
-    && file_exists(TCPC_OA_DIR . '/includes/oa/contract-policy.php')) {
+// TASK-2320：开关两种载体都认（常量优先，其次 option `tcpc_oa_load_contract_skeleton`，便于灰度/一键回退）。
+if (!defined('TCPC_OA_CONTRACT_SKELETON_ON')) {
+    $zw_oa_sk = (defined('TCPC_OA_LOAD_CONTRACT_SKELETON') && TCPC_OA_LOAD_CONTRACT_SKELETON)
+        || (function_exists('get_option') && (int) get_option('tcpc_oa_load_contract_skeleton', 0) === 1);
+    define('TCPC_OA_CONTRACT_SKELETON_ON', $zw_oa_sk);
+}
+if (TCPC_OA_CONTRACT_SKELETON_ON && file_exists(TCPC_OA_DIR . '/includes/oa/contract-policy.php')) {
     require_once TCPC_OA_DIR . '/includes/oa/contract-policy.php';
 }
 // 契约 C1~C3 · 发文读面骨架（同一开关，默认不加载）。
-if (defined('TCPC_OA_LOAD_CONTRACT_SKELETON') && TCPC_OA_LOAD_CONTRACT_SKELETON
-    && file_exists(TCPC_OA_DIR . '/includes/oa/contract-doc.php')) {
+if (TCPC_OA_CONTRACT_SKELETON_ON && file_exists(TCPC_OA_DIR . '/includes/oa/contract-doc.php')) {
     require_once TCPC_OA_DIR . '/includes/oa/contract-doc.php';
 }
