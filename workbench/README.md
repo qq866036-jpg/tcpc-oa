@@ -55,8 +55,14 @@ ZW_TASK_SPACES=TASK,OA bash scripts/dev-merge.sh TASK-xxxx \
 - **插件代码门**：`bash scripts/ci-check.sh` 全绿才允许提交（`php -l` / 单测 / 契约 / 版本三方）。
 - **契约**：`docs/contract-tcpc-oa.md` 是主题 ↔ 插件契约的唯一出处。
 - **版本三方一致**：`VERSION` / `TCPC_OA_VERSION` / 插件头 `Version:`。
-- **生产只读**：`/www/wwwroot/tcpc.org.cn` 禁止直接改；发版走 `scripts/plugin-switch-oa.sh`（待建）。
+- **生产只读**：`/www/wwwroot/tcpc.org.cn` 禁止直接改；发版走 `scripts/plugin-switch-oa.sh`（`--dry-run` 先看，`--rollback <ts>` 回滚）。
 - **主题内核不得反向依赖本插件**：主题侧有 `scripts/oa-kernel-boundary-check.php` 守着（反向依赖 0 容忍）。
+- **preflight 的台账口径（2026-10-28 实测）**：`workbench/preflight.sh` 默认读**主题主工作区**台账；任务若已并入 dev，
+  那里的状态是 `done` ⇒ 会被判"不能开工"。续做时把台账指向**任务工作树**（真实执行面）：
+
+```bash
+ZW_WORKBENCH_THEME=/srv/git/worktrees/dev-tcpc/task-TASK-xxxx bash workbench/preflight.sh TASK-xxxx "role:依据;…"
+```
 
 ## 3. 与主题的分工（边界口径）
 
