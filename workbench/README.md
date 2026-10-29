@@ -64,6 +64,30 @@ ZW_TASK_SPACES=TASK,OA bash scripts/dev-merge.sh TASK-xxxx \
 ZW_WORKBENCH_THEME=/srv/git/worktrees/dev-tcpc/task-TASK-xxxx bash workbench/preflight.sh TASK-xxxx "role:依据;…"
 ```
 
+### 1.1 纯插件任务（`OA-xxxx`）必须用「主题载体单」
+
+主题仓门禁**严格按号段归属**（`docs/ops/repos.yml`：theme=`TASK`、oa=`OA`）—— `OA-xxxx` 在主题仓跑 `workbench-preflight.sh` **必然 rc=1**（`zw_assert_task_space`）。因此纯插件任务的主题侧 marker 只能来自一个**主题号载体单**（`TASK-xxxx`）：
+
+```bash
+# ① 主题侧：建载体单（TASK 号），台账条目写在这个载体单里
+cd /srv/git/worktrees/dev-tcpc/main
+bash scripts/workbench-worktree.sh create TASK-xxxx
+cd /srv/git/worktrees/dev-tcpc/task-TASK-xxxx
+bash scripts/workbench-preflight.sh TASK-xxxx "role:依据;…"     # 产出 marker
+
+# ② 插件侧：用 OA 号开工，显式告诉门禁「主题 marker 在哪个载体单」
+cd /srv/git/worktrees/dev-tcpc-oa/task-OA-yyyy
+export ZW_TASK_SPACES=TASK,OA
+export ZW_WORKBENCH_THEME=/srv/git/worktrees/dev-tcpc/task-TASK-xxxx   # 台账/marker 所在 worktree
+export ZW_WORKBENCH_THEME_TASK=TASK-xxxx                              # 载体单号（缺省＝自身号）
+bash workbench/preflight.sh OA-yyyy "role:依据;…"
+```
+
+- **缺省行为不变**：不设 `ZW_WORKBENCH_THEME_TASK` 时仍按「同号」找 `task-<本号>` 与 marker；
+- **fail-closed**：设了载体单号但工作树/marker 不存在 ⇒ 直接报错并提示创建，**不静默回退**到同号；
+- 载体单与 `OA-yyyy` 在台账里互相 `Refs`；M1/M2/M3 仍按「一仓一号」判。
+
+
 ## 3. 与主题的分工（边界口径）
 
 详见主题仓 `docs/migration/TASK-2306-中传网办公协同tcpc-oa分仓调研与迁移方案-20261028.md`：

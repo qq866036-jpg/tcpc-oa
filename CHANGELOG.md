@@ -77,3 +77,12 @@
 
 - 骨架期**不迁业务代码**；迁入按主题仓 TASK-2306 的 P 阶段执行，并要求 diff=0 证据。
 - 生产目录未创建、未激活：本仓当前对站点零影响。
+
+### Changed
+
+- **多仓开工接缝（OA-2428）**：`workbench/preflight.sh` 新增 `ZW_WORKBENCH_THEME_TASK=<TASK 号>`，
+  让纯插件任务（`OA-xxxx`）可以引用**主题载体单**（`TASK-xxxx`）的开工 marker。
+  - 动机：主题仓 `zw_assert_task_space` 严格比号段前缀（theme=`TASK`），`OA-xxxx` 在主题仓
+    preflight 必然 rc=1 ⇒ 插件仓第 ③ 步硬要求的「同号 marker」结构性不可满足。
+  - 缺省行为**逐字不变**（不设该变量 ⇒ 仍找 `task-<本号>`）；设了但载体缺失 ⇒ **fail-closed**，
+    不静默回退。官方形态见 `workbench/README.md` §1.1。

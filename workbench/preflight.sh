@@ -30,6 +30,16 @@ if ! zw_is_task_id "$TASK"; then
   exit 2
 fi
 BASE="${ZW_WORKBENCH_BASE:-/srv/git/worktrees/dev-tcpc}"
+# OA-2428（多仓开工接缝）：卫星仓（本仓 space=OA）的任务号**不可能**在主题仓过 preflight ——
+# 主题仓 `zw_assert_task_space` 严格比前缀（repos.yml: theme=TASK），`OA-xxxx` 必然 rc=1。
+# 因此主题侧开工 marker 只能来自**主题号载体单**（TASK-xxxx）：
+#   `ZW_WORKBENCH_THEME_TASK=<TASK 号>` 显式指定载体单；未提供时行为与改动前逐字一致（= 同号）；
+#   提供了但载体工作树/marker 不存在 ⇒ fail-closed（不静默回退）。
+THEME_TASK="${ZW_WORKBENCH_THEME_TASK:-$TASK}"
+if [ -n "${ZW_WORKBENCH_THEME_TASK:-}" ] && ! [[ "$ZW_WORKBENCH_THEME_TASK" =~ ^TASK-[0-9]+$ ]]; then
+  echo "✗ ZW_WORKBENCH_THEME_TASK=$ZW_WORKBENCH_THEME_TASK 不合法（须形如 TASK-123 的主题载体单号）" >&2
+  exit 2
+fi
 REPO="$(git rev-parse --show-toplevel)"
 LEDGER="$THEME/AUTONOMOUS_TASKS.md"
 REGISTRY="$THEME/agents/registry.yml"
@@ -128,22 +138,23 @@ else
   echo "  （主题仓尚未提供 long-term-memory-gate.py —— 跳过；并入后自动生效）"
 fi
 
-echo "==> ③ 主题开工 marker 交叉校验"
-WT="$BASE/task-$TASK"
+echo "==> ③ 主题开工 marker 交叉校验（载体单：$THEME_TASK）"
+WT="$BASE/task-$THEME_TASK"
 if [[ ! -d "$WT" ]]; then
-  echo "✗ 主题任务工作树不存在：$WT" >&2
-  echo "  先创建：bash $THEME/scripts/workbench-worktree.sh create $TASK" >&2
-  echo "  再在 $WT 里补台账条目并跑：bash scripts/workbench-preflight.sh $TASK \"...\"" >&2
+  echo "✗ 主题载体工作树不存在：$WT" >&2
+  echo "  先创建：bash $THEME/scripts/workbench-worktree.sh create $THEME_TASK" >&2
+  echo "  再在 $WT 里补台账条目并跑：bash scripts/workbench-preflight.sh $THEME_TASK \"...\"" >&2
+  echo "  （卫星仓任务 $TASK 的主题侧 marker 由载体单 $THEME_TASK 提供；可用 ZW_WORKBENCH_THEME_TASK 显式指定）" >&2
   exit 1
 fi
 THEME_GD="$(git -C "$WT" rev-parse --absolute-git-dir)"
 THEME_MARKER="$THEME_GD/zw-workbench-active.json"
 if [[ ! -f "$THEME_MARKER" ]]; then
   echo "✗ 主题侧尚未跑开工门禁（缺 marker）：$THEME_MARKER" >&2
-  echo "  在 $WT 执行：bash scripts/workbench-preflight.sh $TASK \"$ROLES_SPEC\"" >&2
+  echo "  在 $WT 执行：bash scripts/workbench-preflight.sh $THEME_TASK \"$ROLES_SPEC\"" >&2
   exit 1
 fi
-python3 - "$THEME_MARKER" "$TASK" <<'PY'
+python3 - "$THEME_MARKER" "$THEME_TASK" <<'PY'
 import json, sys
 try:
     d = json.load(open(sys.argv[1], encoding="utf-8"))
