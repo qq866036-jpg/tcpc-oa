@@ -1,0 +1,13 @@
+# 内核共享符号 allow 清单（OA-2438 事故固化）
+# 格式：<符号>|<理由≥8 非空白字符>；只放行「主题侧已带 function_exists 守卫」的共享函数。
+# 机制：WP 先装载插件、后装载主题 ⇒ 插件先声明、内核侧守卫让位 ⇒ 不 fatal。
+# 陈旧豁免判红：登记了但本次无碰撞 ⇒ 脚本判红，必须删除该行。
+zw_policy_platform_audit_insert|R3-3 下沉到内核 data.php，内核侧 if(!function_exists) 守卫；插件先装载故内核让位
+zw_legal_consent_admin_can|同上：下沉到 legal-consent.php，内核侧带守卫，插件侧先声明
+zw_legal_consent_admin_user_state|同上：下沉到 legal-consent.php，内核侧带守卫
+zw_legal_consent_admin_state_label|同上：下沉到 legal-consent.php，内核侧带守卫
+zw_legal_consent_admin_user_status|同上：下沉到 legal-consent.php，内核侧带守卫
+zw_policy_platform_ready|R3-3 下沉到 legal-admin-bridge.php，内核侧带守卫
+zw_policy_platform_badge|R3-3 下沉到 legal-admin-bridge.php，内核侧带守卫
+zw_policy_platform_exists|R3-3 删除插件重复定义后由内核 data.php 提供（canonical），内核侧守卫
+zw_policy_platform_table|R3-3 删除插件重复定义后由内核 data.php 提供（canonical），内核侧带守卫

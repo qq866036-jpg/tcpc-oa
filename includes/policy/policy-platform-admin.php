@@ -2087,11 +2087,22 @@ function zw_policy_platform_page_supervision() {
  * 为什么由本文件负责：主题 `functions.php` 把这 7 个模块文件分成 5 处 require，其中
  * 「协议签署 / 内容审核 / 文档中心」3 个管理面**只在 `is_admin()` 时**加载。插件侧原先只装本文件
  * ⇒ 主题侧 3 个 `inc/admin` 副本按 R3 删除后，这 3 个后台页会**整页消失**（菜单在、页面回调不存在）。
- * 故装载责任收口到插件：本文件 require 其余 6 个兄弟文件，7 个文件一个不少。
+ * 故装载责任收口到插件：本文件 require 其余 **3 个管理面**兄弟文件。
+ *
+ * ⛔ OA-2438 事故修正（0.1.1 发版冒烟实测）：本段原先载入 **7 个**文件，其中
+ * `policy-module-map.php` / `policy-platform-cron.php` / `policy-rule-engine.php` 三个是**读侧**，
+ * 主题 `inc/policy-platform/` 里有一份**同名同函数**的实现（Q-A2 拍板「读侧留主题」）
+ * ⇒ 插件装载后再由主题读侧声明，生产直接
+ * `Cannot redeclare zw_policy_platform_cron_schedules()`（整站 fatal，已回滚）。
+ * 因此**这三个读侧文件不载入插件**，只载 3 个管理面文件；读侧符号一律由主题提供
+ * （本文件对它们的调用保持 `function_exists` 兜底，缺则显式降级，不假定存在）。
+ *
+ * 前置判据（新增，防止同类复发）：任何「插件装载面变更」在发版前必须跑
+ * `bash scripts/check-kernel-symbol-collisions.sh` —— 逐符号比对插件 `includes/**` 与
+ * 主题读侧 `inc/policy-platform/**` + `inc/admin/**`，有任何同名函数即判红。
  *
  * 顺序：本文件先（上方已声明 `zw_policy_platform_table` / `zw_policy_platform_exists`）⇒
- * `policy-platform-cron.php:13` 的「缺函数则回指主题 admin」懒加载守卫**不会触发**，插件不会
- * 反向 require 主题内部文件（ci-check ③ 反向依赖纪律）；其余 6 个随后。
+ * 其余 3 个管理面随后；插件不反向 require 主题内部文件（ci-check ③ 反向依赖纪律）。
  *
  * `is_file` 守卫：部分部署/热更新瞬间缺文件时**跳过而不 fatal**；缺哪个文件由
  * `bash scripts/verify-module-parity.sh policy --expect-theme-absent` 的 require 清单判红（fail-closed
@@ -2103,14 +2114,12 @@ function zw_policy_platform_page_supervision() {
  * 该函数体属主题副本的 DIFF=0 面，本轮不得改（加守卫/删体留给 R3-4，主题切片）。
  * ════════════════════════════════════════════════════════════════════════════ */
 foreach (array(
-    // 7 个模块文件中的第 7 个 = 本文件（`policy-platform-admin.php`），由 `includes/load-list.php`
-    // 以 `bootstrap` 装载；此处列其余 6 个（require_once 自身虽幂等，显式跳过更易读）。
-    'policy-module-map.php',
+    // 只装**管理面** 3 个（本文件 = 第 4 个，由 load-list 以 bootstrap 装载）。
+    // 读侧 3 个（policy-module-map / policy-platform-cron / policy-rule-engine）**不装**：
+    // 主题 inc/policy-platform/ 有同名同函数实现（Q-A2 读侧留主题），装了必 Cannot redeclare。
     'policy-platform-consent.php',
     'policy-platform-content-review.php',
-    'policy-platform-cron.php',
     'policy-platform-document-center.php',
-    'policy-rule-engine.php',
 ) as $zw_policy_module_file) {
     $zw_policy_module_path = __DIR__ . '/' . $zw_policy_module_file;
     if (is_file($zw_policy_module_path)) {
