@@ -43,6 +43,10 @@ if (!defined('ZW_AI_LEGAL_NAME')) {
     define('ZW_AI_LEGAL_NAME', 'AI法务部');
 }
 
+// OA-2419 R3-2（双声明守卫）：下面两处是主题 canonical `inc/policy-platform/policy-platform-data.php`
+// 的**重复声明点**（守卫行 `:17/:30`，函数声明行 `:24/:37`；该文件由主题 `functions.php:340` 无条件加载）。
+// 插件先于主题装载 ⇒ 缺 `function_exists` 守卫时，主题随后 require data.php 即 `Cannot redeclare`。
+// 纪律：守卫只包**声明**，**不删函数体**（保住与主题副本的 DIFF=0；删体/去重留给 R3-4）。
 if (!function_exists('zw_policy_platform_table')) {
 function zw_policy_platform_table($name) {
     global $wpdb;
@@ -2076,3 +2080,41 @@ function zw_policy_platform_page_supervision() {
     ));
     zw_policy_platform_page_footer();
 }
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * OA-2419 R3-2 · 模块装载责任（本文件 = `includes/load-list.php` 登记的 policy bootstrap）
+ *
+ * 为什么由本文件负责：主题 `functions.php` 把这 7 个模块文件分成 5 处 require，其中
+ * 「协议签署 / 内容审核 / 文档中心」3 个管理面**只在 `is_admin()` 时**加载。插件侧原先只装本文件
+ * ⇒ 主题侧 3 个 `inc/admin` 副本按 R3 删除后，这 3 个后台页会**整页消失**（菜单在、页面回调不存在）。
+ * 故装载责任收口到插件：本文件 require 其余 6 个兄弟文件，7 个文件一个不少。
+ *
+ * 顺序：本文件先（上方已声明 `zw_policy_platform_table` / `zw_policy_platform_exists`）⇒
+ * `policy-platform-cron.php:13` 的「缺函数则回指主题 admin」懒加载守卫**不会触发**，插件不会
+ * 反向 require 主题内部文件（ci-check ③ 反向依赖纪律）；其余 6 个随后。
+ *
+ * `is_file` 守卫：部分部署/热更新瞬间缺文件时**跳过而不 fatal**；缺哪个文件由
+ * `bash scripts/verify-module-parity.sh policy --expect-theme-absent` 的 require 清单判红（fail-closed
+ * 落在门禁，不在运行期白屏）。
+ *
+ * ⚠️ 发布窗口纪律：主题侧 3 个副本删除（R3）**之前**，不得打开第二把钥匙
+ * （`TCPC_OA_ENABLE_POLICY` / option `tcpc_oa_enable_policy`）—— 本段会与仍在加载的主题副本撞
+ * `zw_legal_consent_admin_menu`（全仓唯一无声明守卫的函数，见 R3-1 归属清单）⇒ `Cannot redeclare`。
+ * 该函数体属主题副本的 DIFF=0 面，本轮不得改（加守卫/删体留给 R3-4，主题切片）。
+ * ════════════════════════════════════════════════════════════════════════════ */
+foreach (array(
+    // 7 个模块文件中的第 7 个 = 本文件（`policy-platform-admin.php`），由 `includes/load-list.php`
+    // 以 `bootstrap` 装载；此处列其余 6 个（require_once 自身虽幂等，显式跳过更易读）。
+    'policy-module-map.php',
+    'policy-platform-consent.php',
+    'policy-platform-content-review.php',
+    'policy-platform-cron.php',
+    'policy-platform-document-center.php',
+    'policy-rule-engine.php',
+) as $zw_policy_module_file) {
+    $zw_policy_module_path = __DIR__ . '/' . $zw_policy_module_file;
+    if (is_file($zw_policy_module_path)) {
+        require_once $zw_policy_module_path;
+    }
+}
+unset($zw_policy_module_file, $zw_policy_module_path);

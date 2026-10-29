@@ -12,6 +12,8 @@
 #           任一侧缺文件都显式报 `missing-theme:` / `missing-plugin:`，**不静默跳过**。
 #           为什么需要：`policy` 的实现散在主题 `inc/admin/`（13 个 php）与 `inc/policy-platform/`，
 #           `files` 只占 `inc/admin/org/` 8 个中的 2 个 ⇒ 目录对目录无法表达。
+#           `policy` 口径已按 OA-2419 R3-2 收窄：主题侧**只**把 3 个管理面副本当「应迁/应删」，
+#           内核读侧 3 个文件按 Q-A2「读侧留主题」不进清单（详见 registry 前的 policy 口径段）。
 #
 # 用法：
 #   bash scripts/verify-module-parity.sh receipt
@@ -91,6 +93,16 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 #        因此按 basename 从两侧比对中排除，并反向断言插件副本不含该 shim。
 #        未登记 shim 的模块走 --expect-theme-absent ⇒ 直接判红（fail-closed，不放宽）。
 #
+# policy 口径（OA-2419 R3-2 / Q-A2「读侧留主题」）：
+#   主题侧**只登记 3 个管理面副本** `inc/admin/policy-platform-{consent,content-review,document-center}.php`
+#   —— 它们才是要删的「第二套实现」，仍逐个 `cmp` 逐字节比对（口径收窄 ≠ 放松比对）；
+#   内核读侧 3 个 `inc/policy-platform/{policy-module-map,policy-platform-cron,policy-rule-engine}.php`
+#   拍板**留主题** ⇒ 不登记 theme 行（否则 `--expect-theme-absent` 会把内核文件误报成「残留副本」，
+#   实测 R3-1：删除主题 3 个 `inc/admin` 副本后仍被点名 3 次 ⇒ 假红）；
+#   插件内同名副本改登记为**默认 exclude**：反向扫描（插件有、主题无对应 ⇒ missing-theme）必须放行它们，
+#   否则收窄口径的当天就会误判 3 个 missing-theme。shim 仍为 `inc/admin/policy-platform-admin.php`
+#   （主题侧有意差异，两侧比对都排除）。
+#
 # org 口径（Q2 拍板：RBAC 内核 `org-permissions.php` 不迁）：
 #   `inc/admin/org/org-*.php` 中 `org-files.php` 属 files 模块 ⇒ 登记为默认 exclude；
 #   `file-center.php` 同属 files 模块（不匹配 `org-*.php`，但反向扫描会看到它）⇒ 同样默认 exclude；
@@ -106,10 +118,7 @@ require|receipt|receipt-create.php
 require|receipt|receipt-ledger.php
 require|receipt|receipt-bootstrap.php
 require|receipt|receipt-storage.php
-module|policy|list|includes/policy|policy-platform-admin.php|
-theme|policy|inc/policy-platform/policy-module-map.php
-theme|policy|inc/policy-platform/policy-platform-cron.php
-theme|policy|inc/policy-platform/policy-rule-engine.php
+module|policy|list|includes/policy|policy-platform-admin.php|policy-module-map.php policy-platform-cron.php policy-rule-engine.php
 theme|policy|inc/admin/policy-platform-consent.php
 theme|policy|inc/admin/policy-platform-content-review.php
 theme|policy|inc/admin/policy-platform-document-center.php
