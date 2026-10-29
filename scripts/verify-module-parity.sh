@@ -52,6 +52,7 @@ if [[ "$MODULE" == "-h" || "$MODULE" == "--help" ]]; then
 fi
 
 EXPECT_ABSENT=0
+ONLY_FILES=()   # OA-2439（R10a）：子批判据 —— 只比较列出的文件（其余 missing 不计失败）
 THEME="${ZW_OA_THEME:-/srv/git/worktrees/dev-tcpc/main}"
 PLUGIN_OVERRIDE=""
 EXTRA_EXCLUDES=()
@@ -67,6 +68,9 @@ while [[ $# -gt 0 ]]; do
     --exclude)
       [[ -n "${2:-}" ]] || { echo "✗ --exclude 需要 basename 参数" >&2; exit 2; }
       EXTRA_EXCLUDES+=("$2"); shift 2 ;;
+    --only)
+      [[ -n "${2:-}" ]] || { echo "✗ --only 需要逗号分隔的文件名列表" >&2; exit 2; }
+      IFS=',' read -r -a ONLY_FILES <<< "$2"; shift 2 ;;
     --expect-theme-absent) EXPECT_ABSENT=1; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "未知参数：$1" >&2; exit 2 ;;
@@ -297,6 +301,25 @@ verify_list() {
     allow_map["$ap"]="$areason"
   done <<< "${MOD_ALLOW[$MODULE]:-}"
 
+  # OA-2439（R10a）：--only 子批判据 —— 只比较列出的文件；列出的文件若两侧都不存在 ⇒ fail-closed。
+  if [[ ${#ONLY_FILES[@]} -gt 0 ]]; then
+    local only f_only hit
+    for only in "${ONLY_FILES[@]}"; do
+      hit=0
+      [[ -f "$THEME/$only" || -f "$PLUGIN_DIR/$only" ]] && hit=1
+      # 也允许只给 basename（主题侧路径未知时）
+      if [[ "$hit" -eq 0 ]]; then
+        while IFS= read -r f_only; do
+          [[ -n "$f_only" && "${f_only##*/}" == "$only" ]] && hit=1
+        done <<< "$(theme_matches 2>/dev/null || true)"
+      fi
+      if [[ "$hit" -eq 0 ]]; then
+        echo "  ✗ --only 指定的文件在主题侧与插件侧都不存在：$only ⇒ fail-closed（不把「找不到」当通过）" >&2
+        return 1
+      fi
+    done
+  fi
+
   if ! matches="$(theme_matches)"; then
     rc=1
   fi
@@ -315,6 +338,11 @@ verify_list() {
 
   for f in "${theme_files[@]}"; do
     base="${f##*/}"
+    if [[ ${#ONLY_FILES[@]} -gt 0 ]]; then
+      local keep=0 oo
+      for oo in "${ONLY_FILES[@]}"; do [[ "$oo" == "$base" || "$oo" == "${f#"$THEME"/}" ]] && keep=1; done
+      [[ "$keep" -eq 0 ]] && continue
+    fi
     base_seen["$base"]=1
     pf="$PLUGIN_DIR/$base"
     if [[ ! -f "$pf" ]]; then
@@ -341,6 +369,11 @@ verify_list() {
     base="${pf##*/}"
     [[ "$base" == "$SHIM" ]] && continue
     excluded "$base" && continue
+    if [[ ${#ONLY_FILES[@]} -gt 0 ]]; then
+      local keep2=0 oo2
+      for oo2 in "${ONLY_FILES[@]}"; do [[ "$oo2" == "$base" ]] && keep2=1; done
+      [[ "$keep2" -eq 0 ]] && continue
+    fi
     [[ -n "${base_seen[$base]:-}" ]] && continue
     echo "  ✗ missing-theme: $base（插件侧有 $pf，主题侧无对应文件）" >&2
     miss_files=$((miss_files + 1)); rc=1
@@ -356,6 +389,10 @@ verify_list() {
 
   if [[ "$rc" -eq 0 ]]; then
     # OA-2435 措辞修正：豁免命中时不能说「逐个 cmp 字节一致」（那 2 个文件并不一致）。
+    if [[ ${#ONLY_FILES[@]} -gt 0 ]]; then
+      echo "✓ DIFF=0（list 模式：--only 指定 ${#ONLY_FILES[@]} 个文件逐一比对，其余未迁文件不计入本次判定）"
+      return 0
+    fi
     echo "✓ DIFF=0（list 模式：$total 个文件逐一比对$( [[ ${#allow_used[@]} -gt 0 ]] && echo "，其中 ${#allow_used[@]} 个为已登记有意差异（见 ALLOWED-DIFF 行）" || echo "，逐字节一致" )$( [[ -n "$SHIM" ]] && echo "；已排除 shim $SHIM" )）"
     return 0
   fi
