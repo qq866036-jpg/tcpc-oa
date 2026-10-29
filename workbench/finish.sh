@@ -35,6 +35,22 @@ PY
 
 echo "==> 任务：$MARKER_TASK"
 echo "==> 角色：$MARKER_ROLES_SPEC"
+
+# ── TASK-2429 / CHG-435：长期记忆三层（收口必写）──────────────────────────
+# 判据唯一实现在主题仓：scripts/long-term-memory-gate.py finish --task <号> --repo oa
+THEME_WT="${MARKER_THEME_WORKTREE:-}"
+LTM_GATE="$THEME_WT/scripts/long-term-memory-gate.py"
+if [[ -n "$THEME_WT" && -f "$LTM_GATE" ]]; then
+  echo "==> 长期记忆三层（dsh / 主题 / 插件仓）"
+  if ! ZW_LTM_LEDGER="$THEME_WT/AUTONOMOUS_TASKS.md" \
+       python3 "$LTM_GATE" finish --task "$MARKER_TASK" --repo oa; then
+    echo "✗ 长期记忆三层门禁未通过：$MARKER_TASK（marker 保留；口径见主题仓 docs/ops/long-term-memory.yml）" >&2
+    exit 1
+  fi
+else
+  echo "  （主题仓尚未提供 long-term-memory-gate.py —— 跳过；并入后自动生效）"
+fi
+
 echo "==> 本仓质量门：bash scripts/ci-check.sh"
 cd "$REPO"
 OUT="$(mktemp)"

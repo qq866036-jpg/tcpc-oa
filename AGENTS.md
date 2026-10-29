@@ -15,6 +15,20 @@
 4. 门禁：`.githooks` 已接入 —— 无 marker 拒绝提交、提交信息必须含任务号、pre-commit 跑 `ci-check.sh --precommit`。
    安装/查看：`bash workbench/install-hooks.sh [--status]`；急救用 `git commit --no-verify`（须在交接单写明理由）。
 
+## 0.1 长期记忆三层（必须遵守 · TASK-2429 / CHG-435）
+
+用户 2026-10-29 指令原文：「dsh 和 中传网主题 以及相关联的 插件项目 的长期记忆均要遵守」。
+
+- **三层**：`dsh`（`/opt/deepseek-harness/AGENTS.md` + `/srv/ai-memory/projects/tcpc/`，只读）／
+  `theme`（主题仓 `docs/development-long-term-memory.md`，跨仓共性唯一出处）／
+  `oa`（**本仓 `docs/development-long-term-memory.md`**，只写本仓特有事实）。
+- **清单唯一出处**：主题仓 `docs/ops/long-term-memory.yml`；**判据唯一实现**：主题仓
+  `scripts/long-term-memory-gate.py`（本仓 `workbench/preflight.sh` / `workbench/finish.sh` 调用同一实例）。
+- **开工**：本仓 preflight 跑 `check --task <号>`（各层存在/可读/非空壳，打印必读清单）；
+  **收口**：本仓 finish 跑 `finish --task <号> --repo oa`（**本仓记忆必须被本次分支改动**；
+  确无跨会话事实 ⇒ 主题台账写 `- 长期记忆：无需入账（理由：<≥8 字>）`，禁止裸豁免）。
+- **禁止**在本仓另写第二套判据，也**禁止**把主题仓共性口径抄进本仓（只留指针）。
+
 ## 1. 标准流程
 
 见 [`workbench/README.md`](workbench/README.md) §1。要点：主题侧建工作树 → 补台账 → 双端 preflight →
