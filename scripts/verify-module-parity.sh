@@ -142,6 +142,8 @@ allow|org|org-admin.php|R6b：org-files.php 已按模块迁到 includes/files/�
 module|files|list|includes/files||
 theme|files|inc/admin/org/file-center.php
 theme|files|inc/admin/org/org-files.php
+# OA-2443（契约轮）：唯一有意差异 —— 实名客户端改走主题契约，不再直取主题内部类路径。
+allow|doc|doc-appoint-cert.php|契约轮：实名客户端改走主题契约 zw_oa_realname_client_ready()，不再 require 主题内部类文件（陈旧豁免会判红）
 module|doc|list|includes/doc||
 theme|doc|inc/admin/doc/*.php
 module|secretariat|list|includes/secretariat||
