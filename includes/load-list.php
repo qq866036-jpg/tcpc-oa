@@ -50,17 +50,25 @@ if (!function_exists('tcpc_oa_modules')) {
                 'dir'        => 'includes/policy',
                 'bootstrap'  => 'policy-platform-admin.php',
                 'flag'       => 'TCPC_OA_ENABLE_POLICY',
-                // OA-2418 R2：`theme_path` 只列**真正迁入比对**的 6 个文件（判定/读侧仍在主题：
+                // OA-2418 R2：`theme_path` 只列**真正迁入比对**的文件（判定/读侧仍在主题：
                 // policy-platform-data.php / legal-*.php 未迁），外加主题侧 shim。
+                // OA-2419 R3-2（Q-A2）：口径再收窄 —— 主题侧只剩 3 个管理面副本要删；
+                // 内核读侧 3 个（policy-module-map / policy-platform-cron / policy-rule-engine）
+                // **留主题**，故从 parity 主题侧清单移出（插件内同名副本由 registry 默认 exclude 放行）。
                 // 与 `scripts/verify-module-parity.sh` 的 registry 逐项对齐（改一处必须两处同步）。
-                'theme_path' => 'inc/policy-platform/{policy-module-map,policy-platform-cron,policy-rule-engine}.php + inc/admin/policy-platform-{consent,content-review,document-center}.php（shim：inc/admin/policy-platform-admin.php）',
+                'theme_path' => 'inc/admin/policy-platform-{consent,content-review,document-center}.php（shim：inc/admin/policy-platform-admin.php）；读侧 inc/policy-platform/{policy-module-map,policy-platform-cron,policy-rule-engine}.php 按 Q-A2 留主题、不进 parity 口径',
                 // TASK-2320 W1-2 / OA-2410（**代码侧启用 = 第一把钥匙**）。前提已满足：
                 // 主题 1.1.593 起 `inc/admin/policy-platform-admin.php` 已是「插件优先/主题回退」shim
                 // （符号哨兵 + 整段条件包裹）⇒ 本模块装载后主题让位，不会重复声明。
                 // 第二把钥匙（常量 TCPC_OA_ENABLE_POLICY / option `tcpc_oa_enable_policy`）未满足时
                 // 仍**不加载** ⇒ 默认零行为，可一键回滚（option 置 0）。判定/读侧仍留主题（Q-A2）。
                 'enabled'    => true,
-                'note'       => '判定引擎与条款读侧留主题；本模块只含管理面(admin/consent/content-review/document-center/cron/rule-engine/module-map)',
+                // OA-2419 R3-2 · 装载责任：`bootstrap`（policy-platform-admin.php）自己负责 require
+                // 全部 7 个模块文件（policy-module-map / admin / consent / content-review / cron /
+                // document-center / rule-engine，每处 `is_file` 守卫）。原因：主题 `functions.php` 把这 7 个
+                // 分成 5 处 require，其中 3 个管理面只在 `is_admin()` 加载 ⇒ 主题副本删除后若插件只装
+                // admin，「内容审核 / 签署管理 / 文档中心」3 个后台页会整页消失。
+                'note'       => '判定引擎与条款读侧留主题；本模块装载全部 7 个文件（管理面 4 + 读侧 3），后台页不依赖主题副本',
             ),
             // 以下四个模块 = OA-2418 R2「实际登记」（占位注释的兑现）：`enabled` 仍为 **false**
             // ⇒ `tcpc_oa_module_enabled()` 直接返回 false ⇒ `tcpc_oa_load_modules()` 零 require，
