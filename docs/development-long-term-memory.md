@@ -57,3 +57,16 @@ bash workbench/finish.sh OA-xxxx "说明"
 收口时主题仓 `scripts/long-term-memory-gate.py finish --task OA-xxxx` 会检查：
 ① 本仓（`oa` 层）本文件**在本次分支里有改动**；② 若台账写了 `- 记忆层：…`，该层文件里**必须出现本任务号**。
 确无跨会话事实 ⇒ 在台账写 `- 长期记忆：无需入账（理由：<≥8 字>）`（禁止裸豁免）。
+
+## 2026-10-29 · 发文数据层迁移与子批判据（OA-2439 / W3-R10a）
+
+- **子批判据**：`scripts/verify-module-parity.sh` 新增 `--only <file,file>` —— 子批迁移不必等整模块迁完
+  才能判绿；三态：一致 ⇒ `DIFF=0`；指定文件两侧都不存在 ⇒ **fail-closed 判红**；改一字节 ⇒ 判红。
+  不可把「未迁完」的 23 个 missing 当成失败，也不能把「找不到」当成通过。
+- **发文数据层**：`includes/doc/` 已迁 `doc-repository` / `doc-copy-number-repository` /
+  `doc-number-repository` / `doc-download`（2,384 行，与主题侧逐字节一致），`doc.enabled=false` 未启用。
+- **载体单路径坑（会阻塞所有 OA 轮次）**：`workbench/preflight.sh` 与 `workbench/finish.sh` 调长期记忆
+  门禁时曾按**本仓任务号**拼主题工作树（`task-OA-xxxx` 不存在）⇒ 台账读不到 ⇒ 恒红。
+  正确做法：用 `ZW_WORKBENCH_THEME_TASK`（载体单号）拼路径，缺省才回退同号。
+- **提交信息坑**：本仓 commit-msg 拒绝任何跨号段 token（消息里出现主题号即失败），
+  正文只能写「主题载体单」这类措辞。
