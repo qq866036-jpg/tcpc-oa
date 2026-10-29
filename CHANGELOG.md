@@ -135,3 +135,15 @@
 ### Fixed
 
 - parity 脚本：新增「按文件、带理由」的有意差异豁免 + 陈旧豁免判红；豁免命中时 summary 不再谎称逐字节一致。
+
+## [0.1.2] - 2026-10-29
+
+### Added
+
+- 发文管理模块（27 文件 / 30,242 行）整模块迁入 `includes/doc/`，与主题逐字节一致；
+  `doc.enabled=true` 但第二把钥匙（option `tcpc_oa_enable_doc`）默认关 ⇒ 生产行为不变。
+- 实名客户端改走主题契约 `zw_oa_realname_client_ready()`（parity 登记唯一有意差异）。
+
+### Added (tooling)
+
+- `scripts/oa-doc-render-smoke.php`：发文后台 9 页渲染冒烟（四断言，缺回调 fail-closed rc=2）。
