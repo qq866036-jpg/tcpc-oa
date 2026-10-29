@@ -49,7 +49,10 @@ else
 fi
 
 echo "== ③ 反向依赖守卫（不得直拼主题内部路径）"
-hits="$(grep -rnE "get_stylesheet_directory|get_template_directory|TEMPLATEPATH" --include='*.php' . 2>/dev/null | grep -v '^./vendor/' | grep -v '^./.git/' || true)"
+# OA-2441 修：原模式按子串匹配 `get_template_directory`，会把 WP 核心函数
+# `get_template_directory_uri()`（取静态资源前缀，合法 API）误判为「主题路径直拼」。
+# 改为要求后面紧跟 `(`（真正取**目录路径**的用法），`_uri` 变体不再命中。
+hits="$(grep -rnE "get_stylesheet_directory[[:space:]]*\(|get_template_directory[[:space:]]*\(|TEMPLATEPATH" --include='*.php' . 2>/dev/null | grep -v '^./vendor/' | grep -v '^./.git/' || true)"
 if [ -z "$hits" ]; then
   ok "0 命中（只用主题契约函数）"
 else
