@@ -51,9 +51,12 @@ if (!function_exists('tcpc_oa_modules')) {
                 'bootstrap'  => 'policy-platform-admin.php',
                 'flag'       => 'TCPC_OA_ENABLE_POLICY',
                 'theme_path' => 'inc/policy-platform + inc/admin/policy-platform-*.php',
-                // 迁移中：代码已按 DIFF=0 迁入（7 文件 / 5,776 行），但**不启用** ——
-                // 判定/读侧仍留主题（Q-A2 口径），且管理面入口切换须与主题 shim 同窗口。
-                'enabled'    => false,
+                // TASK-2320 W1-2 / OA-2410（**代码侧启用 = 第一把钥匙**）。前提已满足：
+                // 主题 1.1.593 起 `inc/admin/policy-platform-admin.php` 已是「插件优先/主题回退」shim
+                // （符号哨兵 + 整段条件包裹）⇒ 本模块装载后主题让位，不会重复声明。
+                // 第二把钥匙（常量 TCPC_OA_ENABLE_POLICY / option `tcpc_oa_enable_policy`）未满足时
+                // 仍**不加载** ⇒ 默认零行为，可一键回滚（option 置 0）。判定/读侧仍留主题（Q-A2）。
+                'enabled'    => true,
                 'note'       => '判定引擎与条款读侧留主题；本模块只含管理面(admin/consent/content-review/document-center/cron/rule-engine/module-map)',
             ),
             // 后续模块（按迁移顺序占位，未迁入前保持注释）：
