@@ -72,3 +72,4 @@ bash workbench/finish.sh OA-xxxx "说明"
   正文只能写「主题载体单」这类措辞。
 doc-import / doc-helpers / doc-admin-list 三文件迁入（4,991 行），3 处 org/files 契约调用原样保留，模块未启用。
 doc-composer / doc-render-html / doc-layout-gb9704 / doc-layout-designer / doc-pdf 五文件迁入（9,032 行）；doc-composer 的 zw_branch_leaders_save 写契约原样保留；模块未启用。
+发文余批 14 文件迁入（12,236 行）；doc-appoint-cert.php 因直取主题内部类（实名客户端）单列 blocked，待契约轮；模块未启用。
