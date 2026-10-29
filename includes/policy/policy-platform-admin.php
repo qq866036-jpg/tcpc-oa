@@ -604,6 +604,12 @@ function zw_policy_platform_page_sources() {
 /* ───────────── 政策条款库 ───────────── */
 function zw_policy_platform_page_clauses() {
     global $wpdb;
+    // TASK-2320 W1-4 / OA-2410（冒烟修复）：本函数下方「派生对账」块（原第 624 行）先用 `$table`
+    // 做 `FROM {$table} WHERE status=%s`，而 `$table` 的赋值原在其后（第 761 行）⇒ `$table` 未定义，
+    // SQL 退化为 `FROM '' WHERE …`，wpdb 去查列时又把 `WHERE` 当表名（实测报错：
+    // `Table 'tcpc_org_cn.WHERE' doesn't exist / SHOW FULL COLUMNS FROM \`WHERE\``）。
+    // 修法：在函数入口先绑定一次（下方原赋值保留，幂等）。
+    $table = zw_policy_platform_table('policy_clause');
     zw_policy_platform_page_header('政策条款库', '政策条款列表（写操作第一阶段：单条确认/退回；最多显示 300 条）。');
     if (!zw_policy_platform_exists('policy_clause')) { zw_policy_platform_missing_notice(); zw_policy_platform_page_footer(); return; }
     // TASK-1019：条款表已降级为「生效正文的派生视图」，本页提示口径（样式用既有 zw-adm-card，不新增全局 CSS）。
