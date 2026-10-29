@@ -113,3 +113,11 @@
   引用改指 `includes/files/`（R6 已按模块拆分迁入）。两处均与主题侧**有意不同**，由 CHG 登记。
   实测修正：**不能用 `admin_init`** —— WP 核心 `wp-admin/admin.php:163` 先 require `menu.php`
   （`admin_menu` 在其内触发），`:180` 才 `admin_init` ⇒ 挂 `admin_init` 菜单永远不显示。
+
+### Changed
+
+- **OA-2435（R7-1）parity 增加「按文件、带理由」的有意差异豁免**（`scripts/verify-module-parity.sh`）：
+  登记表新增 `allow|<模块>|<basename>|<理由≥8 非空白字符>`；命中差异时打印
+  `· ALLOWED-DIFF <file>（理由）` 并放行，**只放行该文件**（不是整模块 exclude）。
+  两条反滥用判据：理由空/过短 ⇒ fail-closed 判红；**陈旧豁免**（登记了但实测无差异）⇒ 判红。
+  首期登记 OA-2434 的两处（理由见 CHG-434）；`org` 由 DIFF≠0 转为 DIFF=0，`files`/`policy` 行为不变。

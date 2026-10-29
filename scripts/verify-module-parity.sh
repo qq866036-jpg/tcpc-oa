@@ -131,6 +131,10 @@ require|policy|policy-platform-document-center.php
 require|policy|policy-rule-engine.php
 module|org|list|includes/org||org-files.php file-center.php
 theme|org|inc/admin/org/org-*.php
+# OA-2434（R6b）两处「有意差异」，逐行理由见 CHG-434。**不是**整模块 exclude：
+# 只放行这两个文件的差异，其它任何漂移照旧判红；且一旦实测无差异 ⇒ 陈旧豁免判红。
+allow|org|org-bootstrap.php|R6b：不再 require 主题内核 org-permissions.php（Q2 不迁），改 after_setup_theme 判内核契约符号，缺则 fail-closed 不 fatal
+allow|org|org-admin.php|R6b：org-files.php 已按模块迁到 includes/files/，require 路径改指 files 模块目录
 module|files|list|includes/files||
 theme|files|inc/admin/org/file-center.php
 theme|files|inc/admin/org/org-files.php
@@ -141,13 +145,16 @@ theme|secretariat|inc/secretariat/*.php
 OA_REGISTRY
 }
 
-declare -A MOD_MODE=() MOD_PLUGIN=() MOD_SHIM=() MOD_EXCLUDES=() MOD_THEME=() MOD_REQUIRE=()
+declare -A MOD_MODE=() MOD_PLUGIN=() MOD_SHIM=() MOD_EXCLUDES=() MOD_THEME=() MOD_REQUIRE=() MOD_ALLOW=()
 while IFS='|' read -r kind a b c d e; do
   [[ -z "$kind" || "$kind" == \#* ]] && continue
   case "$kind" in
     module)  MOD_MODE["$a"]="$b"; MOD_PLUGIN["$a"]="$c"; MOD_SHIM["$a"]="$d"; MOD_EXCLUDES["$a"]="${e:-}" ;;
     theme)   MOD_THEME["$a"]+="${b}"$'\n' ;;
     require) MOD_REQUIRE["$a"]+="${b}"$'\n' ;;
+    # OA-2435（R7）：按文件、带理由的「有意差异」豁免（**不是**整模块 exclude）。
+    # 行格式：allow|<模块>|<主题侧 basename>|<理由，≥8 个非空白字符>
+    allow)   MOD_ALLOW["$a"]+="${b}|${c}"$'\n' ;;
     *) echo "✗ 登记表格式未知行：$kind|$a|$b" >&2; exit 2 ;;
   esac
 done < <(registry)
@@ -277,6 +284,19 @@ verify_list() {
   local -a theme_files=()
   local -A base_seen=()
 
+  # OA-2435（R7）：「有意差异」按文件豁免 —— 只对**登记过 allow + 有理由**的文件放行，
+  # 理由必须是 ≥8 个非空白字符；空/过短 ⇒ fail-closed（禁止裸豁免）。
+  local -A allow_map=() allow_used=()
+  local ap areason
+  while IFS='|' read -r ap areason; do
+    [[ -z "$ap" ]] && continue
+    if [[ -z "${areason//[[:space:]]/}" || ${#areason} -lt 8 ]]; then
+      echo "  ✗ allow 豁免缺理由或理由过短（需 ≥8 个非空白字符）：$ap" >&2
+      rc=1; continue
+    fi
+    allow_map["$ap"]="$areason"
+  done <<< "${MOD_ALLOW[$MODULE]:-}"
+
   if ! matches="$(theme_matches)"; then
     rc=1
   fi
@@ -305,8 +325,13 @@ verify_list() {
     if cmp -s "$f" "$pf"; then
       echo "  ✓ cmp $base"
     else
-      echo "  ✗ DIFF: $base（内容不一致：$f ⇄ $pf）" >&2
-      diff_files=$((diff_files + 1)); rc=1
+      if [[ -n "${allow_map[$base]:-}" ]]; then
+        echo "  · ALLOWED-DIFF $base（已登记有意差异：${allow_map[$base]}）"
+        allow_used["$base"]=1
+      else
+        echo "  ✗ DIFF: $base（内容不一致：$f ⇄ $pf）" >&2
+        diff_files=$((diff_files + 1)); rc=1
+      fi
     fi
   done
 
@@ -319,6 +344,14 @@ verify_list() {
     [[ -n "${base_seen[$base]:-}" ]] && continue
     echo "  ✗ missing-theme: $base（插件侧有 $pf，主题侧无对应文件）" >&2
     miss_files=$((miss_files + 1)); rc=1
+  done
+
+  # 陈旧豁免判红：登记了 allow 但该文件实测**无差异** ⇒ 判红（防豁免沉淀成黑洞，口径同 K2 陈旧白名单）
+  for ap in "${!allow_map[@]}"; do
+    if [[ -z "${allow_used[$ap]:-}" ]]; then
+      echo "  ✗ 陈旧豁免：$ap 已登记 allow 但本次实测无差异 ⇒ 判红（请删除该 allow 行）" >&2
+      rc=1
+    fi
   done
 
   if [[ "$rc" -eq 0 ]]; then
