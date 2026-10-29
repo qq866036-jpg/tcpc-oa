@@ -50,7 +50,10 @@ if (!function_exists('tcpc_oa_modules')) {
                 'dir'        => 'includes/policy',
                 'bootstrap'  => 'policy-platform-admin.php',
                 'flag'       => 'TCPC_OA_ENABLE_POLICY',
-                'theme_path' => 'inc/policy-platform + inc/admin/policy-platform-*.php',
+                // OA-2418 R2：`theme_path` 只列**真正迁入比对**的 6 个文件（判定/读侧仍在主题：
+                // policy-platform-data.php / legal-*.php 未迁），外加主题侧 shim。
+                // 与 `scripts/verify-module-parity.sh` 的 registry 逐项对齐（改一处必须两处同步）。
+                'theme_path' => 'inc/policy-platform/{policy-module-map,policy-platform-cron,policy-rule-engine}.php + inc/admin/policy-platform-{consent,content-review,document-center}.php（shim：inc/admin/policy-platform-admin.php）',
                 // TASK-2320 W1-2 / OA-2410（**代码侧启用 = 第一把钥匙**）。前提已满足：
                 // 主题 1.1.593 起 `inc/admin/policy-platform-admin.php` 已是「插件优先/主题回退」shim
                 // （符号哨兵 + 整段条件包裹）⇒ 本模块装载后主题让位，不会重复声明。
@@ -59,12 +62,53 @@ if (!function_exists('tcpc_oa_modules')) {
                 'enabled'    => true,
                 'note'       => '判定引擎与条款读侧留主题；本模块只含管理面(admin/consent/content-review/document-center/cron/rule-engine/module-map)',
             ),
-            // 后续模块（按迁移顺序占位，未迁入前保持注释）：
-            // 'policy'      => array('label' => 'AI法务部（写侧+管理面）', 'theme_path' => 'inc/policy-platform + inc/admin/policy-platform-*.php'),
-            // 'doc'         => array('label' => '发文管理', 'theme_path' => 'inc/admin/doc'),
-            // 'org'         => array('label' => '组织架构业务', 'theme_path' => 'inc/admin/org（不含 org-permissions.php）'),
-            // 'files'       => array('label' => '网盘文件中心 UI', 'theme_path' => 'inc/admin/org/file-center.php + org-files.php'),
-            // 'secretariat' => array('label' => 'AI秘书处', 'theme_path' => 'inc/secretariat'),
+            // 以下四个模块 = OA-2418 R2「实际登记」（占位注释的兑现）：`enabled` 仍为 **false**
+            // ⇒ `tcpc_oa_module_enabled()` 直接返回 false ⇒ `tcpc_oa_load_modules()` 零 require，
+            // 运行期行为与登记前**完全一致**（新增的只是数据行，不产生任何加载）。
+            // `theme_path` 口径与 `scripts/verify-module-parity.sh` 的 `registry` 同源，改一处必须两处同步。
+            'doc' => array(
+                'label'      => '发文管理',
+                'dir'        => 'includes/doc',
+                'bootstrap'  => 'doc-bootstrap.php',
+                'flag'       => 'TCPC_OA_ENABLE_DOC',
+                'theme_path' => 'inc/admin/doc',
+                // 未迁入：`includes/doc` 尚不存在 ⇒ `verify-module-parity.sh doc` 输出
+                // 「插件侧模块目录不存在」并 rc=1（预期红，不得写成通过）。迁入后转 DIFF=0。
+                'enabled'    => false,
+                'note'       => 'R9–R17 分批迁入（数据层/列表/编辑器/落盘）；迁入前本行只是登记，零加载',
+            ),
+            'org' => array(
+                'label'      => '组织架构业务',
+                'dir'        => 'includes/org',
+                'bootstrap'  => 'org-bootstrap.php',
+                'flag'       => 'TCPC_OA_ENABLE_ORG',
+                'theme_path' => 'inc/admin/org（org-*.php；不含 file-center.php / org-files.php）',
+                // Q2 拍板：`org-permissions.php` 是 RBAC 内核，**不迁** ⇒ parity 判定时用
+                // `--exclude org-permissions.php` 显式排除（插件内不得出现该文件副本）。
+                'enabled'    => false,
+                'note'       => 'Q2：org-permissions.php 内核不迁；parity 标准调用带 --exclude org-permissions.php',
+            ),
+            'files' => array(
+                'label'      => '网盘文件中心（UI）',
+                'dir'        => 'includes/files',
+                // 入口待 R20 前复核（未验证）：主题侧 `inc/admin/org/` 下无独立的 files-bootstrap，
+                // 现按 UI 入口 `file-center.php` 登记；迁入时若改入口须同步本行与 parity registry。
+                'bootstrap'  => 'file-center.php',
+                'flag'       => 'TCPC_OA_ENABLE_FILES',
+                'theme_path' => 'inc/admin/org/file-center.php + inc/admin/org/org-files.php',
+                'enabled'    => false,
+                'note'       => '只含主题 inc/admin/org/ 8 个 php 中的这 2 个；bootstrap 入口待复核（未验证）',
+            ),
+            'secretariat' => array(
+                'label'      => 'AI秘书处',
+                'dir'        => 'includes/secretariat',
+                'bootstrap'  => 'secretariat-bootstrap.php',
+                'flag'       => 'TCPC_OA_ENABLE_SECRETARIAT',
+                'theme_path' => 'inc/secretariat',
+                // R19 迁入 7 文件 / R20 删主题侧 7 文件；在此之前主题独占，插件零加载。
+                'enabled'    => false,
+                'note'       => 'R19 迁入 / R20 主题侧删除；未迁入 ⇒ parity 预期红（缺插件目录）',
+            ),
         );
     }
 }
