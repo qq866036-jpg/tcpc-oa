@@ -93,7 +93,7 @@ if (!function_exists('tcpc_oa_modules')) {
                 'theme_path' => 'inc/admin/org（org-*.php；不含 file-center.php / org-files.php）',
                 // Q2 拍板：`org-permissions.php` 是 RBAC 内核，**不迁** ⇒ parity 判定时用
                 // `--exclude org-permissions.php` 显式排除（插件内不得出现该文件副本）。
-                'enabled'    => false,
+                'enabled'    => true,
                 'note'       => 'Q2：org-permissions.php 内核不迁；parity 标准调用带 --exclude org-permissions.php',
             ),
             'files' => array(
@@ -104,7 +104,7 @@ if (!function_exists('tcpc_oa_modules')) {
                 'bootstrap'  => 'file-center.php',
                 'flag'       => 'TCPC_OA_ENABLE_FILES',
                 'theme_path' => 'inc/admin/org/file-center.php + inc/admin/org/org-files.php',
-                'enabled'    => false,
+                'enabled'    => true,
                 'note'       => '只含主题 inc/admin/org/ 8 个 php 中的这 2 个；bootstrap 入口待复核（未验证）',
             ),
             'secretariat' => array(
