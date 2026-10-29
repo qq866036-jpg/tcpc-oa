@@ -15,7 +15,10 @@ if (!function_exists('is_admin') || (!is_admin() && !(defined('WP_CLI') && WP_CL
 
 
 require_once __DIR__ . '/org-repository.php';
-require_once __DIR__ . '/org-files.php';
+// OA-2434（R6b）**与主题侧有意差异**（CHG-434）：主题侧这里是 `__DIR__ . '/org-files.php'`。
+// 插件侧该文件已按模块拆分迁到 `includes/files/`（R6 / OA-2433），同目录不存在 ⇒ 启用即 fatal。
+// 只改引用路径，不改文件内容。
+require_once dirname(__DIR__) . '/files/org-files.php';
 require_once __DIR__ . '/org-admin-people.php';
 require_once __DIR__ . '/org-admin-roles.php';
 

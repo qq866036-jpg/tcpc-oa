@@ -103,3 +103,21 @@
     preflight 必然 rc=1 ⇒ 插件仓第 ③ 步硬要求的「同号 marker」结构性不可满足。
   - 缺省行为**逐字不变**（不设该变量 ⇒ 仍找 `task-<本号>`）；设了但载体缺失 ⇒ **fail-closed**，
     不静默回退。官方形态见 `workbench/README.md` §1.1。
+
+### Fixed
+
+- **OA-2434（R6b）org 模块启用前的两处加载适配（有意差异，CHG-434）**：
+  ① `includes/org/org-bootstrap.php` 不再 `require org-permissions.php`（主题内核，Q2 不迁）
+  —— 改为在 `after_setup_theme` 判内核契约符号 `zw_org_all_permission_keys`，缺则 fail-closed
+  （零菜单 + `admin_notices`），不留 fatal；② `includes/org/org-admin.php` 的 `org-files.php`
+  引用改指 `includes/files/`（R6 已按模块拆分迁入）。两处均与主题侧**有意不同**，由 CHG 登记。
+  实测修正：**不能用 `admin_init`** —— WP 核心 `wp-admin/admin.php:163` 先 require `menu.php`
+  （`admin_menu` 在其内触发），`:180` 才 `admin_init` ⇒ 挂 `admin_init` 菜单永远不显示。
+
+### Changed
+
+- **OA-2435（R7-1）parity 增加「按文件、带理由」的有意差异豁免**（`scripts/verify-module-parity.sh`）：
+  登记表新增 `allow|<模块>|<basename>|<理由≥8 非空白字符>`；命中差异时打印
+  `· ALLOWED-DIFF <file>（理由）` 并放行，**只放行该文件**（不是整模块 exclude）。
+  两条反滥用判据：理由空/过短 ⇒ fail-closed 判红；**陈旧豁免**（登记了但实测无差异）⇒ 判红。
+  首期登记 OA-2434 的两处（理由见 CHG-434）；`org` 由 DIFF≠0 转为 DIFF=0，`files`/`policy` 行为不变。
