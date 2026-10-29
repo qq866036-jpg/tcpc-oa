@@ -129,7 +129,10 @@ echo "   号段归属：$(zw_repo_space_for_path "$REPO")（本仓 root=$REPO）
 LTM_GATE="$THEME/scripts/long-term-memory-gate.py"
 if [[ -f "$LTM_GATE" ]]; then
   echo "==> ②c 长期记忆三层（dsh / 主题 / 插件仓）"
-  if ! ZW_LTM_LEDGER="$BASE/task-$TASK/AUTONOMOUS_TASKS.md" \
+  # OA-2439 修：卫星仓（OA-*）的台账在**载体单**的主题工作树里（task-<TASK-xxxx>），
+  # 不存在 task-OA-xxxx 这样的主题工作树；原实现按 $TASK 拼路径 ⇒ 台账读不到 ⇒ 恒红。
+  LTM_TASK="${ZW_WORKBENCH_THEME_TASK:-$TASK}"
+  if ! ZW_LTM_LEDGER="$BASE/task-$LTM_TASK/AUTONOMOUS_TASKS.md" \
        python3 "$LTM_GATE" check --task "$TASK"; then
     echo "✗ 长期记忆三层门禁未通过：$TASK（口径见主题仓 docs/ops/long-term-memory.yml）" >&2
     exit 1
