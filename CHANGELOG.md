@@ -26,6 +26,14 @@
   属 `files` 模块留 R6；插件侧 `grep -rc 'function zw_org_permissions_'` 命中 **0**（无内核副本）。
   `includes/load-list.php` 的 `org` 项 `enabled` 仍为 **false** ⇒ `tcpc_oa_load_modules()` 零 require，
   运行期零行为；启用（双钥匙）待 R7。
+- **网盘文件中心 UI 迁入（OA-2433 / R6，未启用）**：`includes/files/` 2 文件 / 1,762 行
+  （`file-center.php` 1,075 行 + `org-files.php` 687 行，取自主题 `inc/admin/org/`），**逐字节 DIFF=0**
+  （`bash scripts/verify-module-parity.sh files` ⇒ 2 文件逐个 `cmp` 一致，rc=0；`cp -p` 原样复制，
+  未改一行代码、未动 require 路径）。`includes/load-list.php` 的 `files` 项本就指向
+  `includes/files` 且 `enabled=false` ⇒ **零改动**；`tcpc_oa_load_modules()` 仍零 require，运行期零行为。
+  文件默认打开动作复核（SPEC-85 / 铁律 22）：两文件 `zw_control_file_open_link()` 5 处、
+  `zw_control_file_download_button()` 4 处（3 处实际渲染）、`download=` 属性 **0** 处
+  ⇒ 文件名/图标仍只走 canonical「默认打开」，下载仍只由显式按钮触发。
 
 ### Changed
 
