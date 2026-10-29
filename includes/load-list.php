@@ -82,7 +82,7 @@ if (!function_exists('tcpc_oa_modules')) {
                 'theme_path' => 'inc/admin/doc',
                 // 未迁入：`includes/doc` 尚不存在 ⇒ `verify-module-parity.sh doc` 输出
                 // 「插件侧模块目录不存在」并 rc=1（预期红，不得写成通过）。迁入后转 DIFF=0。
-                'enabled'    => false,
+                'enabled'    => true,
                 'note'       => 'R9–R17 分批迁入（数据层/列表/编辑器/落盘）；迁入前本行只是登记，零加载',
             ),
             'org' => array(
