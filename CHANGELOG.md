@@ -17,6 +17,15 @@
 - **收文管理迁入（未启用）**：`includes/receipt/` 11 文件 / 6,675 行，与主题 `inc/receipt` **DIFF=0**；
   `includes/load-list.php` 登记模块 + 双钥匙开关（`enabled=false` 且 `TCPC_OA_ENABLE_RECEIPT` 未定义 ⇒ 零加载）。
 - `scripts/verify-module-parity.sh`：模块迁入的 diff=0 唯一判据工具。
+- **组织架构业务迁入（OA-2432 / R5，未启用）**：`includes/org/` 5 文件 / 4,413 行
+  （`org-bootstrap.php` / `org-repository.php` / `org-admin.php` / `org-admin-people.php` /
+  `org-admin-roles.php`），与主题 `inc/admin/org/` **逐字节 DIFF=0**
+  （`bash scripts/verify-module-parity.sh org --exclude org-permissions.php` ⇒ 5 文件逐个 `cmp`
+  一致，rc=0；`cp` 原样复制，未改一行代码、未动 require 路径）。
+  RBAC 内核 `org-permissions.php`（1,621 行）按 Q2 拍板**不迁**，`file-center.php` / `org-files.php`
+  属 `files` 模块留 R6；插件侧 `grep -rc 'function zw_org_permissions_'` 命中 **0**（无内核副本）。
+  `includes/load-list.php` 的 `org` 项 `enabled` 仍为 **false** ⇒ `tcpc_oa_load_modules()` 零 require，
+  运行期零行为；启用（双钥匙）待 R7。
 
 ### Changed
 
