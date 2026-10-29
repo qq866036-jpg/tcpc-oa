@@ -114,6 +114,20 @@ if ! zw_assert_task_space "$REPO" "$TASK"; then
 fi
 echo "   号段归属：$(zw_repo_space_for_path "$REPO")（本仓 root=$REPO）"
 
+# ── TASK-2429 / CHG-435：长期记忆三层（开工必读）────────────────────────────
+# 判据唯一实现在主题仓（本仓只调用，不复制规则）；台账用主题任务工作树那一份。
+LTM_GATE="$THEME/scripts/long-term-memory-gate.py"
+if [[ -f "$LTM_GATE" ]]; then
+  echo "==> ②c 长期记忆三层（dsh / 主题 / 插件仓）"
+  if ! ZW_LTM_LEDGER="$BASE/task-$TASK/AUTONOMOUS_TASKS.md" \
+       python3 "$LTM_GATE" check --task "$TASK"; then
+    echo "✗ 长期记忆三层门禁未通过：$TASK（口径见主题仓 docs/ops/long-term-memory.yml）" >&2
+    exit 1
+  fi
+else
+  echo "  （主题仓尚未提供 long-term-memory-gate.py —— 跳过；并入后自动生效）"
+fi
+
 echo "==> ③ 主题开工 marker 交叉校验"
 WT="$BASE/task-$TASK"
 if [[ ! -d "$WT" ]]; then
