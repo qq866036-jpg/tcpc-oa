@@ -355,7 +355,8 @@ verify_list() {
   done
 
   if [[ "$rc" -eq 0 ]]; then
-    echo "✓ DIFF=0（list 模式：$total 个文件逐个 cmp 字节一致$( [[ -n "$SHIM" ]] && echo "；已排除 shim $SHIM" )）"
+    # OA-2435 措辞修正：豁免命中时不能说「逐个 cmp 字节一致」（那 2 个文件并不一致）。
+    echo "✓ DIFF=0（list 模式：$total 个文件逐一比对$( [[ ${#allow_used[@]} -gt 0 ]] && echo "，其中 ${#allow_used[@]} 个为已登记有意差异（见 ALLOWED-DIFF 行）" || echo "，逐字节一致" )$( [[ -n "$SHIM" ]] && echo "；已排除 shim $SHIM" )）"
     return 0
   fi
   echo "✗ 存在差异（list 模式：$total 个声明文件里 $diff_files 个内容不一致 / $miss_files 个缺失；不做「只绿不红」豁免）" >&2
