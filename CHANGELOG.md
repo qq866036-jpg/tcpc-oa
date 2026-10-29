@@ -121,3 +121,17 @@
   `· ALLOWED-DIFF <file>（理由）` 并放行，**只放行该文件**（不是整模块 exclude）。
   两条反滥用判据：理由空/过短 ⇒ fail-closed 判红；**陈旧豁免**（登记了但实测无差异）⇒ 判红。
   首期登记 OA-2434 的两处（理由见 CHG-434）；`org` 由 DIFF≠0 转为 DIFF=0，`files`/`policy` 行为不变。
+
+## [0.1.1] - 2026-10-29
+
+### Added
+
+- 组织架构业务（`includes/org/`，5 文件 4,413 行，自主题 `inc/admin/org/` 逐字节迁入）与网盘文件中心 UI
+  （`includes/files/`，2 文件 1,762 行），两模块 `enabled=true` 但**第二把钥匙默认关**（option 未写）
+  ⇒ 生产行为与 0.1.0 等价。
+- `includes/org/org-bootstrap.php` 改为 `after_setup_theme` 装载 + 内核契约符号守卫（缺则 fail-closed 不 fatal）；
+  `org-admin.php` 的 `org-files.php` 引用改指 `includes/files/`（两处有意差异，CHG-434）。
+
+### Fixed
+
+- parity 脚本：新增「按文件、带理由」的有意差异豁免 + 陈旧豁免判红；豁免命中时 summary 不再谎称逐字节一致。
