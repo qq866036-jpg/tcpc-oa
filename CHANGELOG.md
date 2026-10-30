@@ -147,3 +147,11 @@
 ### Added (tooling)
 
 - `scripts/oa-doc-render-smoke.php`：发文后台 9 页渲染冒烟（四断言，缺回调 fail-closed rc=2）。
+
+## [0.1.3] - 2026-10-30
+
+### Changed
+
+- AI 秘书处模块 `secretariat.enabled` 置 true（第二把钥匙 `tcpc_oa_enable_secretariat` 默认关）。
+  门状态存于任务文章 post meta `_zw_sec_gates`（迁移前后同一份），74/74 函数带 `function_exists` 守卫。
+  权限沿用 `tcpc_perm_doc`（TCPC管理员 / TCPC审批人 / TCPC监督管理），未给内置 administrator 扩权。

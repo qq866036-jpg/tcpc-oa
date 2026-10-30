@@ -114,7 +114,7 @@ if (!function_exists('tcpc_oa_modules')) {
                 'flag'       => 'TCPC_OA_ENABLE_SECRETARIAT',
                 'theme_path' => 'inc/secretariat',
                 // R19 迁入 7 文件 / R20 删主题侧 7 文件；在此之前主题独占，插件零加载。
-                'enabled'    => false,
+                'enabled'    => true,
                 'note'       => 'R19 迁入 / R20 主题侧删除；未迁入 ⇒ parity 预期红（缺插件目录）',
             ),
         );

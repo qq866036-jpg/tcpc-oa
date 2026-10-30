@@ -85,3 +85,4 @@ doc-appoint-cert 迁入：实名客户端改走主题契约 zw_oa_realname_clien
   ③迁移期若插件与主题同时加载门逻辑，是否可能**绕过一道门**——这是安全面，比页面白屏严重。
   故本轮只迁代码、不启用。
 - 依赖：秘书处消费组织架构的人员与职务（同型跨模块契约依赖），启用前需与 org 契约一并核。
+secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 tcpc_perm_doc，未给 administrator 扩权。
