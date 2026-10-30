@@ -30,6 +30,20 @@ fi
 # shellcheck disable=SC1090
 . "$ZW_LIB"
 
+# ── OA-2455：默认号段取**本仓**在主题 `docs/ops/repos.yml` 的登记值 ───────────────────
+# 旧行为：`zw_task_re()` 用主题默认号段（TASK,AGENT,XCX,…，不含 OA）⇒ 插件仓三钩子必须手工
+# `ZW_TASK_SPACES=OA,task`，否则本仓任务号被判"非法"（TASK-2409 遗留债）。
+# 现在：未显式设置时调主题库的 `zw_task_spaces_for_repo <本仓根>`（AGENT-0024 提供的清单驱动入口），
+# OA 仓 ⇒ `OA`；函数缺失/派生失败 ⇒ **保持旧默认**并告警（fail-soft：不让老主题仓直接不可用）。
+if [[ -z "${ZW_TASK_SPACES:-}" ]] && declare -F zw_task_spaces_for_repo >/dev/null 2>&1; then
+  _zw_repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+  if _zw_auto_spaces="$(zw_task_spaces_for_repo "$_zw_repo_root" 2>/dev/null)" && [[ -n "$_zw_auto_spaces" ]]; then
+    export ZW_TASK_SPACES="$_zw_auto_spaces"
+  else
+    echo "⚠ 未能按 docs/ops/repos.yml 派生本仓号段（回落主题默认）；如号段校验失败请显式设 ZW_TASK_SPACES" >&2
+  fi
+fi
+
 # 找不到/配置非法 ⇒ fail-closed（zw_task_re 内部对未知号段返回 2）
 ZW_TASK_ID_RE="$(zw_task_re)" || exit 2
 export ZW_TASK_ID_RE

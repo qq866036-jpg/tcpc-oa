@@ -26,7 +26,8 @@ bash scripts/workbench-preflight.sh TASK-xxxx "role:依据;…"
 
 # ② 本仓开工门禁（交叉校验主题 marker）
 cd /srv/git/worktrees/dev-tcpc-oa/main
-export ZW_TASK_SPACES=TASK,OA          # 纯插件任务用 OA-xxxx 时
+# OA-2455 起**不需要**手工 export：workbench/task-space.sh 按主题 `docs/ops/repos.yml` 自动取本仓号段
+# （OA 仓 ⇒ OA）。仅老主题仓（无 zw_task_spaces_for_repo）或临时放宽时才显式设 ZW_TASK_SPACES。
 bash workbench/preflight.sh TASK-xxxx "role:依据;…"
 
 # ③ 改代码 / 测试 / CHANGELOG
@@ -35,11 +36,12 @@ git commit -m "feat(oa): TASK-xxxx …"
 
 # ④ 本仓质量门 + 收口
 bash scripts/ci-check.sh
-bash workbench/finish.sh "任务说明"     # 打印主题侧收口命令（带 --repo tcpc-oa）
+bash workbench/finish.sh "任务说明"     # 打印主题侧收口命令（带 --repo dev-tcpc-oa）
 
 # ⑤ 主题侧收口（唯一写 metrics / 台账状态 / 工作台页）
 cd /srv/git/worktrees/dev-tcpc/task-TASK-xxxx
-bash scripts/workbench-finish.sh "任务说明" --repo tcpc-oa
+# 收口仓由号段推出（AGENT-0024）：OA 号段 ⇒ 注册表 name `dev-tcpc-oa`；传错值会判红。
+bash scripts/workbench-finish.sh "任务说明" --repo dev-tcpc-oa
 
 # ⑥ 合并（唯一入口；跨仓同样走它）
 cd /srv/git/worktrees/dev-tcpc/main
@@ -77,7 +79,7 @@ bash scripts/workbench-preflight.sh TASK-xxxx "role:依据;…"     # 产出 mar
 
 # ② 插件侧：用 OA 号开工，显式告诉门禁「主题 marker 在哪个载体单」
 cd /srv/git/worktrees/dev-tcpc-oa/task-OA-yyyy
-export ZW_TASK_SPACES=TASK,OA
+# 号段由主题清单派生（OA-2455 起）；仅老主题仓（无 zw_task_spaces_for_repo）才需要显式设置。
 export ZW_WORKBENCH_THEME=/srv/git/worktrees/dev-tcpc/task-TASK-xxxx   # 台账/marker 所在 worktree
 export ZW_WORKBENCH_THEME_TASK=TASK-xxxx                              # 载体单号（缺省＝自身号）
 bash workbench/preflight.sh OA-yyyy "role:依据;…"
