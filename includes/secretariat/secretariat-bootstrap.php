@@ -154,7 +154,8 @@ if (!function_exists('zw_secretariat_register_admin_menu')) {
             zw_secretariat_menu_slug(),
             $first['callback'],
             'dashicons-clipboard',
-            59.5
+            // OA-2454 / 主题 TASK-2482：号段下移到 58.6–58.9（避开 WP 核心 59/60 键）⇒ 第 3 位 58.75。
+            58.75
         );
 
         foreach ($pages as $index => $page) {
