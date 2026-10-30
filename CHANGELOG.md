@@ -4,6 +4,11 @@
 
 ### Fixed
 
+- **「我的收文」补任命对象可见性（OA-2449）**：任字号发文的任命人员 uid（正文 `meta.appointments`）是
+  **明确指定的实名收件人**，此前只存在于正文、不进任何可见面（被任命用户在「我的收文」0 篇、预览 403）。
+  新增 canonical 派生 `zw_doc_appointee_ids($doc)`（只读、不落库）；`zw_doc_get_document()` 只增键
+  `appointee_ids`；`zw_doc_query_documents()` 的 `recipient_user_id` 口径扩为「抄送 ∪ 审核人 ∪ 任命对象」；
+  `zw_doc_can_view_doc()` 放行任命对象本人。抄送/审核人语义、已发布（`approved`）门槛、PDF 完成件门槛均不变。
 - **AI法务部控制面依赖降级（OA-2448）**：`includes/policy/policy-platform-admin.php` 里对**主题读侧**符号的
   直接调用改为存在性兜底 —— `zw_policy_applicability_registry_groups()` 缺 `zw_policy_module_keys/feature_keys`
   时返回空分组；`zw_policy_gate_option_state()` 缺 `zw_policy_option_is_on/tokens` 时按「未开 + 空白名单」降级。

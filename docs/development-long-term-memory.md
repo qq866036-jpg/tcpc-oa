@@ -104,3 +104,17 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
   fail-closed 只读（**显式**，非静默写入）。是否把该库迁入插件或登记 P-5，需要用户/架构拍板。
 - **回归口径**：插件 `bash scripts/ci-check.sh`（六项）+ `bash scripts/check-kernel-symbol-collisions.sh`；
   链路本体回归仍在主题 `tests/test-policy-age-retire.php` / `test-policy-rule-engine.php` / `test-oa-policy-shim.php`。
+
+## 2026-10-30 · 任字号发文的任命对象在「我的收文」可见（OA-2449 / 载体单 TASK-2474）
+
+- **口径（用户 2026-10-30 指令原文）**：「任命人员 的任字号 发文要选择 被任命人员的uid 主题中已有的前提是 实名认证
+  所以发文后 这个针对 uid 实名用户的任命 应该直接能 在 前端我的收文中能看到」。
+- **旧行为（缺陷）**：`recipient_user_id` 只认「抄送 `_zw_doc_cc_ids` ∪ 审核人 `_zw_doc_reviewer_id`」；
+  任命人员只写正文 `body.meta.appointments`，不进可见面 ⇒ 被任命 uid 在「我的收文」0 篇、预览端点 `can_view=false`。
+- **唯一出处**：`includes/doc/doc-helpers.php` 的 `zw_doc_appointee_ids($doc)`（从 `appointments` 的
+  `uid`/`user_id` 派生、去重、只读、不落库）。`zw_doc_get_document()` 只增派生键 `appointee_ids`；
+  `zw_doc_query_documents()` 收文口径扩为「抄送 ∪ 审核人 ∪ 任命对象」；`zw_doc_can_view_doc()` 放行任命对象本人。
+- **边界（一票否决）**：不新增字段/表；不改抄送/审核人语义；仍只列 `approved`；PDF 预览仍要求完成件
+  `_zw_doc_pdf_status=ready`（正式用印链路），任命对象只解决「看得见」，不绕过用印。
+- **测试**：主题 `tests/test-doc-member-inbox.php`（新增 5 项任命对象断言，共 47 项）；该测试原来直接 `require`
+  主题已删的 doc 文件 ⇒ 迁移后恒 fatal，本单顺带改走 `tests/lib/source-path.php`（TASK-2474）。
