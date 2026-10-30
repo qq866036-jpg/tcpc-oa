@@ -693,8 +693,10 @@ if (!function_exists('zw_org_page_files')) {
  * 本项此前由主题 `inc/admin/admin-nav-registry.php` 注册（position 60.5），是本轮之前
  * 唯一仍由主题注册的 OA 菜单；现改由插件注册，主题侧已删除该 add_menu_page。
  *
- * 位置：办公协同号段 `59–60.9` 内**第 5 位** `60.5`（顺序：收文 59 → 发文 59.2 → 秘书处 59.5
- * → 法务 60 → **网盘 60.5** → 组织 60.7）。能力位与主题原实现一致（`manage_options`）。
+ * 位置（OA-2454 / 主题 TASK-2482）：办公协同号段下移为 `58.6–58.9`（原 59–60.9 与 WP 核心
+ * `$menu[59]` 分隔线 / `$menu[60]` 外观 冲突，导致「外观」被夹进「办公协同」分组）。
+ * 本项为第 5 位 **58.85**（顺序：收文 58.6 → 发文 58.7 → 秘书处 58.75 → 法务 58.8
+ * → **网盘 58.85** → 组织 58.9）。能力位与主题原实现一致（`manage_options`）。
  *
  * 守卫：函数缺失 / 无权限 ⇒ 零注册（不产出悬空菜单项）。
  *
@@ -715,7 +717,7 @@ if (!function_exists('zw_org_files_register_admin_menu')) {
             'zw-org-files',
             'zw_org_page_files',
             'dashicons-cloud',
-            60.5
+            58.85
         );
     }
 }

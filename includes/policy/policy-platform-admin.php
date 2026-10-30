@@ -505,8 +505,9 @@ function zw_policy_platform_admin_menu() {
         'zw-policy-platform',
         'zw_policy_platform_page_overview',
         'dashicons-shield-alt',
-        // OA-2451 / 主题 TASK-2476：办公协同号段 59–60.9 内第 4 位（收文 59 / 发文 59.2 / 秘书处 59.5）。
-        60
+        // OA-2454 / 主题 TASK-2482：号段下移到 58.6–58.9（原 60 与 WP 核心「外观」同键，
+        // 导致「外观」被夹进「办公协同」分组）⇒ 第 4 位 58.8。
+        58.8
     );
 
     $items = array(

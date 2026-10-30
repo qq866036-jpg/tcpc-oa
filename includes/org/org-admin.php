@@ -155,9 +155,9 @@ if (!function_exists('zw_org_admin_menu')) {
             'zw-org',
             'zw_org_page_people',
             'dashicons-id-alt',
-            // OA-2451 / 主题 TASK-2476：办公协同号段 59–60.9 的**末位** 60.7（用户拍板顺序最后一名：
+            // OA-2454 / 主题 TASK-2482：号段下移到 58.6–58.9 的**末位** 58.9（顺序最后一名：
             // 收文 → 发文 → AI秘书处 → AI法务部 → 网盘文件 → 组织架构）。
-            60.7
+            58.9
         );
 
         add_submenu_page(
