@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **AI法务部控制面依赖降级（OA-2448）**：`includes/policy/policy-platform-admin.php` 里对**主题读侧**符号的
+  直接调用改为存在性兜底 —— `zw_policy_applicability_registry_groups()` 缺 `zw_policy_module_keys/feature_keys`
+  时返回空分组；`zw_policy_gate_option_state()` 缺 `zw_policy_option_is_on/tokens` 时按「未开 + 空白名单」降级。
+  效果：主题读侧缺席/版本错位时，后台页**只读降级**而不是整页 fatal。判定/执行链路（年龄审查等）不变。
+- **契约登记政策读侧缝（OA-2448）**：`docs/contract-tcpc-oa.md` 新增 **P-4**（方向、符号清单、缺位语义、
+  版本握手 `zw_oa_policy_api_version()=1`、插件装载面纪律），并记录「适用模块保存依赖主题
+  `scripts/migrate-policy-rule-modules.php`，插件装载时只读」这一已知缺口（待独立单拍板）。
+
 ### Added
 
 - **分仓号段门禁（OA-0001 / 主题 TASK-2398 / CHG-431）**：`workbench/preflight.sh`（②b）与
