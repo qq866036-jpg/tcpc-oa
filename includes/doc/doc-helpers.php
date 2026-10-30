@@ -1488,20 +1488,51 @@ if (!function_exists('zw_doc_is_super_admin')) {
     }
 }
 
+if (!function_exists('zw_doc_user_realname_verified')) {
+    /**
+     * 账号是否已完成中传网实名核验（铁律 21：实名强度唯一出处优先）。
+     *
+     * 用途：任字号发文的**任命对象可见性**只放行实名本人（用户 2026-10-30 拍板「做」）。
+     * 判定链：`ZW_Realname::is_verified()`（canonical）→ `zw_branch_user_identity()['verified']`
+     * → `get_user_meta('zw_real_verified')`；三者都不可用 ⇒ **不放行**（个人信息面 fail-closed）。
+     *
+     * @param int $user_id WP 用户 ID。
+     * @return bool
+     */
+    function zw_doc_user_realname_verified($user_id) {
+        $user_id = abs((int) $user_id);
+        if ($user_id <= 0) {
+            return false;
+        }
+        if (class_exists('ZW_Realname') && method_exists('ZW_Realname', 'is_verified')) {
+            return (bool) ZW_Realname::is_verified($user_id);
+        }
+        if (function_exists('zw_branch_user_identity')) {
+            $identity = (array) zw_branch_user_identity($user_id);
+            if (array_key_exists('verified', $identity)) {
+                return !empty($identity['verified']);
+            }
+        }
+        if (function_exists('get_user_meta')) {
+            return (bool) get_user_meta($user_id, 'zw_real_verified', true);
+        }
+        return false;
+    }
+}
+
 if (!function_exists('zw_doc_appointee_ids')) {
     /**
      * 任命对象 uid 列表（从正文结构化 meta `appointments` 派生，**只读、不落库**）。
      *
      * 用户 2026-10-30 指令：「任命人员 的任字号 发文要选择 被任命人员的uid … 发文后这个针对 uid
-     * 实名用户的任命 应该直接能 在 前端我的收文中能看到」。
-     * 任命人员在新建发文时按**实名账号**选择（`zw_doc_composer_appoint_from_post()` 服务端复核 uid），
-     * 因此其 uid 是**明确指定的收件人**：`zw_doc_query_documents(['recipient_user_id'=>…])` 与
-     * `zw_doc_can_view_doc()` 都必须包含本人。这里只做派生，不新增存储、不改抄送/审核人语义。
+     * 实名用户的任命 应该直接能 在 前端我的收文中能看到」；同日拍板「做」＝可见性按**实名**收口。
+     * 因此本函数只返回**已实名核验**的 uid（判定唯一出处 `zw_doc_user_realname_verified()`）；
+     * 未实名 / 无法判定实名的 uid 一律排除（失败即不可见，个人信息面 fail-closed）。
      *
      * 兼容：`appointments` 可能是 JSON 串或已解码数组；行内键兼容 `uid` / `user_id`。
      *
      * @param array $doc 发文记录（`zw_doc_get_document()` 结果或至少含 `body`）。
-     * @return int[] 去重后的 uid 列表（无任命要素 / 未选账号 ⇒ 空数组）。
+     * @return int[] 去重后的实名 uid 列表（无任命要素 / 未选账号 / 未实名 ⇒ 空数组）。
      */
     function zw_doc_appointee_ids($doc) {
         $doc  = is_array($doc) ? $doc : array();
@@ -1526,7 +1557,7 @@ if (!function_exists('zw_doc_appointee_ids')) {
                     break;
                 }
             }
-            if ($uid > 0) {
+            if ($uid > 0 && zw_doc_user_realname_verified($uid)) {
                 $ids[] = $uid;
             }
         }
@@ -1539,7 +1570,7 @@ if (!function_exists('zw_doc_can_view_doc')) {
      * 是否有权查看某篇发文（TASK-772 权限收敛）。
      *
      * 口径：仪表盘管理员（`manage_options`）**始终放行**（不锁死运维入口），其余按属主关系：
-     * 作者 / 审核人 / 抄送人 / **任命对象**（正文 `appointments` 的 uid；用户 2026-10-30 指令）。
+     * 作者 / 审核人 / 抄送人 / **任命对象**（正文 `appointments` 的**实名** uid；用户 2026-10-30 指令）。
      *
      * TASK-1386 ⑤：管理员判定改为**按传入 uid**（复用 canonical `zw_doc_is_dashboard_admin()`），
      * 并**保留**原有「当前用户是管理员」判定 ⇒ 行为对当前用户逐字等价，只是把「管理员可见」

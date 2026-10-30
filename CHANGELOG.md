@@ -4,6 +4,13 @@
 
 ### Fixed
 
+- **任命对象可见性按实名收口（OA-2450）**：`zw_doc_appointee_ids()` 只保留**实名已核验**的 uid
+  （canonical `zw_doc_user_realname_verified()`：`ZW_Realname::is_verified()` → `zw_branch_user_identity()`
+  → `zw_real_verified` meta；不可判定 ⇒ 不放行，个人信息面 fail-closed）。
+  用户 2026-10-30 拍板「做」：未实名的任命对象不进入「我的收文」与 `zw_doc_can_view_doc()`。
+- **任命归档证书路径兜底不再 fatal（OA-2450）**：`zw_doc_appoint_cert_backend()` 的 `cert-paths.php`
+  兜底 require 迁入插件后指向插件根（不存在）⇒ CI/CLI/主题未装载时直接 fatal。改为「存在才 require」，
+  解析不到 `zw_cert_backend_file()` 时按既有口径返回 null（调用方走 LWEMS 原路径），不中断任命书颁发。
 - **「我的收文」补任命对象可见性（OA-2449）**：任字号发文的任命人员 uid（正文 `meta.appointments`）是
   **明确指定的实名收件人**，此前只存在于正文、不进任何可见面（被任命用户在「我的收文」0 篇、预览 403）。
   新增 canonical 派生 `zw_doc_appointee_ids($doc)`（只读、不落库）；`zw_doc_get_document()` 只增键

@@ -118,3 +118,18 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
   `_zw_doc_pdf_status=ready`（正式用印链路），任命对象只解决「看得见」，不绕过用印。
 - **测试**：主题 `tests/test-doc-member-inbox.php`（新增 5 项任命对象断言，共 47 项）；该测试原来直接 `require`
   主题已删的 doc 文件 ⇒ 迁移后恒 fatal，本单顺带改走 `tests/lib/source-path.php`（TASK-2474）。
+
+## 2026-10-30 · 任命对象可见性按实名收口 + 任命归档证书路径兜底（OA-2450 / 载体单 TASK-2475）
+
+- **用户口径**：2026-10-30 拍板「做」——任字号发文的任命对象可见性**只放行实名本人**（此前 OA-2449 按 uid 放行，
+  但写作口径写明「前提是实名认证」；实测 `doc-composer.php` 的口径是「未实名只提示、不阻断」⇒ 门槛必须在可见性侧兜住）。
+- **唯一出处**：`includes/doc/doc-helpers.php` 的 `zw_doc_user_realname_verified($uid)`；判定链
+  `ZW_Realname::is_verified()`（铁律 21 canonical）→ `zw_branch_user_identity()['verified']` →
+  `get_user_meta('zw_real_verified')`；三者都不可用 ⇒ **不放行**（fail-closed）。
+  `zw_doc_appointee_ids()` 只返回实名 uid，`zw_doc_can_view_doc()` / 收文过滤沿用该派生键。
+- **边界**：不改抄送/审核人语义；仍只列 `approved`；PDF 预览仍需完成件 `ready`。
+- **证书路径兜底（潜在 fatal）**：`doc-appoint-cert.php` 的 `cert-paths.php` 兜底 require 迁入插件后解析到
+  **插件根**（不存在）；改为「存在才 require」，解析不到 `zw_cert_backend_file()` 时按既有文档口径返回 null
+  （调用方走 LWEMS 原路径）⇒ 不再 fatal，也不改变正常态（主题 `inc/cert-loader.php` 已先定义函数）。
+- **测试口径**：主题 `tests/test-doc-appoint-cert.php` 已改为显式装载 `inc/cert-paths.php` + `inc/oa/contract-doc.php`
+  （插件不得拼主题路径）；`test-doc-member-inbox.php` 增「未实名任命对象不可见」用例（50 项）。
