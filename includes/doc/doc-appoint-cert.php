@@ -542,13 +542,23 @@ if (!function_exists('zw_doc_appoint_cert_backend')) {
         // 候选链文件按 __DIR__ 直接 require，不依赖 loader 时序（否则独立入口会静默回退 LWEMS）。
         if (!interface_exists('ZW_Cert_Backend')) {
             if (!function_exists('zw_cert_backend_file')) {
-                require_once __DIR__ . '/../../cert-paths.php';
+                // OA-2450：本文件迁入插件后，`__DIR__ . '/../../cert-paths.php'` 解析到**插件根**（无该文件）
+                // ⇒ 旧写法在生产之外（CI/CLI/主题未装载）会直接 fatal。改为「存在才 require」；
+                // 解析不到 `zw_cert_backend_file()` 时按本函数既有口径返回 null（调用方走 LWEMS 原路径），
+                // 绝不因路径解析中断任命书颁发。
+                $zw_cert_paths_fallback = dirname(__DIR__, 2) . '/cert-paths.php';
+                if (is_file($zw_cert_paths_fallback)) {
+                    require_once $zw_cert_paths_fallback;
+                }
+                unset($zw_cert_paths_fallback);
             }
-            $module = zw_cert_backend_file();
-            if ($module !== '') {
-                require_once $module;
+            if (function_exists('zw_cert_backend_file')) {
+                $module = zw_cert_backend_file();
+                if ($module !== '') {
+                    require_once $module;
+                }
+                unset($module);
             }
-            unset($module);
         }
         if (!interface_exists('ZW_Cert_Backend') || !function_exists('zw_cert_backend')) {
             return null;
