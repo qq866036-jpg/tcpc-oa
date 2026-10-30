@@ -75,3 +75,13 @@ doc-composer / doc-render-html / doc-layout-gb9704 / doc-layout-designer / doc-p
 发文余批 14 文件迁入（12,236 行）；doc-appoint-cert.php 因直取主题内部类（实名客户端）单列 blocked，待契约轮；模块未启用。
 doc-appoint-cert 迁入：实名客户端改走主题契约 zw_oa_realname_client_ready()，parity 登记唯一 allow 有意差异；发文 27/27 文件全部迁完。
 发文渲染冒烟脚本 scripts/oa-doc-render-smoke.php：9 页 slug/回调从 doc-bootstrap 的 add_*_page 实参枚举；四断言；非 WP 与缺回调均 rc=2 不回填通过。
+
+## 2026-10-30 · AI 秘书处迁入（OA-2446 / W4-R16）
+
+- 7 文件 / 2,491 行已迁入 `includes/secretariat/`，与主题逐字节一致；`secretariat.enabled=false` 未启用。
+- **模块定位**：不是组织架构。秘书处是「AI 辅助文秘与内容生产」：任务、质检、以及**三道人审门**
+  （需求出处《功能需求规格说明书 v1.0》§3：每步结束设人审门，未获发布人确认不得进入下一步）。
+- **迁移风险点（启用前必须查）**：①门状态存哪（option/自定义表）；②谁能过门（角色/能力）；
+  ③迁移期若插件与主题同时加载门逻辑，是否可能**绕过一道门**——这是安全面，比页面白屏严重。
+  故本轮只迁代码、不启用。
+- 依赖：秘书处消费组织架构的人员与职务（同型跨模块契约依赖），启用前需与 org 契约一并核。
