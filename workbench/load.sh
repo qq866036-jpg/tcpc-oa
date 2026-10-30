@@ -33,6 +33,51 @@ from datetime import datetime
 
 theme, repo, mode = sys.argv[1], sys.argv[2], sys.argv[3]
 
+# ── OA-2455：状态词与号段判据**一律走主题仓唯一出处**（本仓不写第二份）────────────────
+# 旧实现自带一份 `进行中/排队` 前缀判断，与主题 `scripts/lib/zw_task_status.py` 分叉 ⇒
+# 插件侧「在办」与主题侧对不上（主题侧已统一到 ACTIVE/QUEUED/REVIEW/CLOSED + 别名）。
+sys.path.insert(0, os.path.join(theme, "scripts", "lib"))
+try:
+    import zw_task_status as _zwst
+except Exception:  # noqa: BLE001 —— 老主题仓没有该库时退回旧前缀判断（fail-soft，不静默崩）
+    _zwst = None
+try:
+    import zw_task_space as _zwts
+except Exception:  # noqa: BLE001
+    _zwts = None
+
+
+def is_open_status(status):
+    """未收口（在办/排队/待收口）—— 唯一出处 `zw_task_status.is_open`。"""
+    if _zwst is not None:
+        try:
+            return _zwst.is_open(status)
+        except Exception:  # noqa: BLE001
+            pass
+    return status.startswith("进行中") or status.startswith("排队")
+
+
+def repo_space_and_target():
+    """本仓号段 + 收口仓名（`docs/ops/repos.yml` 唯一出处；取不到 ⇒ 空串）。"""
+    if _zwts is None:
+        return "", ""
+    try:
+        space = _zwts.spaces_for_repo(repo) or ""
+    except Exception:  # noqa: BLE001
+        space = ""
+    name = ""
+    if space:
+        try:
+            for r in _zwts.repo_rows():
+                allowed = [str(r.get("space") or "").upper()]
+                allowed += [p.strip().upper() for p in str(r.get("space_extra") or "").split(",") if p.strip()]
+                if space.split(",")[0] in allowed:
+                    name = str(r.get("name") or "")
+                    break
+        except Exception:  # noqa: BLE001
+            name = ""
+    return space, name
+
 
 def git(cwd, *args):
     try:
@@ -82,7 +127,7 @@ def flush():
         return
     heading, status = block
     recent.append((heading, status))
-    if status.startswith("进行中") or status.startswith("排队"):
+    if is_open_status(status):
         active.append((heading, status))
 
 
@@ -117,6 +162,8 @@ if git_dir:
         except ValueError:
             marker = {"raw": read(mp)[:200]}
 
+space, repo_target = repo_space_and_target()
+
 data = {
     "theme": {
         "root": theme, "branch": theme_branch, "head": theme_head,
@@ -133,6 +180,7 @@ data = {
     "repo": {
         "root": repo, "branch": branch, "head": head,
         "dirty_files": dirty, "version": version,
+        "space": space, "repo_target": repo_target,
     },
     "marker": marker,
     "workbench_page": os.path.join(theme, "docs", "prototypes", "agents", "index.html"),
@@ -151,7 +199,7 @@ print(f"  角色：{len(role_ids)} 个（agents/registry.yml）")
 print(f"  执行计数：{total_runs} 次（updated_at={metrics.get('updated_at', '?')}）")
 if top:
     print("  Top：" + "，".join(f"{rid}={n}" for rid, n in top))
-print(f"  在办任务：{len(active)} 条（进行中/排队）")
+print(f"  在办任务：{len(active)} 条（状态词判据：主题 scripts/lib/zw_task_status.py）")
 for title, status in active[-5:]:
     print(f"    - {title[:60]} [{status[:16]}]")
 print("  最近任务：")
@@ -161,6 +209,7 @@ print(f"  工作台页：{data['workbench_page']}")
 print()
 print(f"插件仓：{repo}")
 print(f"  分支/HEAD：{branch} @ {head}（VERSION {version}，未提交 {dirty} 个文件）")
+print(f"  号段/收口仓：{space or '（未能从 repos.yml 派生）'} / {repo_target or '（未登记）'}")
 if marker:
     print(f"  活动 marker：{marker.get('task', '?')}（{marker.get('roles_spec', '')[:60]}）")
 else:

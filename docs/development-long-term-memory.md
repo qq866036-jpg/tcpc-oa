@@ -185,3 +185,15 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
 - **纪律（写进契约 P-5）**：**号段必须落在核心未占用键之间**；核心键全集
   2/4/5/10/15/20/25/59/60/65/70/75/80/99。区间只剩 0.3 宽，六模块已用满 —— **新增 OA 模块必须重选号段**。
 - **发版顺序**：先插件 `0.1.6`、后主题。
+
+## 2026-10-31 · 插件仓工作台副本去手工债（OA-2455）
+
+- **本仓特有事实**：`workbench/task-space.sh` 现在**默认按主题 `docs/ops/repos.yml` 派生本仓号段**
+  （调主题库 `zw_task_spaces_for_repo <本仓根>`；OA 仓 ⇒ `OA`），三钩子（preflight / pre-commit / commit-msg）
+  不再需要 `ZW_TASK_SPACES=OA,task`。判据仍全部来自主题仓，本仓**不复制**号段/状态词规则。
+- **严格性未放宽**：派生结果只有 `OA` ⇒ `zw_is_task_id TASK-123` 在本仓为 **false**（一仓一号仍成立）；
+  只有老主题仓（无 `zw_task_spaces_for_repo`）才回落到主题默认号段并告警。
+- **load.sh**：删掉自带的状态词前缀表，改 import 主题 `scripts/lib/zw_task_status.py`（`is_open`），
+  并新增「号段 / 收口仓」两行输出（`repo_space_and_target()`）；插件侧"在办"与主题侧 `plan` 同口径。
+- **收口命令**：`workbench/finish.sh` 打印的主题收口命令带 `--repo dev-tcpc-oa`（AGENT-0024 起主题侧按号段推仓，
+  传 `tcpc-oa` 之类的别名会判红）。
