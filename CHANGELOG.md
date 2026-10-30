@@ -4,6 +4,16 @@
 
 ### Fixed
 
+- **「启用插件」致命错误（OA-2452，2026-10-30 生产）**：`/wp-admin/plugins.php?action=activate` 整站 500 ——
+  `PHP Fatal error: Cannot redeclare zw_policy_platform_clause_review_core()`（主题 `policy-platform-admin.php:303`
+  → 插件 `includes/policy/policy-platform-admin.php:289`）。根因＝**装载顺序反转**：正常请求里插件先于主题
+  （`wp-settings` 先 require 插件、后 require 主题 `functions.php`），而 `activate_plugin()` 是在 wp-settings
+  **之后**才 include 插件文件 ⇒ 主题同名副本先声明，插件 `L289` 起那段**无 function_exists 守卫**的顶层声明随即撞车。
+  修复：该段（L289→EOF）改为**哨兵整段条件包裹**（`if (!function_exists('zw_policy_platform_clause_review_core')) { … }`），
+  声明层让位（`return` 无效 —— PHP 在 include 期即绑定无条件顶层函数）。两条装载顺序现在都安全，行为在
+  「主题缺席」时逐字不变。新增判据：`scripts/probe-load-order.php`（子进程隔离跑 theme-first / plugin-first 双序）
+  并挂进 `scripts/ci-check.sh` ⑦。
+
 - **任命对象可见性按实名收口（OA-2450）**：`zw_doc_appointee_ids()` 只保留**实名已核验**的 uid
   （canonical `zw_doc_user_realname_verified()`：`ZW_Realname::is_verified()` → `zw_branch_user_identity()`
   → `zw_real_verified` meta；不可判定 ⇒ 不放行，个人信息面 fail-closed）。

@@ -104,10 +104,28 @@ done
 grep -q "唯一出处" "$contract" 2>/dev/null || { bad "契约缺「唯一出处」声明"; miss=1; }
 [ "$miss" -eq 0 ] && ok "契约面完整（4 符号 + 唯一出处声明）"
 
+echo "== ⑦ 装载顺序（theme-first / plugin-first 双序无 Cannot redeclare）"
+# OA-2452（2026-10-30 生产事故）：`activate_plugin()` 在 wp-settings 之后才 include 插件文件
+# ⇒ 激活请求里「主题先、插件后」，未加 function_exists 守卫的顶层声明会 Cannot redeclare（整站 500）。
+# 无主题副本可得时（如 GitHub Actions 只 checkout 本仓）该项 skip（rc=2），本地必跑。
+probe_theme="${ZW_THEME_PATH:-}"
+if [ -n "$probe_theme" ]; then
+  php scripts/probe-load-order.php --theme "$probe_theme" >/dev/null 2>&1
+  probe_rc=$?
+else
+  php scripts/probe-load-order.php >/dev/null 2>&1
+  probe_rc=$?
+fi
+case "$probe_rc" in
+  0) ok "两条装载顺序均安全（theme-first / plugin-first）" ;;
+  2) note "跳过：未找到主题侧副本（设置 ZW_THEME_PATH 可启用）" ;;
+  *) bad "装载顺序探针失败（rc=$probe_rc）：插件顶层声明缺 function_exists 守卫，激活插件会 fatal" ;;
+esac
+
 echo "----------------------------------------"
 if [ "$fail" -gt 0 ]; then
   printf '✗ ci-check 未通过：%d 项判红\n' "$fail" >&2
   exit 1
 fi
-echo "✓ ci-check 六项全绿"
+echo "✓ ci-check 七项全绿"
 exit 0

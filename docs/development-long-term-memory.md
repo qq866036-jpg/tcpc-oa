@@ -146,3 +146,18 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
   主题不得做的事、插件缺席语义）。改号段或改「谁写 position」= 破坏性变更，须双仓同批 + 升主版本。
 - **门禁**：主题侧 `tests/test-admin-nav-registry.php` 断言「域内 order 严格递增 = 显示顺序」；
   插件侧 `bash scripts/ci-check.sh`（含 `php -l`）不得回归。
+
+## 2026-10-30 · 「启用插件」fatal：装载顺序反转（OA-2452 / 载体单 TASK-2480）
+
+- **生产现场**：`/wp-admin/plugins.php?action=activate&plugin=tcpc-oa/tcpc-oa.php` ⇒ 500，
+  `Cannot redeclare zw_policy_platform_clause_review_core()`（主题 `:303` → 插件 `:289`）；nginx error.log 留证。
+- **根因（可复用结论）**：**激活请求的装载顺序与正常请求相反** —— 正常请求 `wp-settings.php` 先 require 插件、
+  后 require 主题 `functions.php`（插件赢）；但 `activate_plugin()` 在 wp-settings **之后**才 include 插件文件
+  ⇒ 「主题先、插件后」，主题同名副本先声明 ⇒ 插件未守卫的顶层声明 `Cannot redeclare`（整站 500，非仅插件页）。
+- **纪律（本次固化）**：插件顶层函数声明**一律** `if (!function_exists('x')) { … }`；**`return` 无效**
+  （PHP 在 include 期即绑定无条件顶层函数）。`policy-platform-admin.php` 的 L289→EOF 用哨兵
+  `zw_policy_platform_clause_review_core` 整段包裹 ⇒ 主题在场则零声明零钩子，主题缺席行为逐字不变。
+- **判据**：新增 `scripts/probe-load-order.php`（子进程隔离跑 theme-first / plugin-first，任一条 fatal 即红），
+  已挂 `scripts/ci-check.sh` ⑦；`ZW_THEME_PATH` 指定主题根（CI 无主题时 skip）。
+- **教训**：迁移期「DIFF=0 双份副本 + 依赖装载顺序」是**高危组合**；只要还有一份副本留在主题，
+  插件侧就必须假设「主题可能先装载」。首删副本（R3/R8）前不得依赖于「插件先装载」。
