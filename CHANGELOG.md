@@ -19,6 +19,11 @@
 
 ### Added
 
+- **契约登记后台导航位置号段 P-5（OA-2451 / 主题 TASK-2476）**：`docs/contract-tcpc-oa.md` 新增 P-5 ——
+  办公协同号段 `59–60.9` 由**主题发放**，**插件在号段内取号**并持有「存在权 + 位置权」；主题只发分组标题、
+  号段与仪表盘容器，不得为 OA 模块写 `position`。插件缺席 ⇒ 号段整段空置（零菜单项、零占位、分组标题不渲染、
+  仪表盘卡片消失）。
+
 - **分仓号段门禁（OA-0001 / 主题 TASK-2398 / CHG-431）**：`workbench/preflight.sh`（②b）与
   `workbench/commit-msg.sh`（④）新增「号段归属」判据 —— 任务号前缀必须等于 `docs/ops/repos.yml`
   里本仓的 `space`（oa = `OA`）。
