@@ -161,3 +161,15 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
   已挂 `scripts/ci-check.sh` ⑦；`ZW_THEME_PATH` 指定主题根（CI 无主题时 skip）。
 - **教训**：迁移期「DIFF=0 双份副本 + 依赖装载顺序」是**高危组合**；只要还有一份副本留在主题，
   插件侧就必须假设「主题可能先装载」。首删副本（R3/R8）前不得依赖于「插件先装载」。
+
+
+## 2026-10-30 · 网盘文件菜单注册权移入插件（OA-2453 / 主题 TASK-2481）
+
+- **用户口径（2026-10-30）**：「关闭插件后 左侧有残留信息」＋ 拍板做「主题回退删除轮」。
+- **变更**：`zw-org-files` 的 `add_menu_page`（position 60.5 / `manage_options`）从主题
+  `inc/admin/admin-nav-registry.php` 移入本仓 `includes/files/org-files.php`
+  （`zw_org_files_register_admin_menu()`，`admin_menu` 优先级 60；回调缺失或无权限 ⇒ 零注册）。
+- **配套（主题侧 TASK-2481）**：收文 / 法务管理面 / 网盘文件的主题回退实现全部改为 fail-closed shim，
+  并移除「文号管理（建设中）」「审批引擎（预留）」占位 ⇒ 插件停用时六条 OA 入口一条不剩。
+- **发版顺序（重要）**：**先发插件（本单 0.1.5）→ 再发主题**。反过来会出现「主题已删注册、插件还没带注册」
+  的窗口期 ⇒ 网盘文件入口短暂消失。
