@@ -286,6 +286,16 @@ function zw_policy_platform_handle_recon_export() {
 }
 }
 
+// ⚠️ OA-2452 事故修复（2026-10-30 生产实测）：本行起的管理面声明**没有** function_exists 守卫，
+// 而「启用插件」请求里 WP 的装载顺序是 **主题先、插件后**（wp-settings 已 require 主题 functions.php，
+// activate_plugin() 才 include 本文件）⇒ 主题同名副本先声明 ⇒
+// `PHP Fatal error: Cannot redeclare zw_policy_platform_clause_review_core()`
+// （theme .../inc/admin/policy-platform-admin.php:303 → plugin .../includes/policy/policy-platform-admin.php:289）。
+// 纪律：让位必须发生在**声明层**（`return` 无效 —— PHP 在 include 期即绑定无条件顶层函数）⇒ 用哨兵整段条件包裹。
+// 哨兵取主题副本必有的入口函数：主题在场 ⇒ 本段零声明、零钩子；主题缺席 ⇒ 本段照常声明（行为不变）。
+// 判定依据：主题 `inc/admin/policy-platform-admin.php` 的 `ZW_POLICY_ADMIN_LOADED_FROM` 与插件副本逐字节同源，
+// 两侧符号集合一致，故单哨兵等价于「整套管理面让位」。
+if (!function_exists('zw_policy_platform_clause_review_core')) {
 function zw_policy_platform_clause_review_core($id, $decision, $operator = 'system') {
     global $wpdb;
     $decision = strtoupper((string) $decision);
@@ -2142,3 +2152,4 @@ foreach (array(
     }
 }
 unset($zw_policy_module_file, $zw_policy_module_path);
+} // ← 关闭 OA-2452 的「管理面整段让位」条件块（哨兵 zw_policy_platform_clause_review_core）
