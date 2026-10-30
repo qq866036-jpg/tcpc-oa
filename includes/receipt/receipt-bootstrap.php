@@ -180,10 +180,10 @@ if (!function_exists('zw_receipt_register_admin_menu')) {
             zw_receipt_menu_slug(),
             $parent_callback,
             'dashicons-archive',
-            // TASK-1306 用户指令：「收文管理作为一级菜单并列放到 发文管理 下方」。
-            // 发文管理 `add_menu_page` 用 position 59（`inc/admin/doc/doc-bootstrap.php`），
-            // 故取 **59.5** 让它精确紧随其后（用 60 会把 59~60 之间的位置留给别的菜单，不保证相邻）。
-            59.5
+            // OA-2451 / 主题 TASK-2476：用户 2026-10-30 拍板「办公协同」显示顺序为
+            // 收文 → 发文 → AI秘书处 → AI法务部 → 网盘文件 → 组织架构 ⇒ 收文取号段首 **59**。
+            // （取代 TASK-1306「收文紧随发文之后」的旧顺序；号段 59–60.9 由主题发放，插件只在号段内取号。）
+            59
         );
 
         foreach ($submenus as $page) {

@@ -129,8 +129,8 @@ if (!function_exists('zw_secretariat_register_admin_menu')) {
     /**
      * 注册后台菜单（**功能关闭或无权限时不注册**）。
      *
-     * 位置：`59.2` —— 办公协同分组内、**发文管理（59）与收文管理（59.5）之前**
-     *（按用户拍板 Q1：AI 秘书处是流程编排入口，置于公文类模块之前引导四步流程）。
+     * 位置：`59.5` —— 办公协同号段（59–60.9）内第 3 位：收文(59) → 发文(59.2) → **AI秘书处(59.5)**
+     *（OA-2451 / 主题 TASK-2476：用户 2026-10-30 拍板的显示顺序，取代 TASK-1352 的 Q1「置于公文类之前」）。
      *
      * @return void
      */
@@ -154,7 +154,7 @@ if (!function_exists('zw_secretariat_register_admin_menu')) {
             zw_secretariat_menu_slug(),
             $first['callback'],
             'dashicons-clipboard',
-            59.2
+            59.5
         );
 
         foreach ($pages as $index => $page) {
