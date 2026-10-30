@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Added
+
+- **网盘文件菜单注册权从主题移入插件（OA-2453 / 主题 TASK-2481）**：`page=zw-org-files` 的
+  `add_menu_page`（position **60.5**，办公协同号段第 5 位，能力位 `manage_options`）改由
+  `includes/files/org-files.php` 注册；主题 `inc/admin/admin-nav-registry.php` 已删除该调用。
+  效果：**关掉插件后左侧六条 OA 入口一条不剩**（用户 2026-10-30 拍板「关插件就不能还有入口」）。
+  守卫：页面回调缺失 / 无权限 ⇒ 零注册，不产出悬空菜单项。
+
 ### Fixed
 
 - **「启用插件」致命错误（OA-2452，2026-10-30 生产）**：`/wp-admin/plugins.php?action=activate` 整站 500 ——

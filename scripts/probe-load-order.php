@@ -70,6 +70,9 @@ function zw_plo_arg($name, $default = '') {
  * @return void
  */
 function zw_plo_child($theme_file, $plugin_file, $order) {
+    // 主题形态由父进程静态判定（TASK-2481 后主题侧是 fail-closed shim：不再声明管理面、也不再定义
+    // ZW_POLICY_ADMIN_LOADED_FROM）。形态不同 ⇒ 断言不同，不能一刀切。
+    $theme_shim = (int) zw_plo_arg('theme-shim') === 1;
     define('ABSPATH', sys_get_temp_dir() . '/');
     $GLOBALS['zw_plo_hooks'] = array();
     function add_action($h, $c, $p = 10, $a = 1) {
@@ -99,8 +102,14 @@ function zw_plo_child($theme_file, $plugin_file, $order) {
     }
 
     $files = $order === 'theme-first' ? array($theme_file, $plugin_file) : array($plugin_file, $theme_file);
-    foreach ($files as $file) {
+    $theme_declared = false;
+    foreach ($files as $idx => $file) {
         require $file;
+        if ($idx === 0 && $order === 'theme-first') {
+            // 主题侧形态两态（TASK-2481 前是回退实现，之后是 fail-closed shim）：
+            // 这里记录「主题自己是否声明了管理面」，用于判定由谁提供能力。
+            $theme_declared = function_exists('zw_policy_platform_page_overview');
+        }
     }
 
     $sentinel = function_exists('zw_policy_platform_clause_review_core');
@@ -109,20 +118,31 @@ function zw_plo_child($theme_file, $plugin_file, $order) {
 
     echo 'ORDER=' . $order . ' sentinel=' . ($sentinel ? 'yes' : 'no')
         . ' overview=' . ($overview ? 'yes' : 'no')
+        . ' theme_declared=' . ($theme_declared ? 'yes' : 'no')
         . ' loaded_from=' . $from . "\n";
 
+    // ① 两条顺序都必须「有且只有一份」管理面：符号存在且无 redeclare（有 redeclare 会在 require 时直接 fatal）。
     if (!$sentinel || !$overview) {
         fwrite(STDERR, "✗ {$order}：管理面符号未声明（哨兵/入口缺失）\n");
         exit(1);
     }
-    if ($order === 'plugin-first' && $from !== 'plugin') {
-        fwrite(STDERR, "✗ plugin-first：主题未让位（loaded_from={$from}，应为 plugin）\n");
+    // ② plugin-first（正常请求）：必须由插件提供 ⇒ 主题不得抢先声明（若声明，说明主题回退实现回来了）。
+    if ($order === 'plugin-first' && !$theme_shim && $from !== 'plugin') {
+        fwrite(STDERR, "✗ plugin-first：主题未让位（loaded_from={$from}，应为 plugin；主题侧可能恢复了回退实现）\n");
         exit(1);
     }
-    if ($order === 'theme-first' && $from !== 'theme') {
-        // theme-first 时主题先声明 ⇒ 主题侧必须判定为自己提供（loaded_from=theme）
-        fwrite(STDERR, "✗ theme-first：让位结论不符（loaded_from={$from}，应为 theme）\n");
-        exit(1);
+    // ③ theme-first（激活请求）：两种主题形态都只要求「不崩 + 最终可用」——
+    //    · 主题是回退实现（TASK-2481 前的生产形态）⇒ 主题提供，插件让位（loaded_from=theme）；
+    //    · 主题是 fail-closed shim（TASK-2481 后的形态）⇒ 主题零声明，由插件补上（loaded_from 不再定义）。
+    if ($order === 'theme-first') {
+        if ($theme_declared && !$theme_shim && $from !== 'theme') {
+            fwrite(STDERR, "✗ theme-first：主题已声明管理面但让位结论不符（loaded_from={$from}，应为 theme）\n");
+            exit(1);
+        }
+        if ((!$theme_declared || $theme_shim) && $from !== 'undefined') {
+            fwrite(STDERR, "✗ theme-first：主题为 shim（零声明）但 loaded_from={$from}（应为 undefined）\n");
+            exit(1);
+        }
     }
     exit(0);
 }
@@ -162,9 +182,12 @@ echo "   插件：{$plugin_file}\n";
 
 $failures = 0;
 foreach (array('theme-first', 'plugin-first') as $order) {
+    $theme_src = (string) file_get_contents($theme_file);
+    $theme_shim = strpos($theme_src, 'function zw_policy_platform_page_overview') === false ? 1 : 0;
     $cmd = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(__FILE__)
         . ' --child ' . escapeshellarg($order)
-        . ' --theme-file ' . escapeshellarg($theme_file);
+        . ' --theme-file ' . escapeshellarg($theme_file)
+        . ' --theme-shim ' . $theme_shim;
     $output = array();
     $rc = 0;
     exec($cmd . ' 2>&1', $output, $rc);
