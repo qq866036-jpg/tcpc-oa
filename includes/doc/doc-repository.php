@@ -182,6 +182,14 @@ if (!function_exists('zw_doc_get_document')) {
         if (!$post || $post->post_type !== 'zw_official_doc') {
             return null;
         }
+        $zw_doc_body = function_exists('zw_doc_body_parse')
+            ? zw_doc_body_parse(get_post_meta($post->ID, '_zw_doc_body_json', true))
+            : null;
+        // 用户 2026-10-30 指令：任命对象（正文 `meta.appointments` 的 uid）是**明确指定的收件人**。
+        // 派生键、不落库；仓库/可见性/我的收文共用同一派生（唯一出处 `zw_doc_appointee_ids()`）。
+        $zw_doc_appointees = function_exists('zw_doc_appointee_ids')
+            ? (array) zw_doc_appointee_ids(array('body' => $zw_doc_body))
+            : array();
         return array(
             'id'             => (int) $post->ID,
             'title'          => (string) $post->post_title,
@@ -195,6 +203,8 @@ if (!function_exists('zw_doc_get_document')) {
             'cc_ids'         => array_values(array_filter(array_map('absint', (array) get_post_meta($post->ID, '_zw_doc_cc_ids', true)))),
             'cc_person_ids'  => array_values(array_filter(array_map('absint', (array) get_post_meta($post->ID, '_zw_doc_cc_person_ids', true)))),
             'cc_names'       => array_values(array_filter(array_map('sanitize_text_field', (array) get_post_meta($post->ID, '_zw_doc_cc_names', true)), 'strlen')),
+            // 任命对象 uid（派生自正文 `meta.appointments`，不落库）——my inbox / can_view 共用。
+            'appointee_ids'  => $zw_doc_appointees,
             // TASK-1350：「历史参与人」—— 改派/换抄送后**被换下的人保留可见**（用户拍板）。
             'flow_history_ids' => array_values(array_filter(array_map('absint', (array) get_post_meta($post->ID, '_zw_doc_flow_history_ids', true)))),
             'attachment_ids' => array_values(array_filter(array_map('absint', (array) get_post_meta($post->ID, '_zw_doc_attachment_ids', true)))),
@@ -212,7 +222,7 @@ if (!function_exists('zw_doc_get_document')) {
             'source'         => (string) get_post_meta($post->ID, '_zw_doc_source', true),
             'import_key'     => (string) get_post_meta($post->ID, '_zw_doc_import_key', true),
             // 正文与用印（TASK-766）：body 为 null 表示「这篇发文没有正文」，调用方须回退既有渲染路径。
-            'body'           => function_exists('zw_doc_body_parse') ? zw_doc_body_parse(get_post_meta($post->ID, '_zw_doc_body_json', true)) : null,
+            'body'           => $zw_doc_body,
             'body_hash'      => (string) get_post_meta($post->ID, '_zw_doc_body_hash', true),
             'layout'         => (array) get_post_meta($post->ID, '_zw_doc_layout', true),
             'letterhead_id'  => (int) get_post_meta($post->ID, '_zw_doc_letterhead_id', true),
@@ -499,9 +509,11 @@ if (!function_exists('zw_doc_query_documents')) {
             'reviewer_id'       => 0,
             'cc_user_id'        => 0,
             // TASK-1386 ⑤：「我的收文」——**发给本人**的收文（收件人 / 抄送包含本人）。
-            // 数据模型里能映射到「用户」的收件方只有两类：抄送（`_zw_doc_cc_ids`，uid 列表）
-            // 与审核人（`_zw_doc_reviewer_id`，uid）；主送机关 `body.meta.receiver` 是**文本**（无 uid），
-            // 因此无法按用户过滤（已在 CHG-211 记录理由）。本参数是**唯一**的收文过滤出处。
+            // 数据模型里能映射到「用户」的收件方只有三类：抄送（`_zw_doc_cc_ids`，uid 列表）、
+            // 审核人（`_zw_doc_reviewer_id`，uid）与**任命对象**（正文 `meta.appointments` 的 uid，
+            // 用户 2026-10-30 指令：任字号发文的被任命实名账号应直接可见）；
+            // 主送机关 `body.meta.receiver` 是**文本**（无 uid），因此无法按用户过滤（已在 CHG-211 记录理由）。
+            // 本参数是**唯一**的收文过滤出处。
             'recipient_user_id' => 0,
             'status'            => '',
             'statuses'          => array(),
@@ -536,10 +548,13 @@ if (!function_exists('zw_doc_query_documents')) {
                 continue;
             }
             if (!empty($args['recipient_user_id'])) {
-                // 「发给我」= 抄送我（cc_ids 含本人）或 我是该文审核人（reviewer_id）。
+                // 「发给我」= 抄送我（cc_ids 含本人）∪ 我是该文审核人（reviewer_id）
+                // ∪ 我是该文的**任命对象**（正文 `meta.appointments` 的 uid）。
+                // 用户 2026-10-30 指令：任命人员按实名账号选择，发文后该 uid 应直接能在「我的收文」看到。
                 $recv = (int) $args['recipient_user_id'];
                 $is_recipient = in_array($recv, array_map('intval', (array) $doc['cc_ids']), true)
-                    || (int) $doc['reviewer_id'] === $recv;
+                    || (int) $doc['reviewer_id'] === $recv
+                    || in_array($recv, array_map('intval', (array) (isset($doc['appointee_ids']) ? $doc['appointee_ids'] : array())), true);
                 if (!$is_recipient) {
                     continue;
                 }

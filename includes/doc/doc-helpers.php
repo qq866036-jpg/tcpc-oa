@@ -1488,12 +1488,58 @@ if (!function_exists('zw_doc_is_super_admin')) {
     }
 }
 
+if (!function_exists('zw_doc_appointee_ids')) {
+    /**
+     * 任命对象 uid 列表（从正文结构化 meta `appointments` 派生，**只读、不落库**）。
+     *
+     * 用户 2026-10-30 指令：「任命人员 的任字号 发文要选择 被任命人员的uid … 发文后这个针对 uid
+     * 实名用户的任命 应该直接能 在 前端我的收文中能看到」。
+     * 任命人员在新建发文时按**实名账号**选择（`zw_doc_composer_appoint_from_post()` 服务端复核 uid），
+     * 因此其 uid 是**明确指定的收件人**：`zw_doc_query_documents(['recipient_user_id'=>…])` 与
+     * `zw_doc_can_view_doc()` 都必须包含本人。这里只做派生，不新增存储、不改抄送/审核人语义。
+     *
+     * 兼容：`appointments` 可能是 JSON 串或已解码数组；行内键兼容 `uid` / `user_id`。
+     *
+     * @param array $doc 发文记录（`zw_doc_get_document()` 结果或至少含 `body`）。
+     * @return int[] 去重后的 uid 列表（无任命要素 / 未选账号 ⇒ 空数组）。
+     */
+    function zw_doc_appointee_ids($doc) {
+        $doc  = is_array($doc) ? $doc : array();
+        $body = isset($doc['body']) && is_array($doc['body']) ? $doc['body'] : array();
+        $raw  = isset($body['meta']['appointments']) ? $body['meta']['appointments'] : null;
+        if (is_string($raw)) {
+            $raw = trim($raw);
+            $raw = $raw === '' ? null : json_decode($raw, true);
+        }
+        if (!is_array($raw) || empty($raw['items']) || !is_array($raw['items'])) {
+            return array();
+        }
+        $ids = array();
+        foreach ($raw['items'] as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            $uid = 0;
+            foreach (array('uid', 'user_id') as $key) {
+                if (!empty($item[$key])) {
+                    $uid = abs((int) $item[$key]);
+                    break;
+                }
+            }
+            if ($uid > 0) {
+                $ids[] = $uid;
+            }
+        }
+        return array_values(array_unique($ids));
+    }
+}
+
 if (!function_exists('zw_doc_can_view_doc')) {
     /**
      * 是否有权查看某篇发文（TASK-772 权限收敛）。
      *
      * 口径：仪表盘管理员（`manage_options`）**始终放行**（不锁死运维入口），其余按属主关系：
-     * 作者 / 审核人 / 抄送人。
+     * 作者 / 审核人 / 抄送人 / **任命对象**（正文 `appointments` 的 uid；用户 2026-10-30 指令）。
      *
      * TASK-1386 ⑤：管理员判定改为**按传入 uid**（复用 canonical `zw_doc_is_dashboard_admin()`），
      * 并**保留**原有「当前用户是管理员」判定 ⇒ 行为对当前用户逐字等价，只是把「管理员可见」
@@ -1530,6 +1576,12 @@ if (!function_exists('zw_doc_can_view_doc')) {
         // TASK-1350（用户拍板）：改派/换抄送后，**被换下的原审核人·原抄送人保留可见**（只读）。
         // 名单只增不减，写入见 `zw_doc_update_flow()`；编辑与放行仍按当前状态/当前审核人判定，不受此影响。
         if (in_array($user_id, zw_doc_flow_history_ids($doc), true)) {
+            return true;
+        }
+        // 用户 2026-10-30 指令：任字号发文的**任命对象**（正文 `appointments` 的 uid）是被明确指定的
+        // 收件人，与抄送/审核人一样放行；uid 来自新建时选择的实名账号（服务端复核）。
+        $zw_doc_appointees = isset($doc['appointee_ids']) ? (array) $doc['appointee_ids'] : zw_doc_appointee_ids($doc);
+        if (!empty($zw_doc_appointees) && in_array($user_id, array_map('intval', $zw_doc_appointees), true)) {
             return true;
         }
 
