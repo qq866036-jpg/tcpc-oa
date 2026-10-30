@@ -871,6 +871,11 @@ if (!function_exists('zw_policy_applicability_registry_groups')) {
      * @return array<string,array{label:string,features:array<string,string>}>
      */
     function zw_policy_applicability_registry_groups() {
+        // OA-2448：域键 / 功能点键注册表属**主题读侧**（Q-A2 读侧留主题）。缺失时返回空分组，
+        // 由调用方走「注册表未加载 ⇒ 只读」的 fail-closed 提示；**不得**直接调用导致整页 fatal。
+        if (!function_exists('zw_policy_module_keys') || !function_exists('zw_policy_feature_keys')) {
+            return array();
+        }
         $groups = array();
         foreach ((array) zw_policy_module_keys() as $key => $label) {
             $key = strtolower(trim((string) $key));
@@ -1144,10 +1149,19 @@ if (!function_exists('zw_policy_gate_option_state')) {
             'zw_policy_age_retire_scan'   => $get('zw_policy_age_retire_scan', '0'),
         );
 
-        $enabled  = zw_policy_option_is_on($raw['zw_policy_gate_enabled']);
-        $age_scan = zw_policy_option_is_on($raw['zw_policy_age_retire_scan']);
-        $modules  = zw_policy_option_tokens($raw['zw_policy_gate_modules']);
-        $features = zw_policy_option_tokens($raw['zw_policy_gate_features']);
+        // OA-2448：option 解析（`zw_policy_option_is_on/tokens`）属**主题读侧**（Q-A2）。
+        // 读侧缺失 / 版本错位时按「未开 + 白名单空」降级 ⇒ 面板仍可渲染（只读），不得整页 fatal。
+        $is_on  = function ($value) {
+            return function_exists('zw_policy_option_is_on') ? (bool) zw_policy_option_is_on($value) : false;
+        };
+        $tokens = function ($value) {
+            return function_exists('zw_policy_option_tokens') ? (array) zw_policy_option_tokens($value) : array();
+        };
+
+        $enabled  = $is_on($raw['zw_policy_gate_enabled']);
+        $age_scan = $is_on($raw['zw_policy_age_retire_scan']);
+        $modules  = $tokens($raw['zw_policy_gate_modules']);
+        $features = $tokens($raw['zw_policy_gate_features']);
 
         $display_value = function ($value) {
             if (is_array($value)) {

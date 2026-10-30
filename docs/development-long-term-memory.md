@@ -86,3 +86,21 @@ doc-appoint-cert 迁入：实名客户端改走主题契约 zw_oa_realname_clien
   故本轮只迁代码、不启用。
 - 依赖：秘书处消费组织架构的人员与职务（同型跨模块契约依赖），启用前需与 org 契约一并核。
 secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 tcpc_perm_doc，未给 administrator 扩权。
+
+## 2026-10-30 · AI法务部控制面自足化与政策读侧缝（OA-2448 / 载体单 TASK-2471）
+
+- **关联关系（本仓视角）**：AI法务部迁出的是**管理面**（后台页 + 4 个 option 的开关 UI + 条款/规则维护），
+  判定与执行（`policy-module-map` / `policy-platform-cron` / `policy-rule-engine`）按 Q-A2 **留主题**；
+  插件只保留与主题逐字节一致的副本用于 parity，**不得 require**（OA-2438 `Cannot redeclare` 事故固化为
+  `scripts/check-kernel-symbol-collisions.sh`）。分销「控制面在插件、执行面在主题」，同库同 option 即时生效。
+- **本单加固（防 fatal，不改行为）**：`includes/policy/policy-platform-admin.php` 两处直接调用主题读侧符号的地方加
+  `function_exists` 兜底 —— `zw_policy_applicability_registry_groups()`（缺注册表 ⇒ `array()`）与
+  `zw_policy_gate_option_state()`（缺 option 解析 ⇒ 视为未开/空白名单）。
+  探针实测：读侧缺失 ⇒ `L0 / enabled=false / 空分组`、页面可渲染；读侧在场 ⇒ `L4 / enabled=true`（按 option 原值）。
+- **契约**：`docs/contract-tcpc-oa.md` 新增 **P-4 政策读侧缝**（符号清单 + 缺位语义 + 版本握手 +
+  插件装载面纪律）。这是「插件 → 主题（只读）」的登记缝，改签名 = 破坏性变更，须双仓同批 + 升主版本。
+- **已知缺口（未修，需独立单）**：管理面的「适用模块保存」依赖主题 `scripts/migrate-policy-rule-modules.php` 的
+  `zw_policy_rule_modules_*`；插件内 `dirname(__DIR__,2)/scripts/` 解析为空 ⇒ `lib_ready=false` ⇒ 该页
+  fail-closed 只读（**显式**，非静默写入）。是否把该库迁入插件或登记 P-5，需要用户/架构拍板。
+- **回归口径**：插件 `bash scripts/ci-check.sh`（六项）+ `bash scripts/check-kernel-symbol-collisions.sh`；
+  链路本体回归仍在主题 `tests/test-policy-age-retire.php` / `test-policy-rule-engine.php` / `test-oa-policy-shim.php`。
