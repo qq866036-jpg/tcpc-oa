@@ -133,13 +133,24 @@ require|policy|policy-platform-content-review.php
 require|policy|policy-platform-cron.php
 require|policy|policy-platform-document-center.php
 require|policy|policy-rule-engine.php
-module|org|list|includes/org||org-files.php file-center.php
+# OA-2437（R8-1）：org / files 的**主题侧 shim 登记**（用户拍板③）。
+# 形态与 W1 的 policy 一致：主题只留一个薄 shim（插件优先 / 插件缺席 fail-closed），
+# 其余实现副本删除。shim 只允许**存在且不参与比对**，不降低其它文件的判据。
+module|org|list|includes/org|org-bootstrap.php|org-files.php file-center.php
 theme|org|inc/admin/org/org-*.php
-# OA-2434（R6b）两处「有意差异」，逐行理由见 CHG-434。**不是**整模块 exclude：
-# 只放行这两个文件的差异，其它任何漂移照旧判红；且一旦实测无差异 ⇒ 陈旧豁免判红。
-allow|org|org-bootstrap.php|R6b：不再 require 主题内核 org-permissions.php（Q2 不迁），改 after_setup_theme 判内核契约符号，缺则 fail-closed 不 fatal
+# OA-2434（R6b）有意差异，逐行理由见 CHG-434。**不是**整模块 exclude。
+# 注：`org-bootstrap.php` 在 R8 起改为**主题侧 shim**（OA-2437 已登记 module 行的 shim 字段），
+# shim 不参与比对 ⇒ 原先针对它的 allow 行必须删除，否则会触发「陈旧豁免判红」（本脚本自带该判据）。
 allow|org|org-admin.php|R6b：org-files.php 已按模块迁到 includes/files/，require 路径改指 files 模块目录
-module|files|list|includes/files||
+# OA-2437（R8）插件侧齐全性清单：R8 删主题副本后，插件必须齐备这 5 个文件（org）与 2 个（files）
+require|org|org-bootstrap.php
+require|org|org-repository.php
+require|org|org-admin.php
+require|org|org-admin-people.php
+require|org|org-admin-roles.php
+require|files|file-center.php
+require|files|org-files.php
+module|files|list|includes/files|org-files.php|
 theme|files|inc/admin/org/file-center.php
 theme|files|inc/admin/org/org-files.php
 # OA-2443（契约轮）：唯一有意差异 —— 实名客户端改走主题契约，不再直取主题内部类路径。
