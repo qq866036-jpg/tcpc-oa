@@ -91,6 +91,19 @@ with open(path, "a", encoding="utf-8") as fh:
 print("   " + path)
 PY
 
+# ── OA-2456：清 marker **之前**落 `zw-finished-task`（提交期兜底解析任务号）──────────
+# 为什么：钩子要求"提交时 marker 仍在"，而收口后 marker 必被清 ⇒ 按 README 顺序（先 finish 再 commit）
+# 提交必被拒（OA-2455 只能用 --no-verify）。主题侧 AGENT-0023 已用同一接缝解决，这里做卫星版；
+# pre-commit / commit-msg 在 marker 缺失时读本文件（含 2 小时 TTL，过期仍拒 —— 不放宽）。
+GD="$(git rev-parse --absolute-git-dir)"
+python3 - "$GD/zw-finished-task" "$MARKER_TASK" <<'PYFIN'
+import json, sys, time
+path, task = sys.argv[1], sys.argv[2]
+with open(path, "w", encoding="utf-8") as fh:
+    json.dump({"task": task, "finished_at": time.strftime("%Y-%m-%d %H:%M:%S%z")}, fh, ensure_ascii=False)
+print("   已落 zw-finished-task：" + path)
+PYFIN
+
 rm -f "$MARKER"
 echo "   已清 marker"
 

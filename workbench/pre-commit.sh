@@ -39,18 +39,53 @@ else
   GD="$(git rev-parse --absolute-git-dir)"
   MARKER="$GD/zw-workbench-active.json"
   if [[ ! -f "$MARKER" ]]; then
-    cat >&2 <<'EOF'
-✗ workbench 门禁：没有活动 marker，拒绝提交。
+    # OA-2456：marker 已清但 2 小时内有收口流水（zw-finished-task）⇒ 视为"收口后立即提交"，放行；
+    # 过期 / 缺失 / 不可读 ⇒ 仍拒绝（fail-closed；不给 --no-verify 任何自动通道）。
+    FINISHED="$GD/zw-finished-task"
+    if python3 - "$FINISHED" <<'PYFIN'
+import json, sys, time
+try:
+    d = json.load(open(sys.argv[1], encoding="utf-8"))
+    t = time.mktime(time.strptime(str(d.get("finished_at", ""))[:19], "%Y-%m-%d %H:%M:%S"))
+except Exception:
+    sys.exit(1)
+sys.exit(0 if (time.time() - t) <= 2 * 3600 and d.get("task") else 1)
+PYFIN
+    then
+      echo "==> workbench 门禁：marker 已清，按 2h 内的已收口任务（zw-finished-task）放行"
+    else
+      cat >&2 <<'EOF'
+✗ workbench 门禁：没有活动 marker（也没有 2h 内的收口留痕），拒绝提交。
 
 先在插件工作区跑开工门禁（任务号必须已在主题台账登记）：
     bash workbench/preflight.sh TASK-xxxx "role:触发依据;role:触发依据"
+
+正常时序：preflight → 改代码 → workbench/finish.sh → git commit（finish 会落 zw-finished-task 供提交期兜底）
 
 事故急救可加 git commit --no-verify，但之后必须补：
     bash workbench/preflight.sh ...   # 补开工记录
     bash workbench/finish.sh "..."   # 补收口记录
 EOF
-    exit 1
+      exit 1
+    fi
   fi
+  # OA-2456：marker 缺失走 zw-finished-task 兜底时不再解析 marker（roles 已在开工期校验），
+  # 只校验「已收口任务号」格式（复用同一 ZW_TASK_ID_RE），避免“marker 不可读”的假红。
+  if [[ ! -f "$MARKER" ]]; then
+    python3 - "$GD/zw-finished-task" <<'PY'
+import json, os, re, sys
+try:
+    d = json.load(open(sys.argv[1], encoding="utf-8"))
+except (OSError, ValueError):
+    print("✗ zw-finished-task 不可读：" + sys.argv[1], file=sys.stderr)
+    sys.exit(1)
+task = str(d.get("task", ""))
+if not re.match(os.environ.get("ZW_TASK_ID_RE", r"^TASK-[0-9]{3,}$"), task):
+    print("✗ zw-finished-task 的 task 非法：" + repr(task), file=sys.stderr)
+    sys.exit(1)
+print("==> workbench 门禁：%s（已收口，按 zw-finished-task 放行）" % task)
+PY
+  else
   python3 - "$MARKER" <<'PY'
 import json, os, re, sys
 path = sys.argv[1]
@@ -70,6 +105,7 @@ if not roles.strip():
     sys.exit(1)
 print(f"==> workbench 门禁：{task} / {roles[:80]}")
 PY
+  fi
 fi
 
 # ④ 本仓质量门（pre-commit 模式：跳过依赖 HEAD 的 ⑤）
