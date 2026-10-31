@@ -197,3 +197,13 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
   并新增「号段 / 收口仓」两行输出（`repo_space_and_target()`）；插件侧"在办"与主题侧 `plan` 同口径。
 - **收口命令**：`workbench/finish.sh` 打印的主题收口命令带 `--repo dev-tcpc-oa`（AGENT-0024 起主题侧按号段推仓，
   传 `tcpc-oa` 之类的别名会判红）。
+
+## 2026-10-31 · 插件仓钩子顺序修复：finish 落 zw-finished-task（OA-2456）
+
+- **本仓特有事实**：`workbench/finish.sh` 现在清 marker **之前**写 `<gitdir>/zw-finished-task`
+  （`{task, finished_at}`）；`pre-commit.sh` / `commit-msg.sh` 在 marker 缺失时读它兜底：
+  2 小时内 ⇒ 放行并按该任务号做"提交信息必须包含"校验；过期/缺失/不可读 ⇒ 仍拒绝（fail-closed）。
+- **为什么**：钩子要求"提交时 marker 仍在"，而收口后 marker 必被清 ⇒ 按 README 顺序（先 finish 再 commit）
+  提交必被拒，OA-2455 只能用 `--no-verify`（已留痕）。主题侧 AGENT-0023 用同一接缝解决，本单是卫星版。
+- **纪律**：TTL 2 小时只覆盖"收口后立刻提交"的正常时序；长期无 marker 仍必须重新 preflight；
+  **不给 `--no-verify` 任何自动通道**，ci-check 在 pre-commit 里照跑。

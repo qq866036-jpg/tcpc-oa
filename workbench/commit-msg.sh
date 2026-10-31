@@ -56,6 +56,7 @@ fi
 # ② 有 marker 时，提交里的 TASK 必须包含它（防「A 任务开工、提交写 B」）
 GD="$(git rev-parse --absolute-git-dir)"
 MARKER="$GD/zw-workbench-active.json"
+MTASK=""
 if [[ -f "$MARKER" ]]; then
   MTASK="$(python3 - "$MARKER" <<'PY'
 import json, sys
@@ -65,7 +66,19 @@ except Exception:
     print("")
 PY
 )"
-  if [[ -n "$MTASK" && " $TASKS " != *" $MTASK "* ]]; then
+elif [[ -f "$GD/zw-finished-task" ]]; then
+  # OA-2456：marker 已清（finish 之后）⇒ 用收口留痕里的任务号继续做"提交信息必须包含"校验
+  MTASK="$(python3 - "$GD/zw-finished-task" <<'PY'
+import json, sys
+try:
+    print(json.load(open(sys.argv[1], encoding="utf-8")).get("task", ""))
+except Exception:
+    print("")
+PY
+)"
+fi
+if [[ -n "$MTASK" ]]; then
+  if [[ " $TASKS " != *" $MTASK "* ]]; then
     echo "✗ commit-msg：提交信息未包含当前任务号 $MTASK（信息里是：$TASKS）" >&2
     echo "  若确属另一任务，先收口当前 marker（workbench/finish.sh）再开工。" >&2
     exit 1

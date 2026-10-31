@@ -38,6 +38,9 @@ git commit -m "feat(oa): TASK-xxxx …"
 bash scripts/ci-check.sh
 bash workbench/finish.sh "任务说明"     # 打印主题侧收口命令（带 --repo dev-tcpc-oa）
 
+# ⑤ 提交（**正常** ：OA-2456 起 finish 已落 zw-finished-task，不再需要 --no-verify）
+git commit -m "feat(oa): OA-yyyy …"     # 钩子在 marker 缺失时读 zw-finished-task（2h TTL）
+
 # ⑤ 主题侧收口（唯一写 metrics / 台账状态 / 工作台页）
 cd /srv/git/worktrees/dev-tcpc/task-TASK-xxxx
 # 收口仓由号段推出（AGENT-0024）：OA 号段 ⇒ 注册表 name `dev-tcpc-oa`；传错值会判红。
