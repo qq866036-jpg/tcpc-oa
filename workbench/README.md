@@ -48,7 +48,9 @@ git commit -m "feat(oa): OA-yyyy …"     # 钩子在 marker 缺失时读 zw-fin
 # ⑥ 主题侧收口（唯一写 metrics / 台账状态 / 工作台页）
 cd /srv/git/worktrees/dev-tcpc/task-TASK-xxxx
 # 收口仓由号段推出（AGENT-0024）：OA 号段 ⇒ 注册表 name `dev-tcpc-oa`；传错值会判红。
-bash scripts/workbench-finish.sh "任务说明" --repo dev-tcpc-oa
+# AGENT-0091 起**必须显式 --task OA-xxxx**（卫星单号）：marker 会按插件仓归因、记忆回写按任务工作树判定，
+# 全程不需要 ZW_SPACE_MISMATCH_ALLOW（见 §1.2）。
+bash scripts/workbench-finish.sh --task OA-xxxx --repo dev-tcpc-oa "任务说明"
 
 # ⑦ 合并（唯一入口；跨仓同样走它）
 cd /srv/git/worktrees/dev-tcpc/main
@@ -104,22 +106,36 @@ bash workbench/preflight.sh OA-yyyy "role:依据;…"
 - **fail-closed**：设了载体单号但工作树/marker 不存在 ⇒ 直接报错并提示创建，**不静默回退**到同号；
 - 载体单与 `OA-yyyy` 在台账里互相 `Refs`；M1/M2/M3 仍按「一仓一号」判。
 
-### 1.2 已知缺口：主题侧记忆门禁只认**卫星仓主工作树**（OA-2458 实测）
+### 1.2 卫星单收口（已修复 · AGENT-0091）：任务工作树里做完即可直接收口
 
-任务工作树里提交后，主题侧 `workbench-finish.sh` 的长期记忆门禁会判「层 oa 未回写」：
+**历史缺口（OA-2458 实测，已修）**：任务工作树里提交后，主题侧 `workbench-finish.sh` 的长期记忆门禁曾判
+「层 oa 未回写」，因为主题 `scripts/long-term-memory-gate.py` 只读**清单登记的仓路径（主工作树）**做
+`git -C <repo> diff dev...HEAD`；同一条判据在插件侧（`--repo oa`、cwd=任务工作树）却是**通过**的。
 
+**已修复（主题 AGENT-0091）**：同一判据现在认两个候选来源，且方向未放宽（两处都无改动仍判红）：
+
+| 卡点 | 修法 |
+|---|---|
+| 记忆门禁看不见任务工作树 | 声明层除登记仓根外，再认同仓的 `<父目录>/task-<本号>`（`_same_repo` 按 git common-dir 判） |
+| marker 归因取错（主题工作树里是**载体单**的 TASK 号） | 收口仓非 theme 时按号段取插件仓根，在 `<基座>/task-<本号>`、插件主工作树里解析本任务 marker（`scripts/lib/zw-marker.sh`，`zw-finished-task` 2h TTL），命中才以 `--marker-root` 传给 metrics；找不到仍拒绝 |
+
+**标准收口步骤**（在**任务工作树**里做完即可，无需切回主工作树、无需应急通道）：
+
+```bash
+cd /srv/git/worktrees/dev-tcpc-oa/task-OA-xxxx
+bash scripts/ci-check.sh
+bash workbench/finish.sh "任务说明"                    # 落 zw-finished-task（提交期兜底，2h TTL）
+git add <显式路径…> && git commit -m "… OA-xxxx …"
+
+# 主题侧收口：显式 --task（卫星单号）+ --repo（注册表 name）
+cd /srv/git/worktrees/dev-tcpc/task-TASK-xxxx
+bash scripts/workbench-finish.sh --task OA-xxxx --repo dev-tcpc-oa "任务说明"
 ```
-✗ 层 oa 的长期记忆**未回写**：/srv/git/worktrees/dev-tcpc-oa/main/docs/development-long-term-memory.md 在 dev...HEAD 里没有改动
-```
 
-原因是主题 `scripts/long-term-memory-gate.py` 用**清单登记的仓路径（主工作树）**做 `git -C <repo> diff dev...HEAD`，
-任务工作树里的提交它看不见；同一条命令在插件侧（`--repo oa`、cwd=任务工作树）是**通过**的。
+- `--task` 不能省：只传 `--repo dev-tcpc-oa` 时 finish 会按 marker 里的 TASK 号推出 `--repo theme` 并判红；
+- 全程**不需要** `ZW_SPACE_MISMATCH_ALLOW=1`；该通道与 `ZW_QUEUE_OVERLAP_ALLOW=1` 仍保留（语义未改），但我仓卫星单不再依赖它们；
+- 判别力回归：主题 `tests/test-long-term-memory-gate.php` ⑨/⑩（真 git 工作树正反例）、`tests/test-satellite-marker.sh`（6 态）。
 
-收口期临时处置（二选一）：
-1. 把分支切回主工作树再做主题侧收口：`git -C /srv/git/worktrees/dev-tcpc-oa/main switch task/OA-xxxx`
-   （先 `workbench/worktree.sh remove OA-xxxx` 释放工作树），收口后切回 `dev`；
-2. 或按主题侧 **AGENT 单**修门禁（让 `- 记忆层：` 声明的层也按「调用方当前工作树」判定 / 或支持
-   `--repo-root`）—— 这是根治项，本单只登记缺口与临时处置。
 
 
 ## 3. 与主题的分工（边界口径）

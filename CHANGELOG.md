@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Docs
+
+- **卫星单收口流程回写：从「已知缺口 + 临时处置」改为「已修复 + 标准步骤」（OA-2459，2026-11-02）**：
+  主题侧 `AGENT-0091` 修掉两个卡点后（记忆门禁认同仓的 `<父目录>/task-<本号>` 工作树；marker 按插件仓归因并经
+  `--marker-root` 传给 metrics），`workbench/README.md` §1.2 仍写着过时口径（切回主工作树 / 走应急通道）。
+  本单改写 §1.2 并同步 §1 第 ⑥ 步：
+  - 在**任务工作树**里做完即可直接收口：`workbench-finish.sh --task OA-xxxx --repo dev-tcpc-oa "说明"`；
+  - `--task` 不可省（否则按 marker 的 TASK 号推出 `--repo theme` 判红）；
+  - 不再需要 `ZW_SPACE_MISMATCH_ALLOW=1`（通道保留、语义未改，卫星单不再依赖）；
+  - 给出对应判别力回归位置（主题 `test-long-term-memory-gate.php` ⑨/⑩、`test-satellite-marker.sh`）。
+  验证方式：**按新文档实跑了一遍本单自身**（新 `workbench/worktree.sh` 建树 → 双端 preflight → 收口），全程未用应急通道。
+
 ### Added
 
 - **插件仓任务工作树入口 + 工作树归属断言（OA-2458，2026-11-02）**：此前「新任务在插件独立工作区」只靠人记

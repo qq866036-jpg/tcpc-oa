@@ -233,3 +233,16 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
   这个算法在主工作树与任意任务工作树里结果一致（不认仓名，cert/mapp 可照抄）。
 - **删除纪律**：`remove` 不带 `--force` 时，脏工作树拒绝删除；`--delete-branch` 走 `git branch -d`，
   未并入就拒绝（要丢必须显式 `git branch -D`）。
+
+## 2026-11-02 · 卫星单收口新流程（OA-2459 回写 + 首次实跑）
+
+- **口径已反转**：AGENT-0091 之前，卫星单在插件仓任务工作树里收口要「切回主工作树」或走
+  `ZW_SPACE_MISMATCH_ALLOW=1`；之后**都不需要**。标准命令：
+  `bash workbench/worktree.sh create OA-xxxx` → 双端 preflight → `workbench/finish.sh` → commit →
+  主题侧 `workbench-finish.sh --task OA-xxxx --repo dev-tcpc-oa "说明"`。
+- **为什么 `--task` 不能省**：不传时 finish 按 marker 里的任务号推 `--repo`（卫星单在插件仓有 marker，
+  主题工作树里的 marker 属载体单 TASK 号），会判「收口仓与号段不符」而红。
+- **首次实跑（本单）**：`workbench/worktree.sh create OA-2459` 建树 → 插件 preflight（载体单 marker 交叉校验）
+  → 主题 finish 用新路径（marker 归因 `<基座>/task-OA-2459`、记忆回写按任务工作树）**一次通过，未用任何应急通道**。
+- **仍要小心的**：一个 worktree 只能有一个未收口 marker —— 载体单先收口（清 marker）再给卫星单 preflight 时，
+  若卫星单在插件仓（本单就是）两者不冲突；只有「在主题工作树里给卫星号 preflight」才需要应急通道，而那个做法已不再需要。
