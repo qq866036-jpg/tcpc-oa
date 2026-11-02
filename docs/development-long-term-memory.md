@@ -246,3 +246,15 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
   → 主题 finish 用新路径（marker 归因 `<基座>/task-OA-2459`、记忆回写按任务工作树）**一次通过，未用任何应急通道**。
 - **仍要小心的**：一个 worktree 只能有一个未收口 marker —— 载体单先收口（清 marker）再给卫星单 preflight 时，
   若卫星单在插件仓（本单就是）两者不冲突；只有「在主题工作树里给卫星号 preflight」才需要应急通道，而那个做法已不再需要。
+
+## 2026-11-02 · 卫星单收口顺序：先载体、后卫星（OA-2460 入档）
+
+- **因果**：主题 `workbench-finish.sh` 收口成功即 `rm zw-workbench-active.json`（<gitdir> 级，**一个 worktree 只有一个**）。
+  卫星单与载体单共用同一个主题工作树 ⇒ 先收卫星单会把载体单的 marker 清掉，载体单随后报
+  「本 worktree 没有开工 marker（…/task-TASK-xxxx/zw-workbench-active.json）」。
+- **正确顺序**：① 插件 `workbench/finish.sh` + commit → ② 载体单 `--task TASK-xxxx --repo theme`
+  → ③ 卫星单 `--task OA-xxxx --repo dev-tcpc-oa` → ④ 两条翻 done 后提交载体分支。
+- **补救**：顺序反了不必回滚代码 —— 把载体单状态临时退回 `in_progress`，重跑 preflight 取 marker，
+  再 finish 即可（OA-2459 实测可行；但会多一轮 preflight/finish，属可避免的成本）。
+- **为什么 ③ 不依赖载体 marker**：AGENT-0091/0093 之后，卫星单 marker 从插件仓归因（`<基座>/task-<本号>`），
+  与主题工作树里的载体 marker 无关。

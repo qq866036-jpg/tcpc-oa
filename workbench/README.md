@@ -136,6 +136,28 @@ bash scripts/workbench-finish.sh --task OA-xxxx --repo dev-tcpc-oa "任务说明
 - 全程**不需要** `ZW_SPACE_MISMATCH_ALLOW=1`；该通道与 `ZW_QUEUE_OVERLAP_ALLOW=1` 仍保留（语义未改），但我仓卫星单不再依赖它们；
 - 判别力回归：主题 `tests/test-long-term-memory-gate.php` ⑨/⑩（真 git 工作树正反例）、`tests/test-satellite-marker.sh`（6 态）。
 
+#### 1.2.1 收口顺序（必须按此顺序，OA-2460 实跑踩过）
+
+**一个 worktree 只有一个 marker，清 marker 不可逆** —— 主题 `workbench-finish.sh` 收口成功即删
+`<gitdir>/zw-workbench-active.json`。卫星单与载体单**共用同一个主题工作树**，所以顺序反了会这样报错：
+
+```
+✗ 拒绝写入工作台记录：本 worktree 没有开工 marker（…/task-TASK-xxxx/zw-workbench-active.json）。
+```
+
+正确顺序（**先载体、后卫星**）：
+
+| # | 在哪 | 动作 |
+|---|---|---|
+| ① | 插件任务工作树 | `workbench/finish.sh` → `git commit`（提交信息带 OA 号） |
+| ② | 主题载体工作树 | `workbench-finish.sh --task TASK-xxxx --repo theme "说明"`（**先记载体单 metrics、消费载体 marker**） |
+| ③ | 同一主题载体工作树 | `workbench-finish.sh --task OA-xxxx --repo dev-tcpc-oa "说明"`（此时不再需要载体 marker：marker 归因走插件仓） |
+| ④ | 同上 | `ledger-state.py set` 把两条都翻 `done`，再提交载体分支（metrics/页/台账一并入库） |
+
+- 反面教材（OA-2459 实测）：先跑 ③ 再跑 ② ⇒ ② 报「没有开工 marker」，只能把载体单状态临时退回
+  `in_progress` 重新 preflight 取 marker 才补上 TASK metrics；
+- ③ 依赖 ①② 的产物（插件仓的 `zw-finished-task` 与已提交的记忆回写），顺序不能倒。
+
 
 
 ## 3. 与主题的分工（边界口径）

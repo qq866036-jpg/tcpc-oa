@@ -14,6 +14,11 @@
   - 给出对应判别力回归位置（主题 `test-long-term-memory-gate.php` ⑨/⑩、`test-satellite-marker.sh`）。
   验证方式：**按新文档实跑了一遍本单自身**（新 `workbench/worktree.sh` 建树 → 双端 preflight → 收口），全程未用应急通道。
 
+- **收口顺序写死：先载体、后卫星（OA-2460，2026-11-02）**：`workbench/README.md` 新增 §1.2.1。因果＝
+  主题 `workbench-finish.sh` 收口成功即删 `<gitdir>/zw-workbench-active.json`（一个 worktree 只有一个），
+  卫星单与载体单共用同一主题工作树 ⇒ 顺序反了载体单会报「没有开工 marker」（OA-2459 实测，靠退状态重取 marker 补救）。
+  正确顺序：插件 finish+commit → 载体单 finish → 卫星单 finish → 两条翻 done 后提交载体分支。
+
 ### Added
 
 - **插件仓任务工作树入口 + 工作树归属断言（OA-2458，2026-11-02）**：此前「新任务在插件独立工作区」只靠人记
