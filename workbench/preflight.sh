@@ -36,8 +36,11 @@ BASE="${ZW_WORKBENCH_BASE:-/srv/git/worktrees/dev-tcpc}"
 #   `ZW_WORKBENCH_THEME_TASK=<TASK 号>` 显式指定载体单；未提供时行为与改动前逐字一致（= 同号）；
 #   提供了但载体工作树/marker 不存在 ⇒ fail-closed（不静默回退）。
 THEME_TASK="${ZW_WORKBENCH_THEME_TASK:-$TASK}"
-if [ -n "${ZW_WORKBENCH_THEME_TASK:-}" ] && ! [[ "$ZW_WORKBENCH_THEME_TASK" =~ ^TASK-[0-9]+$ ]]; then
-  echo "✗ ZW_WORKBENCH_THEME_TASK=$ZW_WORKBENCH_THEME_TASK 不合法（须形如 TASK-123 的主题载体单号）" >&2
+# OA-2461：载体单不再限定 `TASK-xxxx` —— 主题仓的业务号段（MEMBER/CONTENT/BIZ/SYS/AGENT，四位）
+# 同样是合法载体（本单的载体单就是 MEMBER-0004：它的工作树里写着 OA-2461 条目并持有 marker）。
+# 只认「已登记号段 + 数字」，其它形态仍 fail-closed。
+if [ -n "${ZW_WORKBENCH_THEME_TASK:-}" ] && ! [[ "$ZW_WORKBENCH_THEME_TASK" =~ ^(TASK|MEMBER|CONTENT|BIZ|SYS|AGENT)-[0-9]{3,4}$ ]]; then
+  echo "✗ ZW_WORKBENCH_THEME_TASK=$ZW_WORKBENCH_THEME_TASK 不合法（须形如 TASK-123 / MEMBER-0004 的主题载体单号）" >&2
   exit 2
 fi
 REPO="$(git rev-parse --show-toplevel)"
