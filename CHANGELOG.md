@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Added
+
+- **插件仓任务工作树入口 + 工作树归属断言（OA-2458，2026-11-02）**：此前「新任务在插件独立工作区」只靠人记
+  一条手敲命令（主题 `workbench-worktree.sh` 的 `WORKTREE_BASE` 写死 `dev-tcpc` 且会跑主题 `agents-sync`，
+  跨仓套用会把 `task-OA-xxxx` 建到**主题仓**），无入口、无断言。本单补：
+  - `workbench/worktree.sh`：`create <OA-xxxx> [--base dev] [--path …]` / `list` / `path` / `remove [--force] [--delete-branch]`；
+    号段与基座从主题 `docs/ops/repos.yml` 派生；**分支或目录已存在 ⇒ rc=1 且不创建任何东西**（PIT-006 防误写）；
+    删除未并入的分支用 `git branch -d` 拒绝（防丢活）；
+  - `workbench/preflight.sh` ⓪ 断言：任务工作树必须位于 `<主工作树父目录>/task-<本任务号>`，且分支必须是
+    `task/<本任务号>`；`main` 主工作区放行（TASK-2306 §5 首期形态）；逃生口 `ZW_WORKTREE_LAYOUT_ALLOW=1`（理由入台账）；
+  - `AGENTS.md` §1 与 `workbench/README.md` §1：建树命令入档（不再只写在迁移规格里），并修正
+    `workbench-finish.sh --repo tcpc-oa` 的旧写法（注册表 name 是 `dev-tcpc-oa`，别名会判红）。
+
 ### Changed
 
 - **双远端镜像同步口径 + 固化入口（OA-2457，2026-11-02）**：收口后**没有**任何动作会把 `dev` 推到远端 ——

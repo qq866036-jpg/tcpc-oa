@@ -41,6 +41,46 @@ if [ -n "${ZW_WORKBENCH_THEME_TASK:-}" ] && ! [[ "$ZW_WORKBENCH_THEME_TASK" =~ ^
   exit 2
 fi
 REPO="$(git rev-parse --show-toplevel)"
+
+# ── ⓪ 工作树归属断言（OA-2458）──────────────────────────────────────────────
+# 为什么：本仓的任务工作树约定是 `<本仓基座>/task-<本任务号>`（基座＝主工作树的父目录），
+# 但历史上没有任何判据守着 —— 判据缺位时最容易出现的不是"建错"，而是"根本没建"：
+# 直接在 main 上改、或在主题仓的 `task-OA-xxxx` 里改（主题 `workbench-worktree.sh` 的
+# `WORKTREE_BASE` 写死 `dev-tcpc`，跨仓套用会建到主题仓），两种都曾把改动放错仓。
+# 口径：
+#   · 主工作区（`<基座>/main`）放行 —— TASK-2306 §5 允许的首期形态（改动量小、单写者）；
+#   · 任务工作树必须在 `<基座>/task-*` 下，且分支必须是 `task/<本任务号>`（或 `int/<本任务号>`）；
+#   · 逃生口 `ZW_WORKTREE_LAYOUT_ALLOW=1`（须在台账写明理由；禁止裸豁免）。
+COMMON_DIR="$(git rev-parse --git-common-dir 2>/dev/null || true)"
+if [ -n "$COMMON_DIR" ]; then
+  [ "${COMMON_DIR#/}" = "$COMMON_DIR" ] && COMMON_DIR="$REPO/$COMMON_DIR"
+  COMMON_DIR="$(cd "$COMMON_DIR" 2>/dev/null && pwd || true)"
+fi
+if [ -n "$COMMON_DIR" ]; then
+  MAIN_WT="$(dirname "$COMMON_DIR")"
+  WT_BASE="$(dirname "$MAIN_WT")"
+  CUR_BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '?')"
+  if [ "${ZW_WORKTREE_LAYOUT_ALLOW:-0}" = "1" ]; then
+    echo "⚠ 工作树归属断言已放行（ZW_WORKTREE_LAYOUT_ALLOW=1）：$REPO（须在台账写明理由）"
+  elif [ "$REPO" = "$MAIN_WT" ]; then
+    echo "==> ⓪ 工作树归属：主工作区（$REPO）—— 首期允许形态"
+  elif [[ "$REPO" != "$WT_BASE"/* ]]; then
+    echo "✗ 任务工作树位置不合规：$REPO" >&2
+    echo "  规则（OA-2458）：任务工作树必须位于 <本仓基座>/task-<本任务号>，当前基座＝$WT_BASE" >&2
+    echo "  处置：bash workbench/worktree.sh create $TASK（会建 $WT_BASE/task-$TASK）" >&2
+    echo "  逃生口：ZW_WORKTREE_LAYOUT_ALLOW=1（须在台账写明理由）" >&2
+    exit 2
+  elif [ "$CUR_BRANCH" != "task/$TASK" ] || [ "${REPO##*/}" != "task-$TASK" ]; then
+    echo "✗ 任务工作树归属不合规：路径=${REPO##*/}，分支=$CUR_BRANCH（本任务要求 task-$TASK / task/$TASK）" >&2
+    echo "  规则（OA-2458）：一个号一个工作树一个写者；禁止在他人工作树/分支上开工与收口" >&2
+    echo "  处置：bash workbench/worktree.sh create $TASK" >&2
+    echo "  逃生口：ZW_WORKTREE_LAYOUT_ALLOW=1（须在台账写明理由）" >&2
+    exit 2
+  else
+    echo "==> ⓪ 工作树归属：任务工作树 $REPO（分支 $CUR_BRANCH）✓"
+  fi
+fi
+
 LEDGER="$THEME/AUTONOMOUS_TASKS.md"
 REGISTRY="$THEME/agents/registry.yml"
 

@@ -31,9 +31,20 @@
 
 ## 1. 标准流程
 
-见 [`workbench/README.md`](workbench/README.md) §1。要点：主题侧建工作树 → 补台账 → 双端 preflight →
-提交 → `ci-check` → `workbench/finish.sh` → 主题 `workbench-finish.sh --repo tcpc-oa` →
-`dev-merge.sh --repo … --space OA`。
+见 [`workbench/README.md`](workbench/README.md) §1。要点：**建任务工作树** → 主题侧建载体单并补台账 → 双端 preflight →
+提交 → `ci-check` → `workbench/finish.sh` → 主题 `workbench-finish.sh --repo dev-tcpc-oa` →
+`dev-merge.sh --repo … --space OA` → `scripts/sync-remotes.sh --apply`。
+
+**第一步必须是「在本仓基座下建任务工作树」**（`OA-2458` 起有门禁断言：`workbench/preflight.sh` ⓪ 会拒绝
+「不在 `<基座>/task-<本号>` 的工作树」与「分支不匹配」两种错位）：
+
+```bash
+bash workbench/worktree.sh create OA-xxxx                      # → /srv/git/worktrees/dev-tcpc-oa/task-OA-xxxx（分支 task/OA-xxxx）
+bash workbench/worktree.sh list                                # 本仓已有哪些任务工作树
+bash workbench/worktree.sh remove OA-xxxx --delete-branch      # 合并后清理（未并入的分支用 -d 拒绝删除，防丢活）
+```
+
+不要用主题的 `scripts/workbench-worktree.sh`：它把 `WORKTREE_BASE` 写死 `dev-tcpc`，会把 `task-OA-xxxx` 建到**主题仓**。
 
 ## 2. 硬约束（一票否决）
 

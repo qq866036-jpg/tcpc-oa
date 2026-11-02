@@ -17,18 +17,22 @@ bash workbench/load.sh --json   # 机器读
 ## 1. 标准流程（跨仓：主题台账唯一）
 
 ```bash
-# ① 主题侧建任务工作树（唯一写台账的地方）
+# ⓪ 本仓建任务工作树（OA-2458：卫星仓专用入口；主题 workbench-worktree.sh 会把目录建到主题仓）
+bash workbench/worktree.sh create OA-xxxx
+cd /srv/git/worktrees/dev-tcpc-oa/task-OA-xxxx
+
+# ① 主题侧建**载体单**工作树（唯一写台账的地方；纯插件任务用 TASK 号载体，见 §1.1）
 cd /srv/git/worktrees/dev-tcpc/main
 bash scripts/workbench-worktree.sh create TASK-xxxx
 cd /srv/git/worktrees/dev-tcpc/task-TASK-xxxx
 #   追加 ## TASK-xxxx 条目（含「修复范围」逐条路径）
 bash scripts/workbench-preflight.sh TASK-xxxx "role:依据;…"
 
-# ② 本仓开工门禁（交叉校验主题 marker）
-cd /srv/git/worktrees/dev-tcpc-oa/main
+# ② 本仓开工门禁（交叉校验主题 marker；须在**任务工作树**里跑）
+cd /srv/git/worktrees/dev-tcpc-oa/task-OA-xxxx
 # OA-2455 起**不需要**手工 export：workbench/task-space.sh 按主题 `docs/ops/repos.yml` 自动取本仓号段
 # （OA 仓 ⇒ OA）。仅老主题仓（无 zw_task_spaces_for_repo）或临时放宽时才显式设 ZW_TASK_SPACES。
-bash workbench/preflight.sh TASK-xxxx "role:依据;…"
+bash workbench/preflight.sh OA-xxxx "role:依据;…"
 
 # ③ 改代码 / 测试 / CHANGELOG
 git add <显式路径…>
@@ -99,6 +103,23 @@ bash workbench/preflight.sh OA-yyyy "role:依据;…"
 - **缺省行为不变**：不设 `ZW_WORKBENCH_THEME_TASK` 时仍按「同号」找 `task-<本号>` 与 marker；
 - **fail-closed**：设了载体单号但工作树/marker 不存在 ⇒ 直接报错并提示创建，**不静默回退**到同号；
 - 载体单与 `OA-yyyy` 在台账里互相 `Refs`；M1/M2/M3 仍按「一仓一号」判。
+
+### 1.2 已知缺口：主题侧记忆门禁只认**卫星仓主工作树**（OA-2458 实测）
+
+任务工作树里提交后，主题侧 `workbench-finish.sh` 的长期记忆门禁会判「层 oa 未回写」：
+
+```
+✗ 层 oa 的长期记忆**未回写**：/srv/git/worktrees/dev-tcpc-oa/main/docs/development-long-term-memory.md 在 dev...HEAD 里没有改动
+```
+
+原因是主题 `scripts/long-term-memory-gate.py` 用**清单登记的仓路径（主工作树）**做 `git -C <repo> diff dev...HEAD`，
+任务工作树里的提交它看不见；同一条命令在插件侧（`--repo oa`、cwd=任务工作树）是**通过**的。
+
+收口期临时处置（二选一）：
+1. 把分支切回主工作树再做主题侧收口：`git -C /srv/git/worktrees/dev-tcpc-oa/main switch task/OA-xxxx`
+   （先 `workbench/worktree.sh remove OA-xxxx` 释放工作树），收口后切回 `dev`；
+2. 或按主题侧 **AGENT 单**修门禁（让 `- 记忆层：` 声明的层也按「调用方当前工作树」判定 / 或支持
+   `--repo-root`）—— 这是根治项，本单只登记缺口与临时处置。
 
 
 ## 3. 与主题的分工（边界口径）

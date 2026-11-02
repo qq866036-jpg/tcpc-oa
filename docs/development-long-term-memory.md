@@ -220,3 +220,16 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
   （私有镜像；SSH alias `github-tcpc-oa` + `/root/.ssh/github_tcpc_oa_ed25519`；deploy key **只可 push**，
   读 Actions 日志需另配凭据，见主题仓 `docs/ops/ci-logs.md`）。
 - **判据**：远端是否最新 = `git rev-list --count <remote>/dev..dev`（与 `sync-remotes.sh --check` 的 rc 同口径）。
+
+## 2026-11-02 · 插件仓建树入口与工作树归属断言（OA-2458）
+
+- **本仓特有事实**：任务工作树入口是 `bash workbench/worktree.sh create OA-xxxx`（基座 `…/dev-tcpc-oa`，
+  分支 `task/OA-xxxx`）。**不要**用主题 `scripts/workbench-worktree.sh` —— 它把 `WORKTREE_BASE` 写死
+  `/srv/git/worktrees/dev-tcpc`，在插件仓里跑会把 `task-OA-xxxx` 建到**主题仓**（错仓）。
+- **断言（`workbench/preflight.sh` ⓪，fail-closed）**：任务工作树必须位于 `<主工作树父目录>/task-<本任务号>`，
+  且分支必须是 `task/<本任务号>`；`main` 主工作区放行（TASK-2306 §5 首期形态）。
+  逃生口 `ZW_WORKTREE_LAYOUT_ALLOW=1`，**须在台账写明理由**。
+- **基座怎么算**：`git rev-parse --git-common-dir` → 主工作树的 `.git` → 其父目录即主工作树 → 再上一层即基座。
+  这个算法在主工作树与任意任务工作树里结果一致（不认仓名，cert/mapp 可照抄）。
+- **删除纪律**：`remove` 不带 `--force` 时，脏工作树拒绝删除；`--delete-branch` 走 `git branch -d`，
+  未并入就拒绝（要丢必须显式 `git branch -D`）。
