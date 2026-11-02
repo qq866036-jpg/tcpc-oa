@@ -1539,6 +1539,27 @@ if (!function_exists('zw_doc_appoint_cert_fetch_images')) {
         if ($certNo === '') {
             return array();
         }
+        /*
+         * OA-2461（配合 MEMBER-0004）：本地（N 编号）证书**没有**「图片地址N」——
+         * 它由电子证书插件在本会服务器现算。图 URL 一律用主题侧唯一构造点生成
+         * （`zw_mc_cert_local_image_url()`，带登录+nonce 的受鉴权端点），页数由模板资产决定。
+         * 判定同样走唯一判据 `zw_mc_cert_print_source()`：判不出/非 N 编号 ⇒ 保持原龙威链路。
+         */
+        $templateId = (int) zw_doc_appoint_cert_template_id();
+        $source = function_exists('zw_mc_cert_print_source')
+            ? (string) zw_mc_cert_print_source($templateId, $certNo)
+            : 'lwems';
+        if ($source === 'local' && function_exists('zw_mc_cert_local_image_url')) {
+            $pages = function_exists('zw_mc_cert_local_pages') ? (int) zw_mc_cert_local_pages($templateId) : 0;
+            if ($pages < 1) {
+                return array();
+            }
+            $out = array();
+            for ($i = 1; $i <= $pages; $i++) {
+                $out[] = zw_mc_cert_local_image_url($certNo, $i);
+            }
+            return array_values(array_filter($out, 'strlen'));
+        }
         // OA-2443（契约轮）：实名客户端改走主题契约，不再直取主题内部类路径。
         if (!class_exists('ZW_LwemsClient') || !method_exists('ZW_LwemsClient', 'probe_one_cert_data')) {
             return array();
