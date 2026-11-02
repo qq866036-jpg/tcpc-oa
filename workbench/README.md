@@ -41,16 +41,21 @@ bash workbench/finish.sh "任务说明"     # 打印主题侧收口命令（带 
 # ⑤ 提交（**正常** ：OA-2456 起 finish 已落 zw-finished-task，不再需要 --no-verify）
 git commit -m "feat(oa): OA-yyyy …"     # 钩子在 marker 缺失时读 zw-finished-task（2h TTL）
 
-# ⑤ 主题侧收口（唯一写 metrics / 台账状态 / 工作台页）
+# ⑥ 主题侧收口（唯一写 metrics / 台账状态 / 工作台页）
 cd /srv/git/worktrees/dev-tcpc/task-TASK-xxxx
 # 收口仓由号段推出（AGENT-0024）：OA 号段 ⇒ 注册表 name `dev-tcpc-oa`；传错值会判红。
 bash scripts/workbench-finish.sh "任务说明" --repo dev-tcpc-oa
 
-# ⑥ 合并（唯一入口；跨仓同样走它）
+# ⑦ 合并（唯一入口；跨仓同样走它）
 cd /srv/git/worktrees/dev-tcpc/main
 ZW_TASK_SPACES=TASK,OA bash scripts/dev-merge.sh TASK-xxxx \
   --repo /srv/git/worktrees/dev-tcpc-oa/main --space OA \
   --ledger-repo /srv/git/worktrees/dev-tcpc/main
+
+# ⑧ 同步远端（OA-2457：dev-merge **只前移本地 ref**，不 push）
+cd /srv/git/worktrees/dev-tcpc-oa/main
+bash scripts/sync-remotes.sh            # dry-run：只打印两个远端待推清单
+bash scripts/sync-remotes.sh --apply    # 快进推送 origin + github（非快进即拒绝，永不 force）
 ```
 
 ## 2. 硬约束
@@ -61,6 +66,9 @@ ZW_TASK_SPACES=TASK,OA bash scripts/dev-merge.sh TASK-xxxx \
 - **契约**：`docs/contract-tcpc-oa.md` 是主题 ↔ 插件契约的唯一出处。
 - **版本三方一致**：`VERSION` / `TCPC_OA_VERSION` / 插件头 `Version:`。
 - **生产只读**：`/www/wwwroot/tcpc.org.cn` 禁止直接改；发版走 `scripts/plugin-switch-oa.sh`（`--dry-run` 先看，`--rollback <ts>` 回滚）。
+- **远端同步（OA-2457）**：`dev-merge.sh` 只 `update-ref` 前移**本地** `dev`，**不含 push**；推送靠
+  `scripts/sync-remotes.sh`（默认 dry-run、只快进、永不 force）。收口后不同步 ⇒ 远端落后
+  （2026-11-02 实测 GitHub 落后 64 提交 / origin 落后 69 提交）。
 - **主题内核不得反向依赖本插件**：主题侧有 `scripts/oa-kernel-boundary-check.php` 守着（反向依赖 0 容忍）。
 - **preflight 的台账口径（2026-10-28 实测）**：`workbench/preflight.sh` 默认读**主题主工作区**台账；任务若已并入 dev，
   那里的状态是 `done` ⇒ 会被判"不能开工"。续做时把台账指向**任务工作树**（真实执行面）：

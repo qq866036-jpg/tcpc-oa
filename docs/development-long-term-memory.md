@@ -207,3 +207,16 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
   提交必被拒，OA-2455 只能用 `--no-verify`（已留痕）。主题侧 AGENT-0023 用同一接缝解决，本单是卫星版。
 - **纪律**：TTL 2 小时只覆盖"收口后立刻提交"的正常时序；长期无 marker 仍必须重新 preflight；
   **不给 `--no-verify` 任何自动通道**，ci-check 在 pre-commit 里照跑。
+
+## 2026-11-02 · 双远端镜像同步：收口不 push，靠 sync-remotes.sh（OA-2457）
+
+- **本仓特有事实**：`scripts/dev-merge.sh` 只对**本地** `refs/heads/dev` 做 CAS `update-ref`，**不含 push**
+  ⇒ 「并入 dev」不等于「远端拿到 dev」。实测 2026-11-02：本地 `dev`=58ffb39（86 提交）／
+  `github/dev`=507fc0d（22 提交，**落后 64**）／`origin/dev`=0452221（17 提交，**落后 69**）。
+- **固化入口**：`bash scripts/sync-remotes.sh`（默认 dry-run）／`--apply`（真推）／`--check`（只判是否已同步，落后 rc=1）。
+  只走快进（远端不是本地祖先 ⇒ 拒绝并提示人工比对，**永不做 force**）；工作区脏 ⇒ 拒推。
+  **不要**把它塞进 `workbench/finish.sh`：收口脚本不写远端，避免并发收口互相顶掉。
+- **远端身份**：`origin`=`/srv/git/repositories/tcpc-oa.git`（权威裸库）；`github`=`qq866036-jpg/tcpc-oa`
+  （私有镜像；SSH alias `github-tcpc-oa` + `/root/.ssh/github_tcpc_oa_ed25519`；deploy key **只可 push**，
+  读 Actions 日志需另配凭据，见主题仓 `docs/ops/ci-logs.md`）。
+- **判据**：远端是否最新 = `git rev-list --count <remote>/dev..dev`（与 `sync-remotes.sh --check` 的 rc 同口径）。
