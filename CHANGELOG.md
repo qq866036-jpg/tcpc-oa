@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **双远端镜像同步口径 + 固化入口（OA-2457，2026-11-02）**：收口后**没有**任何动作会把 `dev` 推到远端 ——
+  `scripts/dev-merge.sh` 只对本地 `refs/heads/dev` 做 CAS `update-ref`，**不含 push**。实测 2026-11-02：
+  本地 `dev`=58ffb39（86 提交）／GitHub `github/dev`=507fc0d（22）⇒ **落后 64**／`origin/dev`=0452221（17）⇒ **落后 69**。
+  已快进补齐（`507fc0d..58ffb39`、`0452221..58ffb39`），并新增守门脚本：
+  - `scripts/sync-remotes.sh`：默认 **dry-run**，`--apply` 才推，`--check` 只判是否已同步；
+    **只快进**（远端非本地祖先 ⇒ 拒绝并提示人工比对，**永不做 force**），工作区脏 ⇒ 拒绝；
+  - `README.md` / `workbench/README.md`：远端口径更正为「双远端（origin 权威裸库 + GitHub 私有镜像）」，
+    标准流程补第 ⑧ 步「同步远端」；
+  - **不给 `finish.sh` 自动 push**：收口脚本不写远端（防并发收口互相顶掉），固化为脚本 + 流程步骤；
+    定时器/系统服务需另行拍板，本单不做。
+
 ### Fixed
 
 - **办公协同号段撞 WP 核心键，导致「外观」被夹进分组（OA-2454 / 主题 TASK-2482）**：原号段 `59–60.9`
