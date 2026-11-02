@@ -258,3 +258,16 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
   再 finish 即可（OA-2459 实测可行；但会多一轮 preflight/finish，属可避免的成本）。
 - **为什么 ③ 不依赖载体 marker**：AGENT-0091/0093 之后，卫星单 marker 从插件仓归因（`<基座>/task-<本号>`），
   与主题工作树里的载体 marker 无关。
+
+## 2026-11-02 · 任命书前端图与「本地证书」（OA-2461，配合主题 MEMBER-0004）
+
+- **图源不是龙威独有**：任命书前端图原实现只认证书数据 `图片地址N`（`zw_doc_appoint_cert_fetch_images`），
+  而电子证书插件本地发的 N 编号证书**没有这个字段** ⇒ 切到插件后任命书前端会空白。修法：先用主题唯一判据
+  `zw_mc_cert_print_source($tid,$certNo)` 判源，local 时用 `zw_mc_cert_local_image_url()` 逐页生成受鉴权端点 URL，
+  页数取 `zw_mc_cert_local_pages()`；判据/构造点缺失时**回落龙威**（fail-open 到旧链路，不制造空白）。
+- **禁止自拼端点 URL**：`admin-ajax.php?action=zw_mc_cert_local_image…` 只允许由主题那一处构造（带登录+nonce+属主），
+  OA 侧直接调用；自拼会绕过 nonce 语义并制造第二套 URL 形态。
+- **载体单号不再限定 TASK-**：`ZW_WORKBENCH_THEME_TASK` 原正则只认 `TASK-\d+`，但主题仓业务号段（MEMBER 等）
+  同样是合法载体单（本单载体 = `MEMBER-0004`）。已放宽为
+  `^(TASK|MEMBER|CONTENT|BIZ|SYS|AGENT)-[0-9]{3,4}$`，仍是白名单 + fail-closed（其它形态 rc=2）。
+- 卫星仓 `workbench/preflight.sh` / `finish.sh` 属门禁自编辑：提交信息带 `[self-edit]`。
