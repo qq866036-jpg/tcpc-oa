@@ -326,3 +326,15 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
 - **签阅是「同一行的状态变化」，不是新留痕**：所以 `read_at` 用单行 UPDATE（且 `AND read_at IS NULL`
   保证只写一次），不要往 handle_log 里再插一条。
 - 迁移 `scripts/migrate-receipt-handle.php`（dbDelta + ADD COLUMN）**未在真库执行**，属发布窗口动作。
+
+## 2026-11-03 · 收文上线顺序与回滚点（OA-2465，载体单 TASK-2550）
+
+- **迁移脚本不在生产插件目录**：`scripts/` 与 `docs/` 是 `export-ignore`（`git archive` 产物只有运行时），
+  所以 `wp eval-file` 必须指向**插件仓检出**里的脚本（`$OA/scripts/migrate-*.php`），不是 `/www/.../plugins/tcpc-oa/scripts/`。
+  OCR 服务物料同理从检出目录 `install` 到 `/opt/tcpc-ocr`。
+- **上线顺序**：备份 → 升版三处一致 → `plugin-switch-oa.sh` 发版 → OCR 五列迁移 → 办理后半段两表三列 →
+  装 OCR 服务（先 RapidOCR，`/health` 绿）→ 后台开 OCR 开关（默认关，未开=零行为）→ 冒烟 10 条 → 质量抽检 3 份。
+- **回滚只回插件版本与开关，不回滚新增列/表**：加列加表对旧代码无影响，DROP 反而丢留痕；
+  异常时先关 `zw_ocr_enabled`，仍异常再 `--rollback <ts>`，避免一次退两步。
+- 速度与精度权衡：默认 RapidOCR mobile 模型，抽检 `conf < 75` 或表格串行 ⇒ 切 PaddleOCR（`TCPC_OCR_ENGINE=paddleocr`），
+  HTTP 契约不变，插件侧零改动。
