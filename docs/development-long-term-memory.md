@@ -338,3 +338,12 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
   异常时先关 `zw_ocr_enabled`，仍异常再 `--rollback <ts>`，避免一次退两步。
 - 速度与精度权衡：默认 RapidOCR mobile 模型，抽检 `conf < 75` 或表格串行 ⇒ 切 PaddleOCR（`TCPC_OCR_ENGINE=paddleocr`），
   HTTP 契约不变，插件侧零改动。
+## 2026-11-03 · 收文上线窗口实跑（OA-2466，载体单 TASK-2551）
+
+- **版本**：0.1.6 → **0.1.7**（三处同改：`VERSION`、`TCPC_OA_VERSION`、插件头 `Version:`）。
+- **窗口顺序（实跑）**：备份（`/root/tcpc-oa-backup-<ts>.tgz` + `/root/tcpc-oa-db-<ts>.sql`）→
+  `plugin-switch-oa.sh --dry-run` → 正式发版 → `migrate-receipt-ocr.php`（dry-run/execute/verify）→
+  `migrate-receipt-handle.php`（同上）→ OCR 服务（venv + systemd + `/health`）→ 后台开开关 → 冒烟。
+- **迁移脚本必须从插件仓检出跑**（生产插件目录没有 `scripts/`，export-ignore）。
+- **回滚点**：插件 `bash scripts/plugin-switch-oa.sh --rollback <ts>`；OCR 只关开关（`zw_ocr_enabled=0`）；
+  新增列/表不回滚（对旧代码无影响，DROP 会丢留痕）。
