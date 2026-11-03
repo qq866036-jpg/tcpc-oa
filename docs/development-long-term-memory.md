@@ -347,3 +347,12 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
 - **迁移脚本必须从插件仓检出跑**（生产插件目录没有 `scripts/`，export-ignore）。
 - **回滚点**：插件 `bash scripts/plugin-switch-oa.sh --rollback <ts>`；OCR 只关开关（`zw_ocr_enabled=0`）；
   新增列/表不回滚（对旧代码无影响，DROP 会丢留痕）。
+
+## 2026-11-03 · 上线热修：列探测的 assoc/isset 坑（OA-2467，载体单 TASK-2552）
+
+- **`zw_receipt_source_columns()` 返回的是 `['列名' => true]` 关联数组**，不是列名列表。
+  判「列是否存在」必须 `isset($cols[$col])`；用 `in_array($col, $cols, true)` 比对的是**值**（全是 true）⇒ 恒判缺列。
+  0.1.7 上线后「拟办/批示/传阅/归档」三卡与待批示角标因此整块不生效（DB 三列已加，页面却显示「尚未迁移」）。
+- **迁移脚本的收尾自检要传 `$fresh = true`**：`zw_ocr_missing_columns()` 原先不接受参数、走请求级缓存，
+  `execute` 刚加完列就自检会误报「仍缺列」（数据其实已写入）。现已支持透传。
+- 教训：**列探测函数返回值形状要写进 docblock 并配一条断言**（本次是「函数名叫 columns，返回却是 map」的典型陷阱）。

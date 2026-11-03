@@ -93,10 +93,11 @@ if (!function_exists('zw_ocr_missing_columns')) {
     /**
      * 缺失的 OCR 列（迁移未跑时非空 ⇒ 调用方必须**短路**，不得发查询/写库）。
      *
+     * @param bool $fresh 强制重查列（迁移脚本 `execute` 的收尾自检必须传 true）。
      * @return string[]
      */
-    function zw_ocr_missing_columns() {
-        $cols = zw_ocr_source_columns();
+    function zw_ocr_missing_columns($fresh = false) {
+        $cols = zw_ocr_source_columns($fresh);
         if (!$cols) {
             return zw_ocr_columns();
         }
