@@ -274,7 +274,8 @@ if (!function_exists('zw_receipt_stats_bars')) {
         }
         $max = $max > 0 ? $max : max(array_map('intval', array_values($data)));
         $max = $max > 0 ? $max : 1;
-        $html = '<table class="widefat striped"><tbody>';
+        // OA-2485：canonical 横滑包裹（规则由收文台账页 `zw_receipt_admin_ui_page_open()` 透传）。
+        $html = '<div class="zw-adm-table-wrap"><table class="widefat striped"><tbody>';
         foreach ($data as $label => $count) {
             $pct  = (int) round(((int) $count / $max) * 100);
             $html .= '<tr><td style="width:26%">' . zw_receipt_print_esc((string) $label) . '</td>'
@@ -282,7 +283,7 @@ if (!function_exists('zw_receipt_stats_bars')) {
                 . 'background:var(--zw-adm-accent,#2271b1);width:' . $pct . '%"></span></td>'
                 . '<td style="width:16%;text-align:right">' . (int) $count . '</td></tr>';
         }
-        return $html . '</tbody></table>';
+        return $html . '</tbody></table></div>';
     }
 }
 
