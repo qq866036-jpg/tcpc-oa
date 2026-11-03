@@ -676,6 +676,7 @@ if (!function_exists('zw_receipt_auto_render_settings')) {
         echo '</div>';
 
         zw_receipt_auto_render_rule_section();
+        zw_receipt_auto_render_dispatch_preview();
 
         echo '<div class="zw-adm-foot">'
             . '<a class="button" href="' . esc_url(function_exists('zw_receipt_ledger_admin_url') ? zw_receipt_ledger_admin_url() : '') . '">返回台账</a>'
@@ -1226,4 +1227,133 @@ if (!function_exists('zw_receipt_auto_archive_schedule')) {
 if (function_exists('add_action')) {
     add_action(ZW_RECEIPT_AUTO_ARCHIVE_HOOK, 'zw_receipt_auto_archive_scan', 10, 0);
     add_action('init', 'zw_receipt_auto_archive_schedule', 21);
+}
+
+if (!function_exists('zw_receipt_auto_dispatch_suggested_rules')) {
+    /**
+     * 派单规则**建议**（不自动保存；设置页「填入建议」按钮用）。
+     *
+     * 依据部门字典现状：`office` 办公室 / `secretariat` 秘书处 / `leadership` 协会领导 /
+     * `membership` 会籍部 / `standards` 标准部。**部委→部门是业务口径**，这里只是可编辑的起点。
+     *
+     * @return array<string,array{dept:string,days:int}>
+     */
+    function zw_receipt_auto_dispatch_suggested_rules() {
+        return array(
+            'cssw'        => array('dept' => 'office', 'days' => 5),
+            'mca'         => array('dept' => 'secretariat', 'days' => 5),
+            'mct'         => array('dept' => 'secretariat', 'days' => 5),
+            'party_upper' => array('dept' => 'office', 'days' => 3),
+        );
+    }
+}
+
+if (!function_exists('zw_receipt_auto_dispatch_preview')) {
+    /**
+     * 派单**干跑预览**（只读，**不生成任何办理单**）。
+     *
+     * 对每件来文算：会派给谁 / 时限几号 / 为什么跳过（无规则 / 已有办理单 / 无收文）。
+     *
+     * @param int $limit 最多看多少件。
+     * @return array{rules:array,rows:array<int,array<string,string>>}
+     */
+    function zw_receipt_auto_dispatch_preview($limit = 50) {
+        $out = array('rules' => zw_receipt_auto_dispatch_rules(), 'rows' => array());
+        if (!function_exists('zw_receipt_ledger_source_table')) {
+            return $out;
+        }
+        global $wpdb;
+        $src = zw_receipt_ledger_source_table();
+        if ($src === '' || !is_object($wpdb) || !method_exists($wpdb, 'get_results')) {
+            return $out;
+        }
+        $ids = (array) $wpdb->get_col($wpdb->prepare(
+            "SELECT id FROM {$src} WHERE origin = 'incoming' ORDER BY id ASC LIMIT %d",
+            max(1, (int) $limit)
+        ));
+        $depts = array();
+        if (function_exists('zw_receipt_admin_ui_dept_rows')) {
+            foreach ((array) zw_receipt_admin_ui_dept_rows() as $d) {
+                if (isset($d['key'])) {
+                    $depts[(string) $d['key']] = isset($d['name']) ? (string) $d['name'] : '';
+                }
+            }
+        }
+        foreach ($ids as $id) {
+            $id  = (string) $id;
+            $row = function_exists('zw_receipt_ledger_row_by_id') ? zw_receipt_ledger_row_by_id($id) : array();
+            $view = function_exists('zw_receipt_ledger_row_view') ? zw_receipt_ledger_row_view($row) : array();
+            $org  = isset($view['org_key']) ? (string) $view['org_key'] : '';
+            $key  = function_exists('zw_receipt_org_key_from_issuer') ? (string) zw_receipt_org_key_from_issuer($org) : $org;
+            $verdict = '';
+            $dept_label = '';
+            $due = '';
+            if (!isset($out['rules'][$key])) {
+                $verdict = '无规则（不派）';
+            } else {
+                $dept = (string) $out['rules'][$key]['dept'];
+                $dept_label = isset($depts[$dept]) ? $depts[$dept] : $dept;
+                $due = date('Y-m-d', strtotime('+' . (int) $out['rules'][$key]['days'] . ' day'));
+                $verdict = '会派单';
+                if (function_exists('zw_receipt_issue_query')) {
+                    $exist = zw_receipt_issue_query(array('source_id' => $id, 'per_page' => 1));
+                    if (!empty($exist['total'])) {
+                        $verdict = '已有办理单（跳过）';
+                    }
+                }
+            }
+            $out['rows'][] = array(
+                'id'     => $id,
+                'title'  => isset($view['title']) ? mb_substr((string) $view['title'], 0, 24) : '',
+                'org'    => isset($view['org_label']) ? (string) $view['org_label'] : $org,
+                'org_key' => $key,
+                'dept'   => $dept_label,
+                'due'    => $due,
+                'verdict' => $verdict,
+            );
+        }
+        return $out;
+    }
+}
+
+if (!function_exists('zw_receipt_auto_render_dispatch_preview')) {
+    /**
+     * 设置页的「干跑预览」区块（只读；建议规则可一键填入 textarea，不自动保存）。
+     *
+     * @return void
+     */
+    function zw_receipt_auto_render_dispatch_preview() {
+        if (!function_exists('esc_html')) {
+            return;
+        }
+        $preview = zw_receipt_auto_dispatch_preview(30);
+        $suggest = zw_receipt_auto_dispatch_suggested_rules();
+        $lines   = array();
+        foreach ($suggest as $org => $one) {
+            $lines[] = $org . ' | ' . $one['dept'] . ' | ' . (int) $one['days'];
+        }
+
+        echo '<div class="zw-adm-card" style="margin:0 0 16px">';
+        echo '<h2>派单干跑预览（只读，不会生成工单）</h2>';
+        echo '<p class="zw-doc-muted">下表是「若现在打开自动派单，这几件会派给谁、时限几号」。'
+            . '规则或部门不对就先改规则；确认无误再打开开关。</p>';
+        echo '<div class="zw-adm-table-wrap"><table class="widefat striped"><thead><tr>'
+            . '<th>收文</th><th>来文单位</th><th>解析部委</th><th>拟派部门</th><th>拟定时限</th><th>判定</th>'
+            . '</tr></thead><tbody>';
+        if (!$preview['rows']) {
+            echo '<tr><td colspan="6">（没有来文可预览）</td></tr>';
+        }
+        foreach ($preview['rows'] as $r) {
+            echo '<tr><td>' . esc_html($r['id']) . '<br><span class="zw-doc-muted">' . esc_html($r['title']) . '</span></td>'
+                . '<td>' . esc_html($r['org']) . '</td>'
+                . '<td>' . esc_html($r['org_key'] === '' ? '未登记' : $r['org_key']) . '</td>'
+                . '<td>' . esc_html($r['dept'] === '' ? '—' : $r['dept']) . '</td>'
+                . '<td>' . esc_html($r['due'] === '' ? '—' : $r['due']) . '</td>'
+                . '<td>' . esc_html($r['verdict']) . '</td></tr>';
+        }
+        echo '</tbody></table></div>';
+        echo '<p class="zw-doc-muted">建议规则（可复制到上面的规则框，按需改）：'
+            . '<code>' . esc_html(implode(' ／ ', $lines)) . '</code></p>';
+        echo '</div>';
+    }
 }
