@@ -1000,6 +1000,27 @@ if (!function_exists('zw_receipt_page_ledger')) {
             zw_receipt_page_ledger_detail(isset($request['id']) ? $request['id'] : '');
             return;
         }
+        // OA-2468：收文自动化设置视图（批示库 + 自动签阅开关；同样挂在台账页，不新增子菜单）。
+        if ($view === 'auto' && function_exists('zw_receipt_auto_render_settings')) {
+            if (function_exists('zw_receipt_admin_ui_page_open')) {
+                zw_receipt_admin_ui_page_open(
+                    '收文自动化',
+                    '自动批示（按批示库）+ 收文 20 秒自动签阅时间戳。自动写入一律标 <code>system:*</code> 与「系统自动」，'
+                    . '不假冒真人账号；关掉开关即回到人工，与未开启前逐字一致。',
+                    'zw-receipt-ledger'
+                );
+            } else {
+                echo '<div class="wrap zw-receipt-ledger"><h1>收文自动化</h1>';
+            }
+            zw_receipt_auto_render_settings();
+            if (function_exists('zw_receipt_admin_ui_page_close')) {
+                zw_receipt_admin_ui_page_close();
+            } else {
+                echo '</div>';
+            }
+            return;
+        }
+
         // OA-2463：OCR 设置视图（挂在台账页，不新增子菜单 —— 见 ocr-admin.php 头部说明）。
         if ($view === 'ocr' && function_exists('zw_ocr_render_settings_body')) {
             if (function_exists('zw_receipt_admin_ui_page_open')) {
@@ -1058,6 +1079,9 @@ if (!function_exists('zw_receipt_page_ledger')) {
             . esc_url(zw_receipt_ledger_admin_url('zw-receipt-create')) . '">登记收文</a>';
         if (function_exists('zw_ocr_settings_url')) {
             echo ' <a class="button" href="' . esc_url(zw_ocr_settings_url()) . '">OCR 识别设置</a>';
+        }
+        if (function_exists('zw_receipt_auto_settings_url')) {
+            echo ' <a class="button" href="' . esc_url(zw_receipt_auto_settings_url()) . '">自动化设置</a>';
         }
         echo '</div>';
 

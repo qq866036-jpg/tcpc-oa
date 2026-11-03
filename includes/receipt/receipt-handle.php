@@ -204,7 +204,7 @@ if (!function_exists('zw_receipt_handle_add')) {
      * @param array $raw 原始输入：receipt_id / action / content / dept_key。
      * @return int|WP_Error 新行 ID。
      */
-    function zw_receipt_handle_add($raw) {
+    function zw_receipt_handle_add($raw, $extra_actions = array(), $system_login = '') {
         $raw = is_array($raw) ? $raw : array();
         if (!zw_receipt_handle_ready()) {
             return new WP_Error('zw_receipt_handle_not_ready', '办理留痕表尚未迁移（请先跑迁移脚本）。');
@@ -215,7 +215,15 @@ if (!function_exists('zw_receipt_handle_add')) {
         if ($receipt_id === '') {
             return new WP_Error('zw_receipt_handle_bad_id', '收文记录 ID 非法。');
         }
-        if (!isset(zw_receipt_handle_actions()[$action])) {
+        // OA-2468：内部调用可显式放行额外动作（如自动签阅 `sign`）；人工表单仍只允许三项。
+        $allowed = zw_receipt_handle_actions();
+        foreach ((array) $extra_actions as $one) {
+            $one = trim((string) $one);
+            if ($one !== '') {
+                $allowed[$one] = $one;
+            }
+        }
+        if (!isset($allowed[$action])) {
             return new WP_Error('zw_receipt_handle_bad_action', '动作类型非法（只允许 suggest / instruction / urge）。');
         }
         if ($content === '') {
@@ -234,7 +242,8 @@ if (!function_exists('zw_receipt_handle_add')) {
 
         global $wpdb;
         $tables = zw_receipt_handle_tables();
-        $login  = zw_receipt_handle_current_login();
+        // OA-2468：系统自动写入用固定标识（`system:*`），**不假冒任何真人账号**。
+        $login  = trim((string) $system_login) !== '' ? trim((string) $system_login) : zw_receipt_handle_current_login();
         $dept   = isset($raw['dept_key']) ? trim((string) $raw['dept_key']) : '';
         $now    = function_exists('current_time') ? (string) current_time('mysql') : gmdate('Y-m-d H:i:s');
         $ok     = $wpdb->insert($tables['log'], array(
@@ -686,7 +695,9 @@ if (!function_exists('zw_receipt_handle_render_cards')) {
             return;
         }
         $missing = zw_receipt_handle_missing();
+        // OA-2468：展示用动作名（含内部动作 `sign`；人工表单仍只给三项）。
         $actions = zw_receipt_handle_actions();
+        $actions['sign'] = '自动签阅';
         $msg     = isset($_GET['zw_msg']) ? sanitize_key((string) wp_unslash($_GET['zw_msg'])) : '';
         $notices = zw_receipt_handle_notice_map();
 
@@ -713,8 +724,17 @@ if (!function_exists('zw_receipt_handle_render_cards')) {
             echo '<div class="notice notice-' . esc_attr($notices[$msg][0]) . ' inline"><p>'
                 . esc_html($notices[$msg][1]) . '</p></div>';
         }
-        echo '<p class="zw-doc-muted">拟办 / 批示 / 催办一律**追加留痕**（只增不改）；'
-            . '它们不改变办理状态机（状态仍在「收文办理」里维护）。</p>';
+        // OA-2468：签名时间戳（系统自动签阅那一条的行时间）。
+        $signed_at = '';
+        foreach ($logs as $one_log) {
+            if (isset($one_log['action']) && (string) $one_log['action'] === 'sign') {
+                $signed_at = isset($one_log['created_at']) ? (string) $one_log['created_at'] : '';
+                break;
+            }
+        }
+        echo '<p class="zw-doc-muted">拟办 / 批示 / 催办 / 签阅一律**追加留痕**（只增不改）；'
+            . '它们不改变办理状态机（状态仍在「收文办理」里维护）。'
+            . ' 签名时间戳：<strong>' . ($signed_at !== '' ? esc_html($signed_at) : '未签阅') . '</strong></p>';
 
         if (!$logs) {
             echo '<p>还没有拟办：登记来文后，先由办公室填「拟办意见」，再走领导批示。</p>';
@@ -724,10 +744,17 @@ if (!function_exists('zw_receipt_handle_render_cards')) {
                 . '<th style="width:150px">时间</th><th>内容</th>'
                 . '</tr></thead><tbody>';
             foreach ($logs as $log) {
-                $action = isset($log['action']) ? (string) $log['action'] : '';
+                $action   = isset($log['action']) ? (string) $log['action'] : '';
+                $login    = isset($log['author_login']) ? (string) $log['author_login'] : '';
+                $is_auto  = (strpos($login, 'system:') === 0);
+                $who      = isset($log['author_name']) && $log['author_name'] !== '' ? (string) $log['author_name'] : $login;
                 echo '<tr>';
                 echo '<td>' . esc_html(isset($actions[$action]) ? $actions[$action] : $action) . '</td>';
-                echo '<td>' . esc_html((string) (isset($log['author_name']) && $log['author_name'] !== '' ? $log['author_name'] : (isset($log['author_login']) ? $log['author_login'] : ''))) . '</td>';
+                echo '<td>' . esc_html($who);
+                if ($is_auto) {
+                    echo ' <span class="zw-adm-badge" style="margin-left:6px">系统自动</span>';
+                }
+                echo '</td>';
                 echo '<td>' . esc_html((string) (isset($log['created_at']) ? $log['created_at'] : '')) . '</td>';
                 echo '<td style="white-space:pre-wrap">' . esc_html((string) (isset($log['content']) ? $log['content'] : '')) . '</td>';
                 echo '</tr>';

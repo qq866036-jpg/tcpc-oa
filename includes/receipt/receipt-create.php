@@ -1002,6 +1002,12 @@ if (!function_exists('zw_receipt_handle_create_post')) {
             zw_ocr_queue((string) $result['id'], false);
         }
 
+        // OA-2468：自动办理（唯一触发点）—— 批示库自动批示 + 20 秒自动签阅。
+        // 开关全关时零行为；任一步失败只留痕不阻断登记。
+        if (function_exists('zw_receipt_auto_after_register')) {
+            zw_receipt_auto_after_register((string) $result['id']);
+        }
+
         wp_safe_redirect(add_query_arg(array(
             'page'   => $page,
             'zw_msg' => 'receipt_created',
