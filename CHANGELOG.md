@@ -122,6 +122,19 @@
   反而把中文名判成「未登记单位」。现改为三级映射：① key 精确 → ② 中文名精确 → ③ 中文名互相包含（取最长）；
   都不中才回退「未登记单位（原值）」。
 
+## [0.1.19] - 2026-11-04
+
+### Changed
+
+- **issuer 口径统一（OA-2479）**：统计/报表的来文单位名不再自写第二套映射，改为只走既有 canonical 反查
+  `zw_receipt_org_key_from_issuer()`（TASK-1297，关键字表 + `zw_receipt_org_issuer_map` 过滤器），
+  命中取字典中文名、未命中保留原值并标「未登记单位」。删除 OA-2478 引入的私有映射实现（重复口径下线）。
+
+### Added
+
+- **`scripts/receipt-issuer-audit.php`（只读）**：列出所有 distinct `issuer`、解析出的部委 key、件数；
+  未命中项提示去补字典。`wp eval-file scripts/receipt-issuer-audit.php [--csv]`，未命中时退出码 1。
+
 ## [Unreleased]
 
 ### Added

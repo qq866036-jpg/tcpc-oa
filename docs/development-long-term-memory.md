@@ -453,3 +453,11 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
 - 统一用 `zw_receipt_stats_org_label()`：key 精确 → 中文名精确 → 中文名互相包含（最长匹配）→ 未登记回退。
 - 更彻底的修法（未做，建议）：登记时把 issuer 规范成 key（或在字典里补「办公厅」这类后缀别名），
   否则映射只能靠模糊包含。这条留给数据侧决策。
+
+## 2026-11-04 · issuer 口径唯一出处（OA-2479，载体单 TASK-2567）
+
+- **口径唯一出处**：`zw_receipt_org_key_from_issuer()`（`includes/receipt/receipt-orgs.php`，TASK-1297）——
+  key 精确 → 关键字表（含过滤器 `zw_receipt_org_issuer_map`）→ 未命中返回空串（**不擅自归「其他」**）。
+- 任何「issuer → 部门/目录/显示名」的地方都调它；**不要**再写第三套模糊匹配（OA-2478 的私有实现已删）。
+- 存量 `issuer` **保持原值**（全名是公文台账要的信息）；不做数据改写。覆盖情况用只读审计脚本看清：
+  `wp eval-file scripts/receipt-issuer-audit.php`。

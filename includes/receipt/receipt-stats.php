@@ -75,11 +75,12 @@ if (!function_exists('zw_receipt_stats_where')) {
 
 if (!function_exists('zw_receipt_stats_org_label')) {
     /**
-     * 来文单位显示名（OA-2478）：`issuer` 列里可能是 key、中文名、或「中文名+后缀」（如「中央社会工作部办公厅」），
-     * 而字典是 `key => 中文名`。三级映射：① key 精确 → ② 中文名精确 → ③ 中文名互相包含（取最长）。
-     * 都不中才回退「未登记单位（原值）」，**不裸露 key**。
+     * 来文单位显示名（OA-2479）：**只走 canonical 反查**，不再自写第二套映射。
      *
-     * @param string $issuer     issuer 原值。
+     * 唯一出处：`zw_receipt_org_key_from_issuer()`（TASK-1297，关键字表 + 过滤器
+     * `zw_receipt_org_issuer_map`）；命中则取字典中文名，未命中保留原值并标「未登记单位」。
+     *
+     * @param string $issuer     issuer 原值（可能是 key / 中文名 / 中文名带后缀）。
      * @param array  $org_labels key => 中文名。
      * @return string
      */
@@ -89,29 +90,12 @@ if (!function_exists('zw_receipt_stats_org_label')) {
         if ($issuer === '') {
             return '未标注';
         }
+        $key = function_exists('zw_receipt_org_key_from_issuer') ? (string) zw_receipt_org_key_from_issuer($issuer) : '';
+        if ($key !== '' && isset($org_labels[$key]) && (string) $org_labels[$key] !== '') {
+            return (string) $org_labels[$key];
+        }
         if (isset($org_labels[$issuer]) && (string) $org_labels[$issuer] !== '') {
             return (string) $org_labels[$issuer];
-        }
-        $labels = array();
-        foreach ($org_labels as $k => $v) {
-            $v = trim((string) $v);
-            if ($v !== '') {
-                $labels[$k] = $v;
-            }
-        }
-        if (in_array($issuer, $labels, true)) {
-            return $issuer; // 已经是标准中文名
-        }
-        $best = '';
-        foreach ($labels as $v) {
-            if (strpos($issuer, $v) !== false || strpos($v, $issuer) !== false) {
-                if (strlen($v) > strlen($best)) {
-                    $best = $v;
-                }
-            }
-        }
-        if ($best !== '') {
-            return $best;
         }
         return '未登记单位（' . $issuer . '）';
     }
