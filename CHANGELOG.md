@@ -135,6 +135,13 @@
 - **`scripts/receipt-issuer-audit.php`（只读）**：列出所有 distinct `issuer`、解析出的部委 key、件数；
   未命中项提示去补字典。`wp eval-file scripts/receipt-issuer-audit.php [--csv]`，未命中时退出码 1。
 
+## [0.1.20] - 2026-11-04
+
+### Fixed
+
+- **统计按单位累加（OA-2480）**：同一部委的多个 `issuer` 变体（`cssw` 与 `中央社会工作部办公厅`）映射到同一显示名时，
+  原实现是**赋值覆盖**导致少算（实测 3 件只显示 2 件）；改为累加。
+
 ## [Unreleased]
 
 ### Added
