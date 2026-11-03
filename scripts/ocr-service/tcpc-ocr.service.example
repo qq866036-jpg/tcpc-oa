@@ -1,0 +1,56 @@
+# 中传网 · 收文 OCR 服务（systemd 单元模板 · OA-2463）
+#
+# 安装：
+#   install -m 0644 tcpc-ocr.service.example /etc/systemd/system/tcpc-ocr.service
+#   # 按实际路径改 User / TCPC_OCR_ROOTS / ExecStart
+#   systemctl daemon-reload && systemctl enable --now tcpc-ocr
+#
+# 纪律：
+#   · 只绑回环（127.0.0.1），不要改成 0.0.0.0；
+#   · TCPC_OCR_ROOTS 必须是**收文私有存储根**的真实路径（realpath 前缀匹配）；
+#   · 令牌放 EnvironmentFile（权限 0600），不要写进单元文件正文。
+
+[Unit]
+Description=TCPC OCR service (receipt attachments, local only)
+After=network.target
+
+[Service]
+Type=simple
+User=www
+Group=www
+WorkingDirectory=/opt/tcpc-ocr
+
+# 建议把令牌放独立文件：/etc/tcpc-ocr.env（0600 root:www）
+# 内容示例：TCPC_OCR_TOKEN=换成随机 32 位
+EnvironmentFile=-/etc/tcpc-ocr.env
+
+Environment=TCPC_OCR_HOST=127.0.0.1
+Environment=TCPC_OCR_PORT=8848
+# ↓↓↓ 改成实际收文存储根（多个用冒号分隔）↓↓↓
+Environment=TCPC_OCR_ROOTS=/www/zw-office-files/receipts
+Environment=TCPC_OCR_MAX_BYTES=20971520
+Environment=TCPC_OCR_PDF_DPI=200
+Environment=TCPC_OCR_MAX_PAGES=30
+
+ExecStart=/opt/tcpc-ocr/venv/bin/python /opt/tcpc-ocr/app.py
+Restart=always
+RestartSec=3
+
+# 资源与安全约束：识别是 CPU 密集的，按机器核数给上限
+LimitNOFILE=4096
+MemoryMax=3G
+CPUQuota=400%
+
+# 最小权限：只读文件系统 + 只允许写入 /dev/shm（PDF 渲染临时页）
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadOnlyPaths=/www
+ReadWritePaths=/dev/shm
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+[Install]
+WantedBy=multi-user.target

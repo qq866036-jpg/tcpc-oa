@@ -290,3 +290,24 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
 - **收文页新增 `<table>` 必须包 `.zw-adm-table-wrap`**：主题 `test-admin-h5-gate.php` 有「全树未包裹 0」判据。
 - 第一批回归口径（读插件源码）：主题 `test-receipt-{ledger,issues,create,orgs,permissions,number-org,portal-office-receipt}`
   + `test-doc-admin-ui` 全绿；插件 `scripts/ci-check.sh` 七项全绿。
+
+## 2026-11-03 · 收文 OCR 接入：两档引擎 + 单行写 + 不新增菜单（OA-2463，载体单 TASK-2546）
+
+- **全仓原先零 OCR**（grep 证据）：`zw_policy_source` 的 `ocr_status` / `extraction_method` 两列一直没人写。
+  本次新增 `includes/ocr/`（config/client/schema/job/bootstrap/admin），落点仍是 `zw_policy_source`，
+  只加 `ocr_text/ocr_confidence/ocr_ms/ocr_at/ocr_message` 五列（迁移 `scripts/migrate-receipt-ocr.php`，只 ADD COLUMN）。
+- **引擎选型口径**：GitHub star 实测 PaddleOCR 92,195 最高 ⇒ **首选 PaddleOCR**（中文公文 + PP-StructureV3 版面表格 +
+  Apache-2.0 + CPU）；**保底 RapidOCR**（ONNX，依赖最轻，本机已自带 onnxruntime）。两档共用同一 HTTP 契约
+  （`POST /ocr {path}` / `GET /health`），切换只改 `TCPC_OCR_ENGINE` 与依赖文件，**PHP 侧不动**。
+  Surya 被排除的硬理由：模型权重是修改版 OpenRAIL-M（非 OSI、商用有营收门槛），不是「质量不够」。
+- **只传路径不传字节**：附件已在私有存储根，服务与本插件同机 ⇒ PHP 发绝对路径、服务端用 `realpath` 前缀白名单
+  + 扩展名 + 20MB 校验（**双端**都校验）。这样 PHP 不读大文件、不 base64、不产生第二份临时副本。
+- **异步 + 不阻断**：登记成功只置 `pending` 并排 WP-Cron（20s），识别在 cron 跑；失败写 `failed` + `ocr_message`，
+  详情页给「原因 + 重试 + 下一步」。任何时候 OCR 挂掉都不影响登记/办理 —— 这是刻意的降级语义，不是遗漏。
+- **不新增子菜单**：OCR 设置挂在「收文台账 → `view=ocr`」。原因具体：新增子页会改
+  `zw_receipt_permission_function_ids()` 的 ID 集与「子页 slug 与登记表一致」两条判据
+  （主题 `tests/test-receipt-permissions.php` 逐项断言 5 个 slug），而本单不改主题测试口径。
+- **测试取源陷阱（真踩到）**：主题 `tests/test-receipt-ledger.php` 用 `ZW_OA_DIR` 而非 `ZW_OA_PLUGIN_DIR`
+  解析插件源码 ⇒ 只设后者时测试跑的是**插件主工作树**（旧代码），会「假绿」。跑收文相关测试必须
+  `ZW_OA_DIR=<任务工作树> ZW_OA_PLUGIN_DIR=<任务工作树>` 两个都设。
+- 未验证：PaddleOCR 适配器未在真机跑（本机未装 paddlepaddle）；RapidOCR 真机识别耗时/准确率未测（依赖安装耗时）。

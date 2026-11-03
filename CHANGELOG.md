@@ -4,6 +4,25 @@
 
 ### Added
 
+- **收文附件 OCR 接入（OA-2463，2026-11-03）**：用户指令「收文需要专业的ocr文字识别 再次调研github中star最高的
+  适合的仓库代码」。调研结论与实现：
+  - **选型**：GitHub star 实测（2026-11-03）——PaddleOCR **92,195**（Apache-2.0）/ MinerU 83,048 / tesseract 77,313 /
+    Umi-OCR 48,400 / EasyOCR 30,120 / Surya 21,575 / chineseocr_lite 12,355 / dots.ocr 9,185 / RapidOCR 8,431 /
+    GOT-OCR2.0 8,227 / chineseocr 6,109 / CnOCR 3,774。**首选 PaddleOCR**（中文公文质量 + 版面/表格 + CPU 可跑 +
+    许可干净），**保底 RapidOCR**（ONNX、依赖最轻）；**排除 Surya**（权重是非 OSI 的 OpenRAIL-M，商用有营收门槛）。
+    报告：`docs/research/OA-2463-收文OCR引擎调研与接入方案-20261103.md`。
+  - **PHP 侧接缝**：`includes/ocr/`（config / client / schema / job / bootstrap / admin）；登记成功只置
+    `ocr_status=pending` 并排 WP-Cron（20s），识别在 cron 执行；失败写 `failed` + `ocr_message`（详情页给原因与重试），
+    **OCR 不可用不阻断登记**；详情页新增 OCR 卡片（状态/引擎/置信度/耗时/文本折叠/重新识别），
+    设置挂在「收文台账 → `view=ocr`」（**不新增子菜单**，避免改权限功能树与子页 slug 判据）。
+  - **数据落点**：复用 `zw_policy_source`，只增 `ocr_text/ocr_confidence/ocr_ms/ocr_at/ocr_message` 五列
+    （复用既有 `ocr_status`/`extraction_method`，写 `ocr:engine@version`），**不写** `doc_name` 与正文生效面；
+    迁移 `scripts/migrate-receipt-ocr.php`（dry-run/execute/verify，只 ADD COLUMN、幂等）。
+  - **服务物料**：`scripts/ocr-service/`（`app.py` 标准库 HTTP、两档后端 PaddleOCR/RapidOCR 同一契约、
+    PDF 用 pypdfium2 逐页 200DPI、路径 realpath 白名单、可选令牌、日志不写正文）+ `requirements*.txt` +
+    `tcpc-ocr.service.example` + README（安装/排障/回滚）。**未在生产部署**（属发布窗口动作）。
+  - 安全：端点只允许回环/内网（PHP 与服务端**双端**校验）、只传路径不传字节、20MB 与扩展名白名单、令牌常量时间比较。
+
 - **收文详情页 + 收文台账 UI 对齐发文管理（OA-2462，2026-11-03）**：用户指令「进一步开发收文管理…主要注重
   功能完整性，UI界面与发文管理对齐」。本次为第一批（只动展示层，**不动数据模型**）：
   - **收文详情页**：同一个后台页的 `view=detail&id=SRC-…`（与发文 `zw-doc&view=detail` 同构，**不新增菜单项**、

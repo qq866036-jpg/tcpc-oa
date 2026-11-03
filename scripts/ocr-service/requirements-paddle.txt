@@ -1,0 +1,19 @@
+# 中传网 · 收文 OCR 服务依赖 —— PaddleOCR 后端（OA-2463 · **调研首选**）
+#
+# 与 requirements.txt 二选一：
+#   · requirements.txt         RapidOCR（ONNX）—— 保底后端，依赖最轻，本机已验证可加载
+#   · requirements-paddle.txt  本文件        —— PaddleOCR —— star 最高（92k）/中文公文质量最好/含 PP-StructureV3 版面表格
+#
+# 安装：
+#   python3 -m venv /opt/tcpc-ocr/venv
+#   /opt/tcpc-ocr/venv/bin/pip install -r requirements-paddle.txt
+#   启动时设 TCPC_OCR_ENGINE=paddleocr
+#
+# 注意（未实测项）：
+#   · 宝塔 CentOS 上 paddlepaddle CPU wheel 的 glibc/版本兼容**尚未实测**（见 docs/research 报告「未验证项」）；
+#   · 模型首次运行会下载到 ~/.paddlex 或 PADDLEOCR_HOME（数百 MB），务必在发布窗口内预热；
+#   · 若装不上/内存不足：**不要**硬扛 —— 直接退回 requirements.txt（RapidOCR），HTTP 契约完全一致。
+paddlepaddle>=3.0.0
+paddleocr>=3.0.0
+pypdfium2>=4.30.0
+pillow>=10.0.0

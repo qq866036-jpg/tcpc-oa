@@ -61,6 +61,12 @@ if (zw_receipt_is_enabled()) {
         }
     }
     unset($zw_receipt_module_file, $zw_receipt_module_path);
+
+    // OA-2463：OCR 接入（开关默认关 ⇒ 未部署识别服务时零行为）。放在模块文件之后装载，
+    // 保证 `zw_ocr_*` 能用到 `zw_receipt_ledger_source_table()` / `zw_receipt_storage_*`。
+    if (is_file(dirname(__DIR__) . '/ocr/ocr-bootstrap.php')) {
+        require_once dirname(__DIR__) . '/ocr/ocr-bootstrap.php';
+    }
 }
 
 if (!function_exists('zw_receipt_admin_pages')) {
@@ -101,6 +107,8 @@ if (!function_exists('zw_receipt_admin_pages')) {
                 'menu_title' => '收文编号设置',
                 'callback'   => 'zw_receipt_number_page',
             ),
+            // OA-2463：OCR 设置**不新增子菜单**（避免改动权限功能树 ID 集与「子页 slug 与登记表一致」
+            // 这条既有判据）⇒ 挂在收文台账页的 `view=ocr` 分支上，见 `receipt-ledger.php`。
         );
         if (function_exists('apply_filters')) {
             $pages = apply_filters('zw_receipt_admin_pages', $pages);
