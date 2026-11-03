@@ -146,7 +146,8 @@ if (!function_exists('zw_receipt_stats_collect')) {
         foreach ((array) $rows as $one) {
             $key   = isset($one['issuer']) ? (string) $one['issuer'] : '';
             $label = zw_receipt_stats_org_label($key, $org_labels);
-            $out['by_org'][$label] = (int) $one['cnt'];
+            // OA-2480：同一个 label 可能由多个 issuer 变体汇入（如 cssw 与 中央社会工作部办公厅），必须**累加**。
+            $out['by_org'][$label] = (isset($out['by_org'][$label]) ? (int) $out['by_org'][$label] : 0) + (int) $one['cnt'];
         }
 
         $rows = $run("SELECT SUBSTR(doc_received_date, 1, 4) y, COUNT(*) c FROM {$table} WHERE {$where['sql']} GROUP BY y ORDER BY y DESC", $where['params']);
