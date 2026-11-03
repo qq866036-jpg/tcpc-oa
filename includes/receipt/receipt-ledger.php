@@ -1000,6 +1000,26 @@ if (!function_exists('zw_receipt_page_ledger')) {
             zw_receipt_page_ledger_detail(isset($request['id']) ? $request['id'] : '');
             return;
         }
+        // OA-2463：OCR 设置视图（挂在台账页，不新增子菜单 —— 见 ocr-admin.php 头部说明）。
+        if ($view === 'ocr' && function_exists('zw_ocr_render_settings_body')) {
+            if (function_exists('zw_receipt_admin_ui_page_open')) {
+                zw_receipt_admin_ui_page_open(
+                    'OCR 识别设置',
+                    '收文附件在本机 OCR 引擎上识别为文本（不出服务器）。识别是**异步**的：登记成功后排队，'
+                    . '在 WP-Cron 里执行；失败只影响 OCR 字段，不影响收文登记与办理。',
+                    'zw-receipt-ledger'
+                );
+            } else {
+                echo '<div class="wrap zw-receipt-ledger"><h1>OCR 识别设置</h1>';
+            }
+            zw_ocr_render_settings_body();
+            if (function_exists('zw_receipt_admin_ui_page_close')) {
+                zw_receipt_admin_ui_page_close();
+            } else {
+                echo '</div>';
+            }
+            return;
+        }
 
         $args    = zw_receipt_ledger_request_args($request);
         $result  = zw_receipt_ledger_query($args);
@@ -1035,11 +1055,18 @@ if (!function_exists('zw_receipt_page_ledger')) {
 
         // 主操作（与发文列表页「新建发文」同位：标题下、筛选上）
         echo '<div style="margin:10px 0 14px"><a class="button button-primary" href="'
-            . esc_url(zw_receipt_ledger_admin_url('zw-receipt-create')) . '">登记收文</a></div>';
+            . esc_url(zw_receipt_ledger_admin_url('zw-receipt-create')) . '">登记收文</a>';
+        if (function_exists('zw_ocr_settings_url')) {
+            echo ' <a class="button" href="' . esc_url(zw_ocr_settings_url()) . '">OCR 识别设置</a>';
+        }
+        echo '</div>';
 
         if (!$result['schema_ready']) {
             echo '<div class="notice notice-warning"><p>收文台账暂不可用：数据表尚未迁移（缺少列：'
                 . esc_html(implode('、', $result['missing'])) . '），本次返回 0 行（不显示任何记录）。</p></div>';
+            // 迁移未跑 ⇒ **不渲染表头/表格**（既有判据：缺列时页面不得出现表头，避免"空壳台账"误导）。
+            echo '</div>';
+            return;
         }
 
         // 筛选表单（GET；只读视图，无需 nonce）
@@ -1311,6 +1338,61 @@ if (!function_exists('zw_receipt_page_ledger_detail')) {
                 . '落私有存储 <code>部委/年份/文件名</code>。</p>';
         }
         echo '</div>';
+
+        // —— 卡片 2.5：OCR 识别（OA-2463；结果只落 OCR 专用列，不改进正文）——
+        if (function_exists('zw_ocr_record') && function_exists('zw_ocr_status_label')) {
+            $ocr = zw_ocr_record((string) $view['id']);
+            echo '<div class="zw-adm-card" style="margin:0 0 16px">';
+            echo '<h2>OCR 识别</h2>';
+
+            $ocr_msg = isset($_GET['zw_msg']) ? sanitize_key((string) wp_unslash($_GET['zw_msg'])) : '';
+            if ($ocr_msg === 'ocr_queued') {
+                echo '<div class="notice notice-success inline"><p>已重新排队：识别完成后刷新本页即可看到文本。</p></div>';
+            } elseif ($ocr_msg === 'ocr_not_queued') {
+                echo '<div class="notice notice-warning inline"><p>未能排队：请先在「OCR 识别设置」启用开关并保存端点'
+                    . '（或数据列尚未迁移）。</p></div>';
+            }
+
+            echo '<div class="zw-adm-grid is-2">';
+            echo zw_receipt_ledger_detail_field('识别状态', zw_ocr_status_label($ocr['ocr_status']));
+            echo zw_receipt_ledger_detail_field('引擎', $ocr['extraction_method'] !== '' ? $ocr['extraction_method'] : '—');
+            echo zw_receipt_ledger_detail_field('平均置信度', $ocr['ocr_confidence'] === null ? '' : (string) $ocr['ocr_confidence'] . '%');
+            echo zw_receipt_ledger_detail_field('耗时', $ocr['ocr_ms'] > 0 ? $ocr['ocr_ms'] . ' ms' : '');
+            echo zw_receipt_ledger_detail_field('识别时间', $ocr['ocr_at']);
+            echo '</div>';
+
+            if ($ocr['ocr_status'] === 'failed' && $ocr['ocr_message'] !== '') {
+                echo '<div class="notice notice-error inline"><p><strong>识别失败：</strong>'
+                    . esc_html($ocr['ocr_message']) . '</p><p>请先到「OCR 识别设置 → 测试连接」确认服务可达；'
+                    . '修好后点下面的「重新识别」。</p></div>';
+            } elseif ($ocr['ocr_status'] === '' || $ocr['ocr_status'] === 'pending') {
+                echo '<p class="zw-doc-muted">尚未识别或正在排队。启用 OCR 后，登记成功会自动排队；'
+                    . '也可以点「重新识别」立即排一次。</p>';
+            }
+
+            if ($ocr['ocr_text'] !== '') {
+                echo '<details style="margin:10px 0 0"><summary style="cursor:pointer;font-weight:600">识别文本（'
+                    . (int) str_word_count((string) $ocr['ocr_text']) . ' 词 / ' . (function_exists('mb_strlen') ? (int) mb_strlen((string) $ocr['ocr_text']) : (int) strlen((string) $ocr['ocr_text']))
+                    . ' 字）</summary>'
+                    . '<pre style="white-space:pre-wrap;word-break:break-word;max-height:360px;overflow:auto;'
+                    . 'background:#f6f7f7;border:1px solid #e5e7eb;border-radius:8px;padding:12px;margin:10px 0 0;font-size:13px">'
+                    . esc_html($ocr['ocr_text']) . '</pre></details>';
+            }
+
+            if (function_exists('zw_ocr_retry_url') && function_exists('zw_ocr_retry_nonce')) {
+                echo '<form method="post" action="' . esc_url(zw_ocr_retry_url()) . '" style="margin:12px 0 0">';
+                echo '<input type="hidden" name="action" value="zw_ocr_retry">';
+                echo '<input type="hidden" name="zw_ocr_id" value="' . esc_attr((string) $view['id']) . '">';
+                if (function_exists('wp_nonce_field')) {
+                    wp_nonce_field(zw_ocr_retry_nonce((string) $view['id']), 'zw_ocr_nonce');
+                }
+                echo '<button type="submit" class="button">重新识别</button>';
+                echo '<span class="zw-doc-muted" style="margin-left:10px">识别在本机进行，文件不出服务器；'
+                    . '识别文本只写 OCR 专用列，不修改来文正文。</span>';
+                echo '</form>';
+            }
+            echo '</div>';
+        }
 
         // —— 卡片 3：办理单（只读列表；办理动作仍去「收文办理」页）——
         echo '<div class="zw-adm-card" style="margin:0 0 16px">';

@@ -991,6 +991,13 @@ if (!function_exists('zw_receipt_handle_create_post')) {
         }
 
         $page = function_exists('zw_receipt_page_ledger') ? 'zw-receipt-ledger' : 'zw-receipt-create';
+
+        // OA-2463：登记成功后排一次 OCR（异步 cron；OCR 未启用/未迁移/无附件时静默跳过，
+        // 绝不影响登记结果 —— 失败只会在详情页 OCR 卡片上显示原因并可重试）。
+        if (function_exists('zw_ocr_queue')) {
+            zw_ocr_queue((string) $result['id'], false);
+        }
+
         wp_safe_redirect(add_query_arg(array(
             'page'   => $page,
             'zw_msg' => 'receipt_created',
