@@ -140,6 +140,14 @@ if (!function_exists('zw_receipt_handle_display_name')) {
         if ($login === '') {
             return '';
         }
+        // OA-2470：系统自动来源的中文显示名（不查用户表，也不冒充真人）。
+        $system_labels = array(
+            'system:auto-instruction' => '系统自动（批示库）',
+            'system:auto-sign'        => '系统自动签阅',
+        );
+        if (isset($system_labels[$login])) {
+            return $system_labels[$login];
+        }
         if (function_exists('get_user_by')) {
             $user = get_user_by('login', $login);
             if ($user && isset($user->display_name) && (string) $user->display_name !== '') {
