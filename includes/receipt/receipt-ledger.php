@@ -373,13 +373,27 @@ if (!function_exists('zw_receipt_ledger_where')) {
             $params[]  = $filters['org_key'];
         }
 
-        // ④ 关键词（标题 / 来文字号 / 收文编号）
+        // ④ 关键词（标题 / 来文字号 / 收文编号；OA-2470：`ocr_text` 列存在时**再含 OCR 正文**）
         if ($filters['keyword'] !== '') {
-            $clauses[] = '(doc_name LIKE %s OR doc_no LIKE %s OR doc_received_no LIKE %s)';
-            $like      = '%' . $filters['keyword'] . '%';
-            $params[]  = $like;
-            $params[]  = $like;
-            $params[]  = $like;
+            $like = '%' . $filters['keyword'] . '%';
+            $has_ocr = false;
+            if (function_exists('zw_receipt_source_columns')) {
+                $cols    = (array) zw_receipt_source_columns();
+                // 注意：该函数返回的是「列名 => true」关联数组（OA-2467 踩过 `in_array` 的坑）。
+                $has_ocr = isset($cols['ocr_text']);
+            }
+            if ($has_ocr) {
+                $clauses[] = '(doc_name LIKE %s OR doc_no LIKE %s OR doc_received_no LIKE %s OR ocr_text LIKE %s)';
+                $params[]  = $like;
+                $params[]  = $like;
+                $params[]  = $like;
+                $params[]  = $like;
+            } else {
+                $clauses[] = '(doc_name LIKE %s OR doc_no LIKE %s OR doc_received_no LIKE %s)';
+                $params[]  = $like;
+                $params[]  = $like;
+                $params[]  = $like;
+            }
         }
 
         // ⑤ 年份（取 `doc_received_date` 前 4 位；兼容 `2026-08-01` / `20260801` / `2026年8月1日` 等写法）
@@ -1083,6 +1097,10 @@ if (!function_exists('zw_receipt_page_ledger')) {
         if (function_exists('zw_receipt_auto_settings_url')) {
             echo ' <a class="button" href="' . esc_url(zw_receipt_auto_settings_url()) . '">自动化设置</a>';
         }
+        // OA-2470：按当前筛选导出 CSV（Excel 可直接打开）。
+        if (function_exists('zw_receipt_export_url')) {
+            echo ' <a class="button" href="' . esc_url(zw_receipt_export_url($filters)) . '">导出 CSV</a>';
+        }
         echo '</div>';
 
         // OA-2464：待批示提示（有拟办、无批示）。角标在左侧菜单，这里给可读入口。
@@ -1118,7 +1136,7 @@ if (!function_exists('zw_receipt_page_ledger')) {
             . '" placeholder="如 2026" size="10"></label>';
         echo '<label style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:#666">关键词';
         echo '<input type="search" name="zw_receipt_kw" value="' . esc_attr($filters['keyword'])
-            . '" placeholder="标题 / 来文字号 / 收文编号"></label>';
+            . '" placeholder="标题 / 来文字号 / 收文编号 / 来文正文"></label>';
         echo '<button type="submit" class="button button-primary">筛选</button>';
         echo '<a class="button" href="' . esc_url(zw_receipt_ledger_admin_url()) . '">重置</a>';
         echo '</form>';

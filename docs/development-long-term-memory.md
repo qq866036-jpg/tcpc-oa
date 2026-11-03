@@ -375,3 +375,12 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
 - 上线后验证口径：登记一条测试收文 → 详情页应立刻出现「系统自动（批示库）」批示；
   20 秒后出现 `自动签阅` 条目，`created_at` 即签名时间戳；时间线两条均为灰标「系统自动」。
 - 回滚：`plugin-switch-oa.sh --rollback <ts>`；或后台把两个自动开关关掉（零行为）。
+
+## 2026-11-03 · 收文检索扩 OCR 正文 + 台账 CSV 导出（OA-2470，载体单 TASK-2556）
+
+- **检索**：台账关键词子句在 `ocr_text` 列存在时追加 `OR ocr_text LIKE %s`（**同一张表**，不加 JOIN、不改契约形状；
+  列不存在则退回原三字段）。判存在用 `isset($cols['ocr_text'])` —— 该函数返回关联数组，`in_array` 会恒假（OA-2467 的坑）。
+- **量级**：LIKE 全表扫描在协会量级（数百–数千行）可接受；**不建全文索引表**，一旦上千行再评估 MySQL FULLTEXT。
+- **导出**：`admin-post.php?action=zw_receipt_export`，`tcpc_perm_doc` + **按筛选指纹绑定的 nonce**
+  （换筛选即换 nonce，防手拼链接批量拉库）；CSV 带 UTF-8 BOM；上限 5000 行；不含 OCR 正文与个人信息明细。
+- 导出另起一条 `SELECT ... LIMIT`（不复用台账分页查询，避免把「契约面 SQL」拉长），归档三列缺列时不查。
