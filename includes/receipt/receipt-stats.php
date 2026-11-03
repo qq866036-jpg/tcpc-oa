@@ -113,10 +113,19 @@ if (!function_exists('zw_receipt_stats_collect')) {
             $where['params']
         ));
 
-        $rows = $run("SELECT issuer, COUNT(*) c FROM {$table} WHERE {$where['sql']} GROUP BY issuer ORDER BY c DESC", $where['params']);
+        $org_labels = function_exists('zw_receipt_org_options') ? (array) zw_receipt_org_options() : array();
+        $rows = $run("SELECT issuer, COUNT(*) cnt FROM {$table} WHERE {$where['sql']} GROUP BY issuer ORDER BY cnt DESC", $where['params']);
         foreach ((array) $rows as $one) {
             $key = isset($one['issuer']) ? (string) $one['issuer'] : '';
-            $out['by_org'][$key === '' ? '未标注' : $key] = (int) $one['c'];
+            if ($key === '') {
+                $label = '未标注';
+            } elseif (isset($org_labels[$key]) && $org_labels[$key] !== '') {
+                $label = (string) $org_labels[$key];
+            } else {
+                // OA-2477：字典缺中文名时不再裸露 key，明确标「未登记」并提示补名。
+                $label = '未登记单位（' . $key . '）';
+            }
+            $out['by_org'][$label] = (int) $one['cnt'];
         }
 
         $rows = $run("SELECT SUBSTR(doc_received_date, 1, 4) y, COUNT(*) c FROM {$table} WHERE {$where['sql']} GROUP BY y ORDER BY y DESC", $where['params']);
@@ -311,6 +320,8 @@ if (!function_exists('zw_receipt_stats_render')) {
         echo '</div>';
         echo '<p class="zw-doc-muted" style="margin-top:14px">口径：逾期=未收口且时限早于今天；待批示=有拟办无批示；'
             . '归档率=已写归档盒号的收文 ÷ 收文总量。数据实时读取，不做缓存。</p>';
+        echo '<p class="zw-doc-muted">显示为「未登记单位（key）」的，说明该来文单位还没在字典里填中文名 —— '
+            . '去「收文管理 → 来文单位」补一个名称即可自动恢复。</p>';
     }
 }
 
