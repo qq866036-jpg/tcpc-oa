@@ -159,6 +159,18 @@
 - **派单通配规则（OA-2482）**：规则框支持 `*` 通配 —— 一行 `* | office | 5` 即「所有来文都派办公室、时限 5 天」；
   具体部委 key 的规则优先于 `*`。派单与干跑预览共用同一解析函数 `zw_receipt_auto_dispatch_rule_for()`。
 
+## [0.1.23] - 2026-11-04
+
+### Added
+
+- **收文档案处置：保管期限 / 清退 / 销毁（OA-2483）**：收文台账新增「档案处置」（`view=disposal`，不新增子菜单）。
+  - 保管期限按件设置（永久 / 30 / 10 / 5 年），到期日 = 收文日期 + 年限；
+  - 到期清单：已归档（有盒号）+ 已到期 + 未销毁；
+  - 清退：`需清退 / 已清退`（归还来文单位，**不删档**）；
+  - 销毁：**前置门禁三条**（已归档 + 已到期 + 填批准人）才允许写「已销毁」；
+  - **系统永不删除文件或记录**：只写 `zw_receipt_disposal`（append-only）+ `disposal` 审计留痕；物理删除由人线下做；
+  - 新增表 `zw_receipt_disposal`（迁移脚本 `scripts/migrate-receipt-disposal.php`，dry-run/execute/verify）。
+
 ## [Unreleased]
 
 ### Added

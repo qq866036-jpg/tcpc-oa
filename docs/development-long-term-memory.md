@@ -481,3 +481,10 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
 - 用户口径「所有收文都归办公室」用**通配规则 `*`** 表达：`* | office | 5`；
   具体部委 key 的规则优先（以后想给某个部委单开例外，加一行即可）。
 - 解析唯一出处：`zw_receipt_auto_dispatch_rule_for($rules, $org)`；派单与干跑预览都调它。
+
+## 2026-11-04 · 档案处置红线（OA-2483，载体单 TASK-2573）
+
+- **系统永不删除文件或记录**：销毁 = 写状态 + 清册 + 留痕；物理删除由人线下执行（代码里不得出现 unlink/DELETE）。
+- 销毁三条门禁：已归档（有盒号）+ 保管期限已到 + 填批准人；缺一不可。
+- 清退（returned）≠ 销毁：归还来文单位，档案件与文件都保留。
+- 数据在独立表 `zw_receipt_disposal`（append-only，不改主表）；迁移 `scripts/migrate-receipt-disposal.php`。

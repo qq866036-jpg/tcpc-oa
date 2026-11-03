@@ -1014,6 +1014,22 @@ if (!function_exists('zw_receipt_page_ledger')) {
             zw_receipt_page_ledger_detail(isset($request['id']) ? $request['id'] : '');
             return;
         }
+        // OA-2483：档案处置视图（保管期限/清退/销毁；只写状态，不删文件）。
+        if ($view === 'disposal' && function_exists('zw_receipt_disposal_render_page')) {
+            if (function_exists('zw_receipt_admin_ui_page_open')) {
+                zw_receipt_admin_ui_page_open('档案处置', '保管期限、清退与销毁清册。系统不会删除任何文件或记录，销毁只写状态与留痕。', 'zw-receipt-ledger');
+            } else {
+                echo '<div class="wrap zw-receipt-ledger"><h1>档案处置</h1>';
+            }
+            zw_receipt_disposal_render_page();
+            if (function_exists('zw_receipt_admin_ui_page_close')) {
+                zw_receipt_admin_ui_page_close();
+            } else {
+                echo '</div>';
+            }
+            return;
+        }
+
         // OA-2475：统计报表视图（纯只读聚合；同样挂在台账页，不新增子菜单）。
         if ($view === 'stats' && function_exists('zw_receipt_stats_render')) {
             if (function_exists('zw_receipt_admin_ui_page_open')) {
@@ -1119,6 +1135,9 @@ if (!function_exists('zw_receipt_page_ledger')) {
         }
         if (function_exists('zw_receipt_stats_url')) {
             echo ' <a class="button" href="' . esc_url(zw_receipt_stats_url()) . '">统计</a>';
+        }
+        if (function_exists('zw_receipt_disposal_render_page')) {
+            echo ' <a class="button" href="' . esc_url(add_query_arg(array('page' => 'zw-receipt-ledger', 'view' => 'disposal'), admin_url('admin.php'))) . '">档案处置</a>';
         }
         // OA-2470：按当前筛选导出 CSV（Excel 可直接打开）。
         if (function_exists('zw_receipt_export_url')) {
