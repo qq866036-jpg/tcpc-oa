@@ -73,6 +73,50 @@ if (!function_exists('zw_receipt_stats_where')) {
     }
 }
 
+if (!function_exists('zw_receipt_stats_org_label')) {
+    /**
+     * 来文单位显示名（OA-2478）：`issuer` 列里可能是 key、中文名、或「中文名+后缀」（如「中央社会工作部办公厅」），
+     * 而字典是 `key => 中文名`。三级映射：① key 精确 → ② 中文名精确 → ③ 中文名互相包含（取最长）。
+     * 都不中才回退「未登记单位（原值）」，**不裸露 key**。
+     *
+     * @param string $issuer     issuer 原值。
+     * @param array  $org_labels key => 中文名。
+     * @return string
+     */
+    function zw_receipt_stats_org_label($issuer, $org_labels) {
+        $issuer     = trim((string) $issuer);
+        $org_labels = is_array($org_labels) ? $org_labels : array();
+        if ($issuer === '') {
+            return '未标注';
+        }
+        if (isset($org_labels[$issuer]) && (string) $org_labels[$issuer] !== '') {
+            return (string) $org_labels[$issuer];
+        }
+        $labels = array();
+        foreach ($org_labels as $k => $v) {
+            $v = trim((string) $v);
+            if ($v !== '') {
+                $labels[$k] = $v;
+            }
+        }
+        if (in_array($issuer, $labels, true)) {
+            return $issuer; // 已经是标准中文名
+        }
+        $best = '';
+        foreach ($labels as $v) {
+            if (strpos($issuer, $v) !== false || strpos($v, $issuer) !== false) {
+                if (strlen($v) > strlen($best)) {
+                    $best = $v;
+                }
+            }
+        }
+        if ($best !== '') {
+            return $best;
+        }
+        return '未登记单位（' . $issuer . '）';
+    }
+}
+
 if (!function_exists('zw_receipt_stats_collect')) {
     /**
      * 采集统计（一次调用返回页面与导出共用的数据结构）。
@@ -116,15 +160,8 @@ if (!function_exists('zw_receipt_stats_collect')) {
         $org_labels = function_exists('zw_receipt_org_options') ? (array) zw_receipt_org_options() : array();
         $rows = $run("SELECT issuer, COUNT(*) cnt FROM {$table} WHERE {$where['sql']} GROUP BY issuer ORDER BY cnt DESC", $where['params']);
         foreach ((array) $rows as $one) {
-            $key = isset($one['issuer']) ? (string) $one['issuer'] : '';
-            if ($key === '') {
-                $label = '未标注';
-            } elseif (isset($org_labels[$key]) && $org_labels[$key] !== '') {
-                $label = (string) $org_labels[$key];
-            } else {
-                // OA-2477：字典缺中文名时不再裸露 key，明确标「未登记」并提示补名。
-                $label = '未登记单位（' . $key . '）';
-            }
+            $key   = isset($one['issuer']) ? (string) $one['issuer'] : '';
+            $label = zw_receipt_stats_org_label($key, $org_labels);
             $out['by_org'][$label] = (int) $one['cnt'];
         }
 
