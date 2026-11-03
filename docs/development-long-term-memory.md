@@ -495,3 +495,11 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
   `Illegal mix of collations`（页面与函数都拿不到数据）。
 - 规矩：**任何新表的外键式字符列，建表时显式 `DEFAULT CHARSET/COLLATE` 取主表的规则**；
   跨表比对**优先在 PHP 里做**，不要动辄 JOIN（排序规则不一致在生产很难第一时间发现）。
+
+## 2026-11-04 · 收文 5 张表补 canonical 横滑包裹（OA-2485，载体单 TASK-2577）
+
+- 主题 `tests/test-admin-h5-gate.php` 段 U 的扫描面包含 OA 插件 `includes/`；**任何 `<table>` 都必须落
+  canonical `.zw-adm-table-wrap`**，否则「未包裹 0」判红。收文打印页不在后台外壳作用域内 ⇒ 在
+  `zw_receipt_print_css()` 内**透传** `zw_adm_ui_table_wrap_css()`，不复制第二套声明；统计页规则由
+  `zw_receipt_admin_ui_page_open()` 透传。
+- 复核命令：`php scripts/admin-h5-static.php --paths <OA includes> --json` ⇒ **52/52 全包裹**（本单前 47/52）。

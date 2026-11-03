@@ -180,6 +180,17 @@
   - 迁移脚本改为**跟随主表排序规则**建表；表已存在但规则不同时自动 `ALTER ... CONVERT`；
   - 到期清单**去掉跨表 JOIN**，先取到期处置行再逐件判已归档（不再受排序规则影响）。
 
+## [0.1.25] - 2026-11-04
+
+### Fixed
+
+- **收文打印 / 统计页 5 张表补 canonical 横滑包裹（OA-2485）**：主题 `admin-h5-gate` 的「未包裹 0」判据实测
+  `includes/receipt/receipt-print.php` 4 张、`includes/receipt/receipt-stats.php` 1 张未落 canonical。
+  - 打印页 4 张表逐张套 `.zw-adm-table-wrap`，并在 `zw_receipt_print_css()` 内**透传**主题 canonical
+    `zw_adm_ui_table_wrap_css()`（打印页不在后台外壳作用域内；不复制第二套声明）；
+  - 统计页横条表套 canonical 容器（规则仍由收文台账页 `zw_receipt_admin_ui_page_open()` 透传）；
+  - 零功能变更：不改列/列宽/取数/权限/路由/字段名与提交形状。
+
 ## [Unreleased]
 
 ### Added
