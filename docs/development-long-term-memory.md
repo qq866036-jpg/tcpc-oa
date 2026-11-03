@@ -311,3 +311,18 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
   解析插件源码 ⇒ 只设后者时测试跑的是**插件主工作树**（旧代码），会「假绿」。跑收文相关测试必须
   `ZW_OA_DIR=<任务工作树> ZW_OA_PLUGIN_DIR=<任务工作树>` 两个都设。
 - 未验证：PaddleOCR 适配器未在真机跑（本机未装 paddlepaddle）；RapidOCR 真机识别耗时/准确率未测（依赖安装耗时）。
+
+## 2026-11-03 · 收文办理后半段：append-only 流水 + 角标改 $menu（OA-2464，载体单 TASK-2549）
+
+- **拟办/批示/传阅/催办一律不碰状态机**：`zw_policy_issue` 同时服务法务整改台账，扩状态值会污染语义
+  ⇒ 新表 `zw_receipt_handle_log`（只 INSERT）+ `zw_receipt_circulation`（只 INSERT，签阅只写 `read_at`）。
+  收文状态仍是 4 态 + 派生逾期；拟办/批示只是「留痕」，不是「状态」。
+- **归档三列只单行 UPDATE**：`page_count` / `archive_box_no` / `archive_year` 在 `zw_policy_source` 上，
+  `WHERE id = %s` 写三列；台账主查询 `zw_receipt_ledger_query()` 的 SQL **不许动**（契约面 + 主题断言），
+  归档信息用独立小查询 `zw_receipt_handle_archive_info()`（与 `zw_ocr_record()` 同套路）。
+- **待批示角标不能改 add_menu_page 实参**：主题 `tests/test-receipt-number-org.php` 取源判据是
+  「add_menu_page 块内出现 58.6」，把菜单标题换成变量会直接判红（本次实测踩到）。正确做法：
+  保持 `add_menu_page('收文管理','收文管理',…,58.6)` 原样，**之后**遍历 `$GLOBALS['menu']` 改标题加气泡。
+- **签阅是「同一行的状态变化」，不是新留痕**：所以 `read_at` 用单行 UPDATE（且 `AND read_at IS NULL`
+  保证只写一次），不要往 handle_log 里再插一条。
+- 迁移 `scripts/migrate-receipt-handle.php`（dbDelta + ADD COLUMN）**未在真库执行**，属发布窗口动作。
