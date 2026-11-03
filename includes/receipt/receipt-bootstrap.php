@@ -45,6 +45,7 @@ if (!function_exists('zw_receipt_admin_module_files')) {
             'receipt-auto.php',        // OA-2468 批示库 + 20 秒自动签阅（复用 handle_log，无新表）
             'receipt-export.php',      // OA-2470 台账 CSV 导出（按当前筛选；admin-post + nonce）
             'receipt-print.php',       // OA-2471 呈批单/传阅卡打印（打印友好 HTML，无第三方 PDF 依赖）
+            'receipt-stats.php',       // OA-2475 统计报表（纯只读聚合 + CSV 导出）
             'receipt-number-admin.php', // TASK-1306 收文编号设置页 + admin-post 保存入口
             'receipt-permissions.php', // R6 权限登记
         );

@@ -1014,6 +1014,26 @@ if (!function_exists('zw_receipt_page_ledger')) {
             zw_receipt_page_ledger_detail(isset($request['id']) ? $request['id'] : '');
             return;
         }
+        // OA-2475：统计报表视图（纯只读聚合；同样挂在台账页，不新增子菜单）。
+        if ($view === 'stats' && function_exists('zw_receipt_stats_render')) {
+            if (function_exists('zw_receipt_admin_ui_page_open')) {
+                zw_receipt_admin_ui_page_open(
+                    '收文统计',
+                    '按来文单位 / 年度 / 密级 / 办理状态汇总；逾期=未收口且时限早于今天，待批示=有拟办无批示。数据实时读取，不做缓存。',
+                    'zw-receipt-ledger'
+                );
+            } else {
+                echo '<div class="wrap zw-receipt-ledger"><h1>收文统计</h1>';
+            }
+            zw_receipt_stats_render();
+            if (function_exists('zw_receipt_admin_ui_page_close')) {
+                zw_receipt_admin_ui_page_close();
+            } else {
+                echo '</div>';
+            }
+            return;
+        }
+
         // OA-2468：收文自动化设置视图（批示库 + 自动签阅开关；同样挂在台账页，不新增子菜单）。
         if ($view === 'auto' && function_exists('zw_receipt_auto_render_settings')) {
             if (function_exists('zw_receipt_admin_ui_page_open')) {
@@ -1096,6 +1116,9 @@ if (!function_exists('zw_receipt_page_ledger')) {
         }
         if (function_exists('zw_receipt_auto_settings_url')) {
             echo ' <a class="button" href="' . esc_url(zw_receipt_auto_settings_url()) . '">自动化设置</a>';
+        }
+        if (function_exists('zw_receipt_stats_url')) {
+            echo ' <a class="button" href="' . esc_url(zw_receipt_stats_url()) . '">统计</a>';
         }
         // OA-2470：按当前筛选导出 CSV（Excel 可直接打开）。
         if (function_exists('zw_receipt_export_url')) {
