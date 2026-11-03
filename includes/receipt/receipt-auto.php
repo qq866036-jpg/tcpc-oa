@@ -727,6 +727,7 @@ if (!function_exists('zw_receipt_auto_dispatch_rules')) {
         $out = array();
         foreach (is_array($raw) ? $raw : array() as $org => $one) {
             $org = trim((string) $org);
+            // OA-2482：`*` = 通配规则（所有来文默认派同一部门）；具体部委 key 优先。
             if ($org === '' || !is_array($one)) {
                 continue;
             }
@@ -766,11 +767,12 @@ if (!function_exists('zw_receipt_auto_dispatch')) {
         }
         $view = function_exists('zw_receipt_ledger_row_view') ? zw_receipt_ledger_row_view($row) : $row;
         $org_key = isset($view['org_key']) ? (string) $view['org_key'] : '';
-        $rules   = zw_receipt_auto_dispatch_rules();
-        if ($org_key === '' || !isset($rules[$org_key])) {
+        $rules = zw_receipt_auto_dispatch_rules();
+        $rule  = zw_receipt_auto_dispatch_rule_for($rules, $org_key);
+        if ($rule === null) {
             return array('result' => 'skipped', 'issue_id' => '', 'note' => 'no_rule:' . $org_key);
         }
-        $dept = (string) $rules[$org_key]['dept'];
+        $dept = (string) $rule['dept'];
         if (function_exists('zw_receipt_issue_dept_key') && zw_receipt_issue_dept_key($dept) === '') {
             return array('result' => 'skipped', 'issue_id' => '', 'note' => 'bad_dept:' . $dept);
         }
@@ -782,7 +784,7 @@ if (!function_exists('zw_receipt_auto_dispatch')) {
             }
         }
 
-        $days = (int) $rules[$org_key]['days'];
+        $days = (int) $rule['days'];
         $due  = date('Y-m-d', strtotime('+' . $days . ' day'));
         $title = isset($view['title']) && $view['title'] !== '' ? (string) $view['title'] : '收文办理';
         $result = zw_receipt_issue_create(array(
@@ -965,7 +967,8 @@ if (!function_exists('zw_receipt_auto_render_rule_section')) {
             . '<textarea id="zw-auto-rules" name="auto_dispatch_rules" rows="5" placeholder="mca | office | 5">'
             . esc_html(implode("\n", $lines)) . '</textarea>'
             . '<p class="description">可用部委 key：' . esc_html(implode('、', array_keys($orgs))) . '；'
-            . '留空 = 不自动派单。承办部门用组织架构部门 key。</p></div>';
+            . '<code>*</code> = 通配（所有来文默认派该部门，具体 key 优先）；留空 = 不自动派单。'
+            . '承办部门用组织架构部门 key。</p></div>';
         echo '</div>';
     }
 }
@@ -1248,6 +1251,27 @@ if (!function_exists('zw_receipt_auto_dispatch_suggested_rules')) {
     }
 }
 
+if (!function_exists('zw_receipt_auto_dispatch_rule_for')) {
+    /**
+     * 取某部委 key 生效的派单规则（OA-2482）：**具体 key 优先 → `*` 通配 → 无**。
+     *
+     * @param array  $rules 规则表。
+     * @param string $org   部委 key。
+     * @return array{dept:string,days:int}|null
+     */
+    function zw_receipt_auto_dispatch_rule_for($rules, $org) {
+        $rules = is_array($rules) ? $rules : array();
+        $org   = (string) $org;
+        if ($org !== '' && isset($rules[$org])) {
+            return $rules[$org];
+        }
+        if (isset($rules['*'])) {
+            return $rules['*'];
+        }
+        return null;
+    }
+}
+
 if (!function_exists('zw_receipt_auto_dispatch_preview')) {
     /**
      * 派单**干跑预览**（只读，**不生成任何办理单**）。
@@ -1288,12 +1312,13 @@ if (!function_exists('zw_receipt_auto_dispatch_preview')) {
             $verdict = '';
             $dept_label = '';
             $due = '';
-            if (!isset($out['rules'][$key])) {
+            $rule = zw_receipt_auto_dispatch_rule_for($out['rules'], $key);
+            if ($rule === null) {
                 $verdict = '无规则（不派）';
             } else {
-                $dept = (string) $out['rules'][$key]['dept'];
+                $dept = (string) $rule['dept'];
                 $dept_label = isset($depts[$dept]) ? $depts[$dept] : $dept;
-                $due = date('Y-m-d', strtotime('+' . (int) $out['rules'][$key]['days'] . ' day'));
+                $due = date('Y-m-d', strtotime('+' . (int) $rule['days'] . ' day'));
                 $verdict = '会派单';
                 if (function_exists('zw_receipt_issue_query')) {
                     $exist = zw_receipt_issue_query(array('source_id' => $id, 'per_page' => 1));
