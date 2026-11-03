@@ -393,3 +393,13 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
   鉴权 `tcpc_perm_doc` + **按记录+单据类型绑定的 nonce**；只读、不写任何表。
 - 单据内容边界：来文要素 + 拟办/批示/办理单/传阅；**不含 OCR 正文与个人信息明细**。
 - 版式：A4 竖版、`@page` 15mm、正文 14px/1.6、表格 1px 实线；打印栏 `@media print{display:none}`。
+
+## 2026-11-03 · 自动催办 + 自动派单（OA-2472，载体单 TASK-2559）
+
+- `auto_urge`：每日 08:30 cron 扫 `policy_issue`（source_type=incoming 且 status 不在 已办结/归档），
+  时限在 N 天内（含逾期）⇒ 写 `urge` 留痕；**幂等键 = 办理单 ID + 时限**（内容里带 `# <id> ｜时限 <due>` 标记）。
+  不改办理状态、不派单；默认关。
+- `auto_dispatch`：登记后按 option `zw_receipt_dispatch_rules`（org_key => dept/days）派单，
+  **只补第一张**（已有办理单就跳过），走 `zw_receipt_issue_create()`；派单后写 `dispatch` 审计行；默认关。
+- 规则存 option（设置页一行一条 `部委 | 部门 | 天数`）；两天数的语义是**自然日**（不是工作日），已在 UI 说明。
+- 自动写入仍一律 `system:*` 标识 + 灰标；`dispatch` 是新增的内部动作（人工表单不出现）。

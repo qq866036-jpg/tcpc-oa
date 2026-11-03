@@ -67,6 +67,18 @@ if (!function_exists('zw_receipt_auto_switches')) {
                 'note'    => '开启后，收文登记 20 秒后由 WP-Cron 写一条「系统自动签阅」留痕，行时间即签名时间戳；'
                     . '可随时关闭改回人工签阅。',
             ),
+            'auto_urge'        => array(
+                'label'   => '自动催办（时限前 N 天写催办留痕）',
+                'default' => 0,
+                'note'    => '开启后，每日 08:30 扫描「未收口且时限在 N 天内」的办理单，写一条催办留痕'
+                    . '（系统自动催办）；同一办理单同一期限点只催一次。默认关，先观察再开。',
+            ),
+            'auto_dispatch'    => array(
+                'label'   => '自动派单（按部委规则生成办理单）',
+                'default' => 0,
+                'note'    => '开启后，新登记的收文按「部委 → 承办部门 + 默认天数」规则自动生成办理单'
+                    . '（走既有派单写入器）；无规则/部门不存在则不派。默认关，只对新登记生效。',
+            ),
         );
     }
 }
@@ -450,6 +462,10 @@ if (!function_exists('zw_receipt_auto_after_register')) {
             $r = zw_receipt_auto_apply_instruction($receipt_id);
             $out['instruction'] = is_wp_error($r) ? ('error:' . $r->get_error_code()) : 'done';
         }
+        if (zw_receipt_auto_enabled('auto_dispatch')) {
+            $r = zw_receipt_auto_dispatch($receipt_id);
+            $out['dispatch'] = is_wp_error($r) ? ('error:' . $r->get_error_code()) : (is_array($r) ? (string) $r['result'] : 'done');
+        }
         if (zw_receipt_auto_enabled('auto_sign')) {
             $out['sign'] = zw_receipt_auto_schedule_sign($receipt_id) ? 'scheduled' : 'skipped';
         }
@@ -514,6 +530,30 @@ if (!function_exists('zw_receipt_auto_handle_save')) {
             $settings[$key] = (isset($_POST[$key]) && (string) wp_unslash($_POST[$key]) === '1') ? 1 : 0;
         }
         update_option(ZW_RECEIPT_AUTO_OPTION, $settings);
+
+        // OA-2472：催办提前量 + 派单规则（一行一条：部委 key | 部门 key | 天数）
+        if (isset($_POST['auto_urge_days'])) {
+            update_option(ZW_RECEIPT_AUTO_URGE_DAYS_OPTION, (string) max(0, min(30, (int) wp_unslash($_POST['auto_urge_days']))));
+        }
+        if (isset($_POST['auto_dispatch_rules'])) {
+            $rules = array();
+            $raw   = (string) wp_unslash($_POST['auto_dispatch_rules']);
+            foreach (preg_split('/\r\n|\r|\n/', $raw) as $line) {
+                $line = trim((string) $line);
+                if ($line === '') {
+                    continue;
+                }
+                $parts = array_map('trim', explode('|', $line));
+                if (count($parts) < 2 || $parts[0] === '' || $parts[1] === '') {
+                    continue;
+                }
+                $rules[$parts[0]] = array(
+                    'dept' => $parts[1],
+                    'days' => isset($parts[2]) ? max(1, min(60, (int) $parts[2])) : 5,
+                );
+            }
+            update_option(ZW_RECEIPT_AUTO_DISPATCH_RULES_OPTION, $rules);
+        }
 
         $library = array();
         foreach (zw_receipt_auto_library_defaults() as $key => $meta) {
@@ -618,10 +658,287 @@ if (!function_exists('zw_receipt_auto_render_settings')) {
         }
         echo '</div>';
 
+        zw_receipt_auto_render_rule_section();
+
         echo '<div class="zw-adm-foot">'
             . '<a class="button" href="' . esc_url(function_exists('zw_receipt_ledger_admin_url') ? zw_receipt_ledger_admin_url() : '') . '">返回台账</a>'
             . '<button type="submit" class="button button-primary">保存自动化设置</button>'
             . '</div>';
         echo '</form>';
+    }
+}
+
+if (!defined('ZW_RECEIPT_AUTO_SYSTEM_URGE')) {
+    define('ZW_RECEIPT_AUTO_SYSTEM_URGE', 'system:auto-urge');
+}
+if (!defined('ZW_RECEIPT_AUTO_SYSTEM_DISPATCH')) {
+    define('ZW_RECEIPT_AUTO_SYSTEM_DISPATCH', 'system:auto-dispatch');
+}
+if (!defined('ZW_RECEIPT_AUTO_URGE_HOOK')) {
+    define('ZW_RECEIPT_AUTO_URGE_HOOK', 'zw_receipt_auto_urge_event');
+}
+if (!defined('ZW_RECEIPT_AUTO_URGE_DAYS_OPTION')) {
+    define('ZW_RECEIPT_AUTO_URGE_DAYS_OPTION', 'zw_receipt_auto_urge_days');
+}
+if (!defined('ZW_RECEIPT_AUTO_DISPATCH_RULES_OPTION')) {
+    define('ZW_RECEIPT_AUTO_DISPATCH_RULES_OPTION', 'zw_receipt_dispatch_rules');
+}
+
+if (!function_exists('zw_receipt_auto_urge_days')) {
+    /**
+     * 催办提前量（天；夹取 0–30，默认 2）。
+     *
+     * @return int
+     */
+    function zw_receipt_auto_urge_days() {
+        $raw = function_exists('get_option') ? (int) get_option(ZW_RECEIPT_AUTO_URGE_DAYS_OPTION, 2) : 2;
+        return max(0, min(30, $raw));
+    }
+}
+
+if (!function_exists('zw_receipt_auto_dispatch_rules')) {
+    /**
+     * 派单规则：`org_key => ['dept' => 部门 key, 'days' => 天数]`。
+     *
+     * 存 option（一行一条在设置页维护）；无规则即不自动派单（默认空）。
+     *
+     * @return array<string,array{dept:string,days:int}>
+     */
+    function zw_receipt_auto_dispatch_rules() {
+        $raw = function_exists('get_option') ? get_option(ZW_RECEIPT_AUTO_DISPATCH_RULES_OPTION, array()) : array();
+        $out = array();
+        foreach (is_array($raw) ? $raw : array() as $org => $one) {
+            $org = trim((string) $org);
+            if ($org === '' || !is_array($one)) {
+                continue;
+            }
+            $dept = isset($one['dept']) ? trim((string) $one['dept']) : '';
+            if ($dept === '') {
+                continue;
+            }
+            $days = isset($one['days']) ? (int) $one['days'] : 5;
+            $out[$org] = array('dept' => $dept, 'days' => max(1, min(60, $days)));
+        }
+        return $out;
+    }
+}
+
+if (!function_exists('zw_receipt_auto_dispatch')) {
+    /**
+     * 自动派单：按规则给收文生成一张办理单（走既有 `zw_receipt_issue_create()`，不新写 SQL）。
+     *
+     * 跳过条件（都返回 `result=skipped`，不报错）：无规则 / 部门 key 不合法 / 已有办理单。
+     *
+     * @param string $receipt_id 收文 ID。
+     * @return array{result:string,issue_id:string,note:string}|WP_Error
+     */
+    function zw_receipt_auto_dispatch($receipt_id) {
+        $receipt_id = function_exists('zw_receipt_handle_sanitize_id')
+            ? zw_receipt_handle_sanitize_id($receipt_id)
+            : trim((string) $receipt_id);
+        if ($receipt_id === '' || !function_exists('zw_receipt_issue_create')) {
+            return new WP_Error('zw_receipt_auto_dispatch_unavailable', '派单写入器未加载。');
+        }
+        if (zw_receipt_auto_has_action($receipt_id, 'dispatch', '')) {
+            return array('result' => 'skipped', 'issue_id' => '', 'note' => 'already dispatched');
+        }
+        $row = function_exists('zw_receipt_ledger_row_by_id') ? zw_receipt_ledger_row_by_id($receipt_id) : array();
+        if (!$row) {
+            return new WP_Error('zw_receipt_auto_no_receipt', '找不到该收文。');
+        }
+        $view = function_exists('zw_receipt_ledger_row_view') ? zw_receipt_ledger_row_view($row) : $row;
+        $org_key = isset($view['org_key']) ? (string) $view['org_key'] : '';
+        $rules   = zw_receipt_auto_dispatch_rules();
+        if ($org_key === '' || !isset($rules[$org_key])) {
+            return array('result' => 'skipped', 'issue_id' => '', 'note' => 'no_rule:' . $org_key);
+        }
+        $dept = (string) $rules[$org_key]['dept'];
+        if (function_exists('zw_receipt_issue_dept_key') && zw_receipt_issue_dept_key($dept) === '') {
+            return array('result' => 'skipped', 'issue_id' => '', 'note' => 'bad_dept:' . $dept);
+        }
+        // 已有办理单 ⇒ 不再派（一纸多单应由人决定，系统只补第一张）。
+        if (function_exists('zw_receipt_issue_query')) {
+            $existing = zw_receipt_issue_query(array('source_id' => $receipt_id, 'per_page' => 1));
+            if (!empty($existing['total'])) {
+                return array('result' => 'skipped', 'issue_id' => '', 'note' => 'issue_exists');
+            }
+        }
+
+        $days = (int) $rules[$org_key]['days'];
+        $due  = date('Y-m-d', strtotime('+' . $days . ' day'));
+        $title = isset($view['title']) && $view['title'] !== '' ? (string) $view['title'] : '收文办理';
+        $result = zw_receipt_issue_create(array(
+            'source_id'  => $receipt_id,
+            'title'      => '办理：' . $title,
+            'owner_dept' => $dept,
+            'due_date'   => $due,
+            'urgency'    => '',
+            'description' => '（系统自动派单：部委规则 ' . $org_key . ' → ' . $dept . '，默认 ' . $days . ' 天）',
+        ));
+        if (is_wp_error($result)) {
+            return $result;
+        }
+        $issue_id = '';
+        if (is_array($result)) {
+            $issue_id = isset($result['id']) ? (string) $result['id'] : '';
+        }
+        // 审计留痕：一条 dispatch 行（内部动作；不占用 拟办/批示/催办 的语义）。
+        if (function_exists('zw_receipt_handle_add')) {
+            zw_receipt_handle_add(array(
+                'receipt_id' => $receipt_id,
+                'action'     => 'dispatch',
+                'content'    => '系统自动派单：' . $dept . '，时限 ' . $due . '（规则 ' . $org_key . '）',
+            ), array('dispatch'), ZW_RECEIPT_AUTO_SYSTEM_DISPATCH);
+        }
+        return array('result' => 'done', 'issue_id' => $issue_id, 'note' => '');
+    }
+}
+
+if (!function_exists('zw_receipt_auto_urge_scan')) {
+    /**
+     * 每日扫描：对「未收口且时限在 N 天内（含已逾期）」的办理单写催办留痕。
+     *
+     * 幂等键 = 办理单 ID + 时限（同一期限内不重复催）。
+     *
+     * @param int $limit 单次最多处理条数（防跑太久）。
+     * @return array{due:int,urged:int,skipped:int}
+     */
+    function zw_receipt_auto_urge_scan($limit = 100) {
+        $out = array('due' => 0, 'urged' => 0, 'skipped' => 0);
+        if (!zw_receipt_auto_enabled('auto_urge') || !function_exists('zw_receipt_issue_table')) {
+            return $out;
+        }
+        global $wpdb;
+        $table = zw_receipt_issue_table();
+        if ($table === '' || !is_object($wpdb) || !method_exists($wpdb, 'get_results')) {
+            return $out;
+        }
+        $closed = array('已办结', '归档');
+        $rows   = $wpdb->get_results($wpdb->prepare(
+            "SELECT id, source_id, title, due_date, status FROM {$table}"
+            . " WHERE source_type = %s AND due_date <> '' AND status NOT IN (%s, %s)"
+            . " ORDER BY due_date ASC LIMIT %d",
+            'incoming',
+            $closed[0],
+            $closed[1],
+            max(1, (int) $limit)
+        ), 'ARRAY_A');
+        $rows = is_array($rows) ? $rows : array();
+        $today = function_exists('current_time') ? (string) current_time('Y-m-d') : date('Y-m-d');
+        $days  = zw_receipt_auto_urge_days();
+
+        foreach ($rows as $row) {
+            $due = isset($row['due_date']) ? (string) $row['due_date'] : '';
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $due)) {
+                continue;
+            }
+            $diff = (int) floor((strtotime($due) - strtotime($today)) / 86400);
+            if ($diff > $days) {
+                continue; // 还早，不催
+            }
+            $out['due']++;
+            $issue_id  = isset($row['id']) ? (string) $row['id'] : '';
+            $source_id = isset($row['source_id']) ? (string) $row['source_id'] : '';
+            if ($issue_id === '' || $source_id === '') {
+                continue;
+            }
+            $marker = '# ' . $issue_id . ' ｜时限 ' . $due;
+            $already = false;
+            foreach ((array) zw_receipt_handle_list($source_id) as $one) {
+                if (isset($one['action']) && (string) $one['action'] === 'urge'
+                    && strpos((string) (isset($one['content']) ? $one['content'] : ''), $marker) !== false) {
+                    $already = true;
+                    break;
+                }
+            }
+            if ($already) {
+                $out['skipped']++;
+                continue;
+            }
+            $word = $diff < 0 ? ('已逾期 ' . abs($diff) . ' 天') : ('距期限 ' . $diff . ' 天');
+            $add  = zw_receipt_handle_add(array(
+                'receipt_id' => $source_id,
+                'action'     => 'urge',
+                'content'    => '【系统自动催办】办理单 ' . $marker . '（' . $word . '），请抓紧办理。',
+            ), array('urge'), ZW_RECEIPT_AUTO_SYSTEM_URGE);
+            if (is_wp_error($add)) {
+                $out['skipped']++;
+            } else {
+                $out['urged']++;
+            }
+        }
+        return $out;
+    }
+}
+
+if (!function_exists('zw_receipt_auto_schedule_urge')) {
+    /**
+     * 排每日催办扫描（08:30）；已排过则不重复。
+     *
+     * @return void
+     */
+    function zw_receipt_auto_schedule_urge() {
+        if (!function_exists('wp_next_scheduled') || !function_exists('wp_schedule_event')) {
+            return;
+        }
+        if (!zw_receipt_auto_enabled('auto_urge')) {
+            return;
+        }
+        if (!wp_next_scheduled(ZW_RECEIPT_AUTO_URGE_HOOK)) {
+            wp_schedule_event(strtotime('tomorrow 08:30'), 'daily', ZW_RECEIPT_AUTO_URGE_HOOK);
+        }
+    }
+}
+
+if (!function_exists('zw_receipt_auto_urge_register_hooks')) {
+    /**
+     * 注册催办 cron 回调与每日排期。
+     *
+     * @return void
+     */
+    function zw_receipt_auto_urge_register_hooks() {
+        if (!function_exists('add_action')) {
+            return;
+        }
+        add_action(ZW_RECEIPT_AUTO_URGE_HOOK, 'zw_receipt_auto_urge_scan', 10, 0);
+        add_action('init', 'zw_receipt_auto_schedule_urge', 20);
+    }
+}
+
+if (function_exists('add_action')) {
+    zw_receipt_auto_urge_register_hooks();
+}
+
+if (!function_exists('zw_receipt_auto_render_rule_section')) {
+    /**
+     * 设置页「催办 / 派单规则」区块（供 `zw_receipt_auto_render_settings()` 调用）。
+     *
+     * @return void
+     */
+    function zw_receipt_auto_render_rule_section() {
+        if (!function_exists('esc_html')) {
+            return;
+        }
+        $days  = zw_receipt_auto_urge_days();
+        $rules = zw_receipt_auto_dispatch_rules();
+        $lines = array();
+        foreach ($rules as $org => $one) {
+            $lines[] = $org . ' | ' . $one['dept'] . ' | ' . (int) $one['days'];
+        }
+        $orgs = function_exists('zw_receipt_org_options') ? zw_receipt_org_options() : array();
+
+        echo '<div class="zw-adm-card" style="margin:0 0 16px">';
+        echo '<h2>催办与派单规则</h2>';
+        echo '<div class="zw-adm-grid is-2">';
+        echo '<div class="zw-adm-field"><label for="zw-auto-urge-days">催办提前量（天）</label>'
+            . '<input type="number" id="zw-auto-urge-days" name="auto_urge_days" min="0" max="30" value="' . esc_attr((string) $days) . '">'
+            . '<p class="description">时限前 N 天（含已逾期）开始催办；0 = 只在逾期当天催。</p></div>';
+        echo '</div>';
+        echo '<div class="zw-adm-field"><label for="zw-auto-rules">自动派单规则（一行一条：部委 key | 承办部门 key | 天数）</label>'
+            . '<textarea id="zw-auto-rules" name="auto_dispatch_rules" rows="5" placeholder="mca | office | 5">'
+            . esc_html(implode("\n", $lines)) . '</textarea>'
+            . '<p class="description">可用部委 key：' . esc_html(implode('、', array_keys($orgs))) . '；'
+            . '留空 = 不自动派单。承办部门用组织架构部门 key。</p></div>';
+        echo '</div>';
     }
 }
