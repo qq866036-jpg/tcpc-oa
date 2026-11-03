@@ -967,6 +967,11 @@ if (!defined('ZW_RECEIPT_AUTO_ARCHIVE_HOOK')) {
 if (!defined('ZW_RECEIPT_AUTO_ARCHIVE_TEMPLATE_OPTION')) {
     define('ZW_RECEIPT_AUTO_ARCHIVE_TEMPLATE_OPTION', 'zw_receipt_archive_template');
 }
+if (!defined('ZW_RECEIPT_AUTO_ARCHIVE_NO_ISSUE_OPTION')) {
+    // 2026-11-03 实测事故（OA-2474）：0.1.13 首版把「无办理单」也当收口，一次扫描把 3 张真实来文
+    // 写上了测试盒号。默认 **不** 归档无办理单的收文；确需时显式打开。
+    define('ZW_RECEIPT_AUTO_ARCHIVE_NO_ISSUE_OPTION', 'zw_receipt_archive_allow_no_issue');
+}
 
 if (!function_exists('zw_receipt_auto_archive_template')) {
     /**
@@ -1045,11 +1050,22 @@ if (!function_exists('zw_receipt_auto_archive_one')) {
             return array('result' => 'skipped', 'box' => (string) $info['archive_box_no'], 'year' => (int) $info['archive_year'], 'note' => 'already_archived');
         }
 
-        // 门禁①：所有办理单已收口（无办理单 ⇒ 视为收口）。
+        // 门禁①：办理单全部收口；**无办理单默认不归档**（OA-2474 事故：首版把无单当收口，误归档 3 张真实来文）。
         if (function_exists('zw_receipt_issue_table')) {
             global $wpdb;
             $table = zw_receipt_issue_table();
             if ($table !== '' && is_object($wpdb) && method_exists($wpdb, 'get_var')) {
+                $total = (int) $wpdb->get_var($wpdb->prepare(
+                    "SELECT COUNT(*) FROM {$table} WHERE source_type = %s AND source_id = %s",
+                    'incoming',
+                    $receipt_id
+                ));
+                if ($total === 0) {
+                    $allow = function_exists('get_option') ? (int) get_option(ZW_RECEIPT_AUTO_ARCHIVE_NO_ISSUE_OPTION, 0) : 0;
+                    if ($allow !== 1) {
+                        return array('result' => 'skipped', 'box' => '', 'year' => 0, 'note' => 'no_issue');
+                    }
+                }
                 $open = (int) $wpdb->get_var($wpdb->prepare(
                     "SELECT COUNT(*) FROM {$table} WHERE source_type = %s AND source_id = %s AND status NOT IN (%s, %s)",
                     'incoming',
