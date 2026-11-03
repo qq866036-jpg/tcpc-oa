@@ -47,6 +47,7 @@ if (!function_exists('zw_receipt_admin_module_files')) {
             'receipt-print.php',       // OA-2471 呈批单/传阅卡打印（打印友好 HTML，无第三方 PDF 依赖）
             'receipt-stats.php',       // OA-2475 统计报表（纯只读聚合 + CSV 导出）
             'receipt-notify.php',      // OA-2476 通知：事件自登记 + 每日摘要 + 站内提示（复用主题通知中心）
+            'receipt-disposal.php',    // OA-2483 档案处置：保管期限/清退/销毁（只写状态，不删文件）
             'receipt-number-admin.php', // TASK-1306 收文编号设置页 + admin-post 保存入口
             'receipt-permissions.php', // R6 权限登记
         );
