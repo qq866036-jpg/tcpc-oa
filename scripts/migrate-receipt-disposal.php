@@ -28,7 +28,27 @@ if ($mode === 'verify') {
     exit($miss ? 1 : 0);
 }
 
-if ($exists) { echo "已存在，无需建表。\n"; exit(0); }
+// OA-2484：新建表必须**跟随主表排序规则**，否则 `s.id = d.receipt_id` 这类 JOIN 会报
+// Illegal mix of collations（0.1.23 实测：处置表被建成了 utf8mb4_unicode_520_ci）。
+$src_table   = $wpdb->prefix . 'zw_policy_source';
+$src_coll    = $wpdb->get_var($wpdb->prepare('SELECT TABLE_COLLATION FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s', $src_table));
+$src_coll    = $src_coll ? (string) $src_coll : 'utf8mb4_general_ci';
+$src_charset = strpos($src_coll, 'utf8mb4') === 0 ? 'utf8mb4' : 'utf8';
+echo "主表排序规则：{$src_coll}\n";
+
+if ($exists) {
+    $cur = $wpdb->get_var($wpdb->prepare('SELECT TABLE_COLLATION FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s', $table));
+    if ((string) $cur !== $src_coll) {
+        $fix = "ALTER TABLE {$table} CONVERT TO CHARACTER SET {$src_charset} COLLATE {$src_coll}";
+        if ($mode === 'dry-run') { echo "将执行（修排序规则）：\n{$fix}\n（dry-run，未写入）\n"; exit(0); }
+        $wpdb->query($fix);
+        $now = $wpdb->get_var($wpdb->prepare('SELECT TABLE_COLLATION FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s', $table));
+        echo "✓ 已修排序规则：{$cur} → {$now}\n";
+        exit((string) $now === $src_coll ? 0 : 1);
+    }
+    echo "已存在且排序规则一致（{$cur}），无需处理。\n";
+    exit(0);
+}
 
 $sql = "CREATE TABLE {$table} (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -44,7 +64,7 @@ $sql = "CREATE TABLE {$table} (
   PRIMARY KEY (id),
   KEY receipt_id (receipt_id),
   KEY until (until)
-) {$wpdb->get_charset_collate()};";
+) DEFAULT CHARACTER SET {$src_charset} COLLATE {$src_coll};";
 
 if ($mode === 'dry-run') {
     echo "将执行：\n{$sql}\n（dry-run，未写入）\n";
