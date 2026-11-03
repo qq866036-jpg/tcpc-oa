@@ -430,3 +430,13 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
 - 逾期 = 未收口（status ∉ 已办结/归档）且 `due_date` < 今天；待批示 = 有拟办无批示（与详情页角标同源）；
   归档率 = 已写盒号 ÷ 收文总量。
 - 不引图表库：横条用共享令牌色 + 宽度百分比，导出 CSV 用同一份 `collect()` 结果（页面与导出口径不会漂）。
+
+## 2026-11-03 · 收文通知与主题通知中心的衔接口径（OA-2476，载体单 TASK-2563）
+
+- **Webhook 名称/地址/默认群/事件绑定只在主题侧**（`inc/notification-center/wecom-webhooks.php`：
+  `zw_notify_wecom_webhooks` / `zw_notify_wecom_event_webhook_map`）。插件**只登记事件 + 调用发送**，
+  不存任何密钥或 URL —— 这是跨仓红线，别在插件里再长出一套 webhook 配置。
+- 事件登记走过滤器 `zw_notify_wecom_events`（先例：活动域、安全中心），不改通知中心文件。
+- 投递结果与重试全在 `ZW_Notify_Log`（「通知中心 → 通知记录」）；绑定到停用/无效群时**不改道默认群**。
+- 幂等：同一事件同一自然日一次（transient 24h）；摘要合并、不按件刷屏。
+- 主题缺席（无 `zw_notify_wecom_send_event`）时静默降级为只做站内提示。

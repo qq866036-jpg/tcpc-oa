@@ -93,6 +93,19 @@
   - 筛选：年度 + 来文单位（与台账字典同源）；「导出统计 CSV」（按当前筛选，BOM，鉴权同台账）；
   - 口径写死在 `receipt-stats.php` 头部并显示在页面底部（逾期=未收口且时限早于今天；待批示=有拟办无批示）。
 
+## [0.1.16] - 2026-11-03
+
+### Added
+
+- **收文通知接入主题通知中心（OA-2476）**：复用 `inc/notification-center`，**插件不存任何 Webhook 地址/密钥**。
+  - 自登记 4 个企微事件（过滤器 `zw_notify_wecom_events`）：`oa_receipt_pending`（待批示）、
+    `oa_receipt_overdue`（逾期）、`oa_receipt_urge`（催办）、`oa_receipt_archived`（归档）；
+    后台「通知中心 → 企业微信 → 名称对应管理」即可为这些事件**选 Webhook 名称**；
+  - 每日 08:40 摘要：待批示 / 逾期各合并成一条（前 5 件清单），**同一事件每天只发一次**；
+  - 催办后、归档后各发一条（每收文每天最多一次）；
+  - 站内：台账顶部新增「N 件办理单已逾期」提示（与既有「待批示」提示并列，纯只读）；
+  - 总开关 `auto_notify` **默认关**；主题缺席时（无 `zw_notify_wecom_send_event`）静默降级为只做站内。
+
 ## [Unreleased]
 
 ### Added

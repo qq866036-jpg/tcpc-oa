@@ -1126,6 +1126,15 @@ if (!function_exists('zw_receipt_page_ledger')) {
         }
         echo '</div>';
 
+        // OA-2476：站内提示——逾期（纯只读；逾期数取自办理单）。
+        if (function_exists('zw_receipt_notify_counts')) {
+            $zw_notify = zw_receipt_notify_counts();
+            if (!empty($zw_notify['overdue'])) {
+                echo '<div class="notice notice-warning inline" style="margin:0 0 14px"><p>有 <strong>'
+                    . (int) $zw_notify['overdue'] . ' 件办理单已逾期</strong>，请到「收文办理」督办。</p></div>';
+            }
+        }
+
         // OA-2464：待批示提示（有拟办、无批示）。角标在左侧菜单，这里给可读入口。
         if (function_exists('zw_receipt_handle_pending_instruction')) {
             $zw_pending = (int) zw_receipt_handle_pending_instruction();
