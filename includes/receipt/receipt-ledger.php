@@ -1321,7 +1321,16 @@ if (!function_exists('zw_receipt_page_ledger_detail')) {
         }
         echo '<h1>收文详情</h1>';
         echo '<p style="margin:0 0 12px"><a class="button" href="'
-            . esc_url(zw_receipt_ledger_admin_url()) . '">← 返回收文台账</a></p>';
+            . esc_url(zw_receipt_ledger_admin_url()) . '">← 返回收文台账</a>';
+        // OA-2471：呈批单 / 传阅卡打印（新窗口；浏览器「打印 / 另存为 PDF」）。
+        if (function_exists('zw_receipt_print_url')) {
+            $print_id = isset($row['id']) ? (string) $row['id'] : '';
+            echo ' <a class="button" target="_blank" rel="noopener" href="'
+                . esc_url(zw_receipt_print_url($print_id, 'approval')) . '">打印呈批单</a>'
+                . ' <a class="button" target="_blank" rel="noopener" href="'
+                . esc_url(zw_receipt_print_url($print_id, 'circulation')) . '">打印传阅卡</a>';
+        }
+        echo '</p>';
 
         if (!$row) {
             echo '<div class="notice notice-warning"><p>未找到该收文：'

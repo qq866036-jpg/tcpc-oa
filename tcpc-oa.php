@@ -3,7 +3,7 @@
  * Plugin Name: 中传网办公协同
  * Plugin URI:  https://tcpc.org.cn/
  * Description: 中传网办公协同（发文管理 / 收文管理 / AI法务部 / AI秘书处 / 网盘文件中心 / 组织架构业务）。独立仓 tcpc-oa。
- * Version:     0.1.10
+ * Version:     0.1.11
  * Author:      中国传统文化促进会
  * Requires PHP: 7.4
  * Text Domain: tcpc-oa
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 if (!defined('TCPC_OA_VERSION')) {
-    define('TCPC_OA_VERSION', '0.1.10');
+    define('TCPC_OA_VERSION', '0.1.11');
 }
 
 if (!defined('TCPC_OA_DIR')) {
