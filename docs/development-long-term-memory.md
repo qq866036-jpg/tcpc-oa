@@ -368,3 +368,10 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
 - **内部动作 `sign` 只能内部写**：`zw_receipt_handle_add($raw, $extra_actions, $system_login)` 第三参传 system 标识；
   人工表单仍只给 拟办/批示/催办 三项（否则任何人可手写"签阅"）。
 - 未做（等确认）：auto_dispatch / auto_circulate / auto_urge / auto_archive；LLM 生成批示需另立合规评估。
+
+## 2026-11-03 · 0.1.9 上线（OA-2469，载体单 TASK-2555）
+
+- 0.1.8 → **0.1.9** 三处同改后 `plugin-switch-oa.sh` 发版；**零迁移**（批示库/自动签阅复用既有表）。
+- 上线后验证口径：登记一条测试收文 → 详情页应立刻出现「系统自动（批示库）」批示；
+  20 秒后出现 `自动签阅` 条目，`created_at` 即签名时间戳；时间线两条均为灰标「系统自动」。
+- 回滚：`plugin-switch-oa.sh --rollback <ts>`；或后台把两个自动开关关掉（零行为）。
