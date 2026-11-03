@@ -258,3 +258,13 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
   再 finish 即可（OA-2459 实测可行；但会多一轮 preflight/finish，属可避免的成本）。
 - **为什么 ③ 不依赖载体 marker**：AGENT-0091/0093 之后，卫星单 marker 从插件仓归因（`<基座>/task-<本号>`），
   与主题工作树里的载体 marker 无关。
+
+## 2026-11-03 · 收文上线窗口实跑（OA-2466，载体单 TASK-2551）
+
+- **版本**：0.1.6 → **0.1.7**（三处同改：`VERSION`、`TCPC_OA_VERSION`、插件头 `Version:`）。
+- **窗口顺序（实跑）**：备份（`/root/tcpc-oa-backup-<ts>.tgz` + `/root/tcpc-oa-db-<ts>.sql`）→
+  `plugin-switch-oa.sh --dry-run` → 正式发版 → `migrate-receipt-ocr.php`（dry-run/execute/verify）→
+  `migrate-receipt-handle.php`（同上）→ OCR 服务（venv + systemd + `/health`）→ 后台开开关 → 冒烟。
+- **迁移脚本必须从插件仓检出跑**（生产插件目录没有 `scripts/`，export-ignore）。
+- **回滚点**：插件 `bash scripts/plugin-switch-oa.sh --rollback <ts>`；OCR 只关开关（`zw_ocr_enabled=0`）；
+  新增列/表不回滚（对旧代码无影响，DROP 会丢留痕）。
