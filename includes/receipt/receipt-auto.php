@@ -79,6 +79,13 @@ if (!function_exists('zw_receipt_auto_switches')) {
                 'note'    => '开启后，新登记的收文按「部委 → 承办部门 + 默认天数」规则自动生成办理单'
                     . '（走既有派单写入器）；无规则/部门不存在则不派。默认关，只对新登记生效。',
             ),
+            'auto_notify'      => array(
+                'label'   => '发送通知（企微事件 + 每日摘要）',
+                'default' => 0,
+                'note'    => '开启后，待批示/逾期每日摘要、催办与归档会调用主题通知中心的企微事件；'
+                    . '**发到哪个群由「通知中心 → 企业微信 → 名称对应管理」按事件绑定**（未绑走默认群）。'
+                    . '本插件不存任何 Webhook 地址或密钥。默认关。',
+            ),
             'auto_archive'     => array(
                 'label'   => '自动归档（办结后写归档年度/盒号）',
                 'default' => 0,
@@ -875,6 +882,10 @@ if (!function_exists('zw_receipt_auto_urge_scan')) {
                 $out['skipped']++;
             } else {
                 $out['urged']++;
+                // OA-2476：催办后发一条（每收文每天最多一次；主题缺席时静默）。
+                if (function_exists('zw_receipt_notify_urge')) {
+                    zw_receipt_notify_urge($source_id, $issue_id, $due);
+                }
             }
         }
         return $out;
@@ -1142,6 +1153,9 @@ if (!function_exists('zw_receipt_auto_archive_one')) {
                 'action'     => 'archive',
                 'content'    => '系统自动归档：盒号 ' . $box . '，年度 ' . $year,
             ), array('archive'), ZW_RECEIPT_AUTO_SYSTEM_ARCHIVE);
+        }
+        if (function_exists('zw_receipt_notify_after_archive')) {
+            zw_receipt_notify_after_archive($receipt_id, $box, $year);
         }
         return array('result' => 'done', 'box' => $box, 'year' => $year, 'note' => '');
     }
