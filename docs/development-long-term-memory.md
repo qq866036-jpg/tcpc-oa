@@ -411,3 +411,14 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
   仍冲突 ⇒ `skipped:box_conflict`（绝不覆盖别人盒号）。
 - 年度：收文日期年，缺失/非法取当前年；写入走 `zw_receipt_archive_save()` 单行三列 + `archive` 审计留痕。
 - 默认关；每日 09:10 cron 扫描；零迁移。
+
+## 2026-11-03 · 自动归档误写事故与门禁收紧（OA-2474，载体单 TASK-2561）
+
+- **事故**：0.1.13 首版 `zw_receipt_auto_archive_one()` 把「无办理单」当收口；在真实库上跑一次扫描
+  （limit=50）即把 3 张真实来文写上测试盒号（`2026-cssw-0001`/`2026-mca-0003`/`2026-other-0004`）。
+  发现后立刻用一条 `UPDATE` 把 3 行 `archive_box_no/archive_year/page_count` 置回 NULL（影响 3 行，已核）。
+- **教训（写进脑子）**：任何「批量扫描 + 自动写业务字段」的新功能，**第一次在真实库上跑之前**必须先：
+  ① 用 `limit=1` 或 dry-run 形态验证命中面；② 确认「无前置条件」的样本不会被误判为满足条件。
+  「缺失即满足」是最危险的默认值。
+- **收紧**：办理单为 0 ⇒ `skipped:no_issue`；要归档无单收文必须显式 `zw_receipt_archive_allow_no_issue=1`。
+- 版本 0.1.13 → 0.1.14；零迁移（只改门禁逻辑）。

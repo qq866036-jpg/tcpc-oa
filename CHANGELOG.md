@@ -74,6 +74,15 @@
   - 写入走 `zw_receipt_archive_save()`（单行 UPDATE 三列）+ 一条 `archive` 审计留痕（`system:auto-archive`）；
   - 开关**默认关**；零数据库迁移。
 
+## [0.1.14] - 2026-11-03
+
+### Fixed
+
+- **热修（OA-2474）：自动归档门禁收紧** —— 0.1.13 把「无办理单」也当收口，实测一次扫描把 3 张真实来文
+  写上了测试盒号（`2026-cssw-0001` / `2026-mca-0003` / `2026-other-0004`）。已回滚那 3 行（`archive_*` 置 NULL）。
+  本次改为：**办理单为 0 ⇒ 不归档**（`skipped:no_issue`）；确需归档无单收文时用 option
+  `zw_receipt_archive_allow_no_issue=1` 显式允许（默认 0）。
+
 ## [Unreleased]
 
 ### Added
