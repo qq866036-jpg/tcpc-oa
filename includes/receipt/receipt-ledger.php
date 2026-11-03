@@ -755,6 +755,152 @@ if (!function_exists('zw_receipt_ledger_attachment_download_url')) {
     }
 }
 
+/* ═════════════════════════════ 办理状态聚合（OA-2462） ═════════════════════════════ */
+
+if (!function_exists('zw_receipt_ledger_issue_map')) {
+    /**
+     * 批量取「收文 → 办理单」汇总（台账 / 详情页展示用；**只读**）。
+     *
+     * 为什么单独一条查询、而不并进 `zw_receipt_ledger_query()`：
+     * 台账主查询的 SQL 形状是主题契约面（`contract-api.php` 的收文快照 + 主题侧
+     * `tests/test-receipt-ledger.php` 对 `FROM 政策源表 WHERE origin = %s` 与
+     * `LIMIT %d OFFSET %d` 的逐项断言）。在那里加 LEFT JOIN 会同时改契约面与断言口径
+     * ⇒ 保持主查询**一字不动**，状态聚合走本函数（按当页 ID 批量查）。
+     *
+     * 状态派生（与 `receipt-issues.php` 同口径，**不新造状态词**）：
+     *   · 无办理单 ⇒ `待派单`（展示态，不落库）；
+     *   · 任一单 `zw_receipt_issue_is_overdue()` 为真 ⇒ `逾期`（派生，不落库）；
+     *   · 存在未收口单（状态不在 `已办结` / `归档`）⇒ `办理中`；
+     *   · 全部收口 ⇒ `已办结`。
+     *
+     * @param string[] $ids 收文记录 ID 列表。
+     * @return array<string,array<string,mixed>> id => array(status, overdue, count, due_date, risk_level)
+     */
+    function zw_receipt_ledger_issue_map($ids) {
+        $ids = is_array($ids) ? $ids : array();
+        $clean = array();
+        foreach ($ids as $id) {
+            $id = trim((string) $id);
+            if ($id !== '' && strlen($id) <= 64 && preg_match('/^[A-Za-z0-9_-]+$/', $id)) {
+                $clean[$id] = $id;
+            }
+        }
+        if (!$clean) {
+            return array();
+        }
+        if (!function_exists('zw_receipt_issue_table') || !function_exists('zw_receipt_issue_schema_ready')
+            || !zw_receipt_issue_schema_ready()) {
+            return array();
+        }
+
+        global $wpdb;
+        if (!is_object($wpdb) || !method_exists($wpdb, 'get_results')) {
+            return array();
+        }
+
+        $table        = zw_receipt_issue_table();
+        $placeholders = implode(',', array_fill(0, count($clean), '%s'));
+        $sql          = "SELECT source_id, status, due_date, risk_level FROM {$table}"
+            . " WHERE source_type = %s AND source_id IN ({$placeholders})";
+        $params = array_merge(array(zw_receipt_issue_source_type()), array_values($clean));
+        $rows   = function_exists('zw_receipt_prepare_sql')
+            ? $wpdb->get_results(zw_receipt_prepare_sql($sql, $params), zw_receipt_ledger_array_a())
+            : $wpdb->get_results($wpdb->prepare($sql, $params), zw_receipt_ledger_array_a());
+        $rows = is_array($rows) ? $rows : array();
+
+        $today  = function_exists('zw_receipt_issue_today') ? (string) zw_receipt_issue_today() : '';
+        $closed = array('已办结', '归档');
+        $map    = array();
+        foreach ($rows as $row) {
+            $row = is_array($row) ? $row : array();
+            $sid = trim((string) (isset($row['source_id']) ? $row['source_id'] : ''));
+            if ($sid === '') {
+                continue;
+            }
+            if (!isset($map[$sid])) {
+                $map[$sid] = array(
+                    'status'     => '待派单',
+                    'overdue'    => false,
+                    'open'       => false,
+                    'count'      => 0,
+                    'due_date'   => '',
+                    'risk_level' => '',
+                );
+            }
+            $map[$sid]['count']++;
+            $risk = trim((string) (isset($row['risk_level']) ? $row['risk_level'] : ''));
+            if ($map[$sid]['risk_level'] === '' && $risk !== '') {
+                $map[$sid]['risk_level'] = $risk;
+            }
+            $due = trim((string) (isset($row['due_date']) ? $row['due_date'] : ''));
+            if ($map[$sid]['due_date'] === '' && $due !== '') {
+                $map[$sid]['due_date'] = $due;
+            }
+            if (function_exists('zw_receipt_issue_is_overdue') && zw_receipt_issue_is_overdue($row, $today)) {
+                $map[$sid]['overdue'] = true;
+            }
+            $status = trim((string) (isset($row['status']) ? $row['status'] : ''));
+            if (!in_array($status, $closed, true)) {
+                $map[$sid]['open'] = true;
+            }
+        }
+
+        foreach ($map as $sid => $item) {
+            if (!empty($item['overdue'])) {
+                $map[$sid]['status'] = '逾期';
+            } elseif (!empty($item['open'])) {
+                $map[$sid]['status'] = '办理中';
+            } else {
+                $map[$sid]['status'] = '已办结';
+            }
+            unset($map[$sid]['open']);
+        }
+
+        return $map;
+    }
+}
+
+if (!function_exists('zw_receipt_ledger_detail_url')) {
+    /**
+     * 收文详情页地址（同一个后台页的 `view=detail` 分支；**不新增菜单项**）。
+     *
+     * @param string $id 收文记录 ID。
+     * @return string
+     */
+    function zw_receipt_ledger_detail_url($id) {
+        $id   = trim((string) $id);
+        $base = function_exists('admin_url') ? (string) admin_url('admin.php') : 'admin.php';
+        $args = array('page' => 'zw-receipt-ledger', 'view' => 'detail');
+        if ($id !== '') {
+            $args['id'] = $id;
+        }
+        if (function_exists('add_query_arg')) {
+            return (string) add_query_arg($args, $base);
+        }
+        return $base . '?' . http_build_query($args);
+    }
+}
+
+if (!function_exists('zw_receipt_ledger_admin_url')) {
+    /**
+     * 收文后台某页面地址（`收文登记` 主按钮与 `重置` 用；无 WP 环境退化拼装）。
+     *
+     * @param string $slug 页面 slug（`zw-receipt-*`）。
+     * @return string
+     */
+    function zw_receipt_ledger_admin_url($slug = 'zw-receipt-ledger') {
+        $slug = trim((string) $slug);
+        if ($slug === '') {
+            $slug = 'zw-receipt-ledger';
+        }
+        $base = function_exists('admin_url') ? (string) admin_url('admin.php') : 'admin.php';
+        if (function_exists('add_query_arg')) {
+            return (string) add_query_arg(array('page' => $slug), $base);
+        }
+        return $base . '?page=' . rawurlencode($slug);
+    }
+}
+
 /* ═════════════════════════════ 权限与页面 URL ═════════════════════════════ */
 
 if (!function_exists('zw_receipt_ledger_can')) {
@@ -846,24 +992,50 @@ if (!function_exists('zw_receipt_page_ledger')) {
             return;
         }
 
-        $args   = zw_receipt_ledger_request_args(isset($_GET) ? $_GET : array());
-        $result = zw_receipt_ledger_query($args);
-        $orgs   = zw_receipt_org_options();
+        $request = isset($_GET) && is_array($_GET) ? $_GET : array();
+        $view    = isset($request['view'])
+            ? strtolower((string) preg_replace('/[^A-Za-z_]/', '', (string) $request['view']))
+            : '';
+        if ($view === 'detail') {
+            zw_receipt_page_ledger_detail(isset($request['id']) ? $request['id'] : '');
+            return;
+        }
+
+        $args    = zw_receipt_ledger_request_args($request);
+        $result  = zw_receipt_ledger_query($args);
+        $orgs    = zw_receipt_org_options();
         $filters = $result['filters'];
 
-        echo '<div class="wrap">';
+        // OA-2462：当页收文的「办理状态」（按当页 ID 批量一条查询；办理表缺失/迁移未跑 ⇒
+        // 空 map，状态列显示「—」，页面照常可用，不因办理表不可用而整页失败）。
+        $page_ids = array();
+        foreach ($result['rows'] as $row) {
+            if (isset($row['id']) && (string) $row['id'] !== '') {
+                $page_ids[] = (string) $row['id'];
+            }
+        }
+        $issue_map = zw_receipt_ledger_issue_map($page_ids);
+
+        echo '<div class="wrap zw-receipt-ledger">';
         // TASK-1633（TASK-1579 P1-6 第四批）：收文管理域不在会员域外壳作用域内
         // （slug 前缀 `zw-receipt` 不命中 `zw_mc_adm_is_screen()`）⇒ 本页须自带 canonical 规则输出点；
         // 唯一出处仍是 canonical `zw_adm_ui_table_wrap_css()`（经本域唯一出口透传，不复制第二套声明）。
         echo function_exists('zw_receipt_admin_ui_table_wrap_style') ? zw_receipt_admin_ui_table_wrap_style() : '';
+        // OA-2462：共享卡片 / 字段 / 徽章 / 分页令牌（与发文管理同一套；唯一出处
+        // `includes/oa/admin-ui.php`，本域不写第二套声明）。
+        echo function_exists('zw_receipt_admin_ui_style') ? zw_receipt_admin_ui_style() : '';
         echo '<h1>收文台账</h1>';
         // TASK-2008：文件默认打开动作 canonical 资源（doc-viewer 弹层/图片灯箱 + file-icon + 本控件样式）。
         // 本页不在会员域外壳作用域内 ⇒ 必须自带输出点（不新增全局 CSS 文件）。
         if (function_exists('zw_control_file_open_assets')) {
             zw_control_file_open_assets();
         }
-        echo '<p style="color:#646970">只显示 <code>origin=incoming</code> 的来文；本会自产文件（章程/管理办法/保密协议/隐私政策）不出现在此视图（<a href="'
+        echo '<p class="zw-doc-sub">只显示 <code>origin=incoming</code> 的来文；本会自产文件（章程/管理办法/保密协议/隐私政策）不出现在此视图（<a href="'
             . esc_url(zw_receipt_ledger_page_url(array(), 1, 'zw-receipt-orgs')) . '">部委与年份目录</a>）。</p>';
+
+        // 主操作（与发文列表页「新建发文」同位：标题下、筛选上）
+        echo '<div style="margin:10px 0 14px"><a class="button button-primary" href="'
+            . esc_url(zw_receipt_ledger_admin_url('zw-receipt-create')) . '">登记收文</a></div>';
 
         if (!$result['schema_ready']) {
             echo '<div class="notice notice-warning"><p>收文台账暂不可用：数据表尚未迁移（缺少列：'
@@ -871,38 +1043,66 @@ if (!function_exists('zw_receipt_page_ledger')) {
         }
 
         // 筛选表单（GET；只读视图，无需 nonce）
-        echo '<form method="get" style="margin:12px 0">';
+        echo '<form method="get" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin:0 0 14px">';
         echo '<input type="hidden" name="page" value="zw-receipt-ledger">';
+        echo '<label style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:#666">来文单位';
         echo '<select name="zw_receipt_org"><option value="">全部来文单位</option>';
         foreach ($orgs as $key => $label) {
             echo '<option value="' . esc_attr($key) . '"' . (($filters['org_key'] === $key) ? ' selected' : '') . '>'
                 . esc_html($label) . '</option>';
         }
-        echo '</select> ';
+        echo '</select></label>';
+        echo '<label style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:#666">收文年份';
         echo '<input type="text" name="zw_receipt_year" value="' . esc_attr(($filters['year'] === '') ? '' : (string) $filters['year'])
-            . '" placeholder="年份，如 2026" size="12"> ';
-        echo '<input type="search" name="zw_receipt_kw" value="' . esc_attr($filters['keyword']) . '" placeholder="标题/来文字号/收文编号"> ';
-        echo '<button type="submit" class="button">筛选</button>';
+            . '" placeholder="如 2026" size="10"></label>';
+        echo '<label style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:#666">关键词';
+        echo '<input type="search" name="zw_receipt_kw" value="' . esc_attr($filters['keyword'])
+            . '" placeholder="标题 / 来文字号 / 收文编号"></label>';
+        echo '<button type="submit" class="button button-primary">筛选</button>';
+        echo '<a class="button" href="' . esc_url(zw_receipt_ledger_admin_url()) . '">重置</a>';
         echo '</form>';
 
+        $colspan = 11;
+        echo '<div class="zw-adm-table-wrap">';
+        echo '<table class="widefat striped"><thead><tr>'
+            . '<th style="width:150px">收文编号</th><th style="width:110px">来文单位</th>'
+            . '<th style="width:140px">来文字号</th><th>标题</th>'
+            . '<th style="width:80px">密级</th><th style="width:110px">收文日期</th>'
+            . '<th style="width:60px">份数</th><th style="width:90px">办理状态</th>'
+            . '<th style="width:150px">归档目录</th><th style="width:170px">附件</th>'
+            . '<th style="width:110px">操作</th>'
+            . '</tr></thead><tbody>';
+
         if (!$result['rows']) {
-            echo '<p>暂无收文记录。</p>';
+            // OA-2462：空态写在表内（与发文台账一致：`<tr><td colspan>`），并给出**就地入口**。
+            $empty_extra = '';
+            if ($filters['org_key'] !== '' || $filters['year'] !== '' || $filters['keyword'] !== '') {
+                $empty_extra = ' 或 <a href="' . esc_url(zw_receipt_ledger_admin_url()) . '">清空筛选</a>';
+            }
+            echo '<tr><td colspan="' . (int) $colspan . '">暂无收文记录：当前筛选条件下没有来文。'
+                . '<a class="button button-small" style="margin-left:8px" href="'
+                . esc_url(zw_receipt_ledger_admin_url('zw-receipt-create')) . '">登记第一份收文</a>'
+                . $empty_extra . '</td></tr>';
         } else {
-            echo '<div class="zw-adm-table-wrap">';
-            echo '<table class="widefat striped"><thead><tr>'
-                . '<th>收文编号</th><th>来文单位</th><th>来文字号</th><th>标题</th><th>密级</th>'
-                . '<th>收文日期</th><th>份数</th><th>归档目录</th><th>附件</th><th>登记时间</th>'
-                . '</tr></thead><tbody>';
             foreach ($result['rows'] as $row) {
                 $view = zw_receipt_ledger_row_view($row);
+                $issue = isset($issue_map[(string) $view['id']]) ? $issue_map[(string) $view['id']] : array();
                 echo '<tr>';
                 echo '<td>' . esc_html($view['number']) . '</td>';
                 echo '<td>' . esc_html($view['org_label']) . '</td>';
                 echo '<td>' . esc_html($view['doc_no']) . '</td>';
-                echo '<td>' . esc_html($view['title']) . '</td>';
+                echo '<td><a href="' . esc_url(zw_receipt_ledger_detail_url((string) $view['id'])) . '">'
+                    . esc_html($view['title']) . '</a></td>';
                 echo '<td>' . esc_html($view['confidentiality']) . '</td>';
                 echo '<td>' . esc_html($view['received_date']) . '</td>';
                 echo '<td>' . (int) $view['copy_count'] . '</td>';
+                // 办理状态：无办理单 ⇒ 「待派单」；有则按办理单聚合（逾期为派生，不落库）。
+                echo '<td>' . (function_exists('zw_receipt_admin_ui_status_badge')
+                    ? zw_receipt_admin_ui_status_badge(
+                        isset($issue['status']) ? $issue['status'] : '待派单',
+                        !empty($issue['overdue'])
+                    )
+                    : esc_html(isset($issue['status']) ? $issue['status'] : '待派单')) . '</td>';
                 echo '<td>' . esc_html($view['directory']) . '</td>';
                 // TASK-2008：附件列从「有 / —」升级为**可用入口**：
                 // 文件名 = 默认打开（PDF/doc/docx 弹层、图片灯箱），下载只走显式「下载」按钮。
@@ -940,26 +1140,223 @@ if (!function_exists('zw_receipt_page_ledger')) {
                         . $att_open . $att_dl . '</span>';
                 }
                 echo '<td>' . $att_cell . '</td>';
-                echo '<td>' . esc_html($view['create_time']) . '</td>';
+                // 操作列（OA-2462）：详情 + 直接去办理（带来源筛选，落到收文办理页）
+                $ops = '<a class="button button-small" href="'
+                    . esc_url(zw_receipt_ledger_detail_url((string) $view['id'])) . '">查看</a>';
+                if (function_exists('zw_receipt_issue_page_url')) {
+                    $ops .= ' <a class="button button-small" href="'
+                        . esc_url(zw_receipt_issue_page_url(array('source_id' => (string) $view['id']), 1))
+                        . '">办理</a>';
+                }
+                echo '<td>' . $ops . '</td>';
                 echo '</tr>';
             }
-            echo '</tbody></table>';
-            echo '</div>';
         }
+        echo '</tbody></table>';
+        echo '</div>';
 
-        // 分页（页码越界不回卷；仅渲染当前页链接）
+        // 分页：有 WP `paginate_links()` 时用后台原生页码（横排规则由共享样式提供），
+        // 否则退回按钮式翻页（无 WP 环境 / 单测）。
         $pages = (int) $result['pages'];
         if ($pages > 1) {
-            echo '<p style="margin-top:12px">';
-            if ((int) $filters['page'] > 1) {
-                echo '<a class="button" href="' . esc_url(zw_receipt_ledger_page_url($filters, (int) $filters['page'] - 1)) . '">上一页</a> ';
+            $paged_now = (int) $filters['page'];
+            if (function_exists('paginate_links') && function_exists('add_query_arg')) {
+                $page_base = zw_receipt_ledger_page_url($filters, 1);
+                echo '<div class="tablenav"><div class="tablenav-pages">';
+                echo paginate_links(array(
+                    'base'      => add_query_arg('zw_receipt_page', '%#%', $page_base),
+                    'format'    => '',
+                    'current'   => $paged_now,
+                    'total'     => $pages,
+                    'type'      => 'list',
+                    'prev_text' => '‹',
+                    'next_text' => '›',
+                ));
+                echo '</div></div>';
+            } else {
+                echo '<p style="margin-top:12px">';
+                if ($paged_now > 1) {
+                    echo '<a class="button" href="' . esc_url(zw_receipt_ledger_page_url($filters, $paged_now - 1)) . '">上一页</a> ';
+                }
+                echo '第 ' . $paged_now . ' / ' . $pages . ' 页（共 ' . (int) $result['total'] . ' 条）';
+                if ($paged_now < $pages) {
+                    echo ' <a class="button" href="' . esc_url(zw_receipt_ledger_page_url($filters, $paged_now + 1)) . '">下一页</a>';
+                }
+                echo '</p>';
             }
-            echo '第 ' . (int) $filters['page'] . ' / ' . $pages . ' 页（共 ' . (int) $result['total'] . ' 条）';
-            if ((int) $filters['page'] < $pages) {
-                echo ' <a class="button" href="' . esc_url(zw_receipt_ledger_page_url($filters, (int) $filters['page'] + 1)) . '">下一页</a>';
-            }
-            echo '</p>';
         }
+        echo '</div>';
+    }
+}
+
+if (!function_exists('zw_receipt_ledger_detail_field')) {
+    /**
+     * 详情页字段格（标签 + 值；值缺省渲染「—」）。
+     *
+     * @param string $label 标签。
+     * @param string $value 值（已转义的纯文本）。
+     * @return string HTML。
+     */
+    function zw_receipt_ledger_detail_field($label, $value) {
+        $label = (string) $label;
+        $value = trim((string) $value);
+        if ($value === '') {
+            $value = '—';
+        }
+        return '<div class="zw-adm-field"><label>' . zw_receipt_admin_ui_esc($label) . '</label>'
+            . '<div>' . zw_receipt_admin_ui_esc($value) . '</div></div>';
+    }
+}
+
+if (!function_exists('zw_receipt_page_ledger_detail')) {
+    /**
+     * 收文详情页（同一后台页的 `view=detail` 分支 · OA-2462）。
+     *
+     * 为什么用 `view=detail` 而不是新菜单项：与发文管理同构（`zw-doc&view=detail`），
+     * 且**不动**主题侧导航注册表与父菜单落地页（`zw-receipt-ledger` 仍是菜单落点）。
+     *
+     * 权限：与台账同一能力位（`tcpc_perm_doc`），无权限 403；**只读**（不写库）。
+     *
+     * @param mixed $id 收文记录 ID（字符串，如 `SRC-MCA-85`）。
+     * @return void
+     */
+    function zw_receipt_page_ledger_detail($id) {
+        if (!zw_receipt_ledger_can()) {
+            if (function_exists('wp_die')) {
+                wp_die('无权限访问收文管理（需要 tcpc_perm_doc）。', '无权访问', array('response' => 403));
+            }
+            return;
+        }
+        if (!function_exists('esc_html')) {
+            return;
+        }
+
+        $id  = trim((string) $id);
+        $row = $id !== '' ? zw_receipt_ledger_row_by_id($id) : array();
+
+        echo '<div class="wrap zw-receipt-detail">';
+        echo function_exists('zw_receipt_admin_ui_table_wrap_style') ? zw_receipt_admin_ui_table_wrap_style() : '';
+        echo function_exists('zw_receipt_admin_ui_style') ? zw_receipt_admin_ui_style() : '';
+        if (function_exists('zw_control_file_open_assets')) {
+            zw_control_file_open_assets();
+        }
+        echo '<h1>收文详情</h1>';
+        echo '<p style="margin:0 0 12px"><a class="button" href="'
+            . esc_url(zw_receipt_ledger_admin_url()) . '">← 返回收文台账</a></p>';
+
+        if (!$row) {
+            echo '<div class="notice notice-warning"><p>未找到该收文：'
+                . '记录不存在、已被删除，或不是 <code>origin=incoming</code> 的来文。'
+                . '请<a href="' . esc_url(zw_receipt_ledger_admin_url()) . '">返回台账</a>重新选择。</p></div>';
+            echo '</div>';
+            return;
+        }
+
+        $view      = zw_receipt_ledger_row_view($row);
+        $issue_map = zw_receipt_ledger_issue_map(array((string) $view['id']));
+        $issue_sum = isset($issue_map[(string) $view['id']]) ? $issue_map[(string) $view['id']] : array();
+
+        // —— 卡片 1：来文信息 ——
+        echo '<div class="zw-adm-card" style="margin:0 0 16px">';
+        echo '<h2>来文信息</h2>';
+        echo '<div class="zw-adm-grid is-2">';
+        echo zw_receipt_ledger_detail_field('收文编号', $view['number']);
+        echo zw_receipt_ledger_detail_field('来文单位', $view['org_label']);
+        echo zw_receipt_ledger_detail_field('来文字号', $view['doc_no']);
+        echo zw_receipt_ledger_detail_field('收文日期', $view['received_date']);
+        echo zw_receipt_ledger_detail_field('密级', $view['confidentiality']);
+        echo zw_receipt_ledger_detail_field('份数', (string) (int) $view['copy_count']);
+        echo zw_receipt_ledger_detail_field('紧急程度', isset($issue_sum['risk_level']) ? (string) $issue_sum['risk_level'] : '');
+        echo zw_receipt_ledger_detail_field('办理状态', isset($issue_sum['status']) ? (string) $issue_sum['status'] : '待派单');
+        echo zw_receipt_ledger_detail_field('归档目录', $view['directory']);
+        echo zw_receipt_ledger_detail_field('登记时间', $view['create_time']);
+        echo '</div>';
+        echo '<div class="zw-adm-field"><label>标题</label><div>' . esc_html($view['title']) . '</div></div>';
+        echo '</div>';
+
+        // —— 卡片 2：附件（文件名 = 默认打开；下载只走显式按钮 · SPEC-85 铁律）——
+        echo '<div class="zw-adm-card" style="margin:0 0 16px">';
+        echo '<h2>附件</h2>';
+        if ($view['has_attachment']) {
+            $att_name = function_exists('zw_receipt_ledger_attachment_label')
+                ? zw_receipt_ledger_attachment_label($view['attachment'])
+                : '';
+            $att_name = $att_name !== '' ? $att_name : '附件';
+            $att_dl_url = function_exists('zw_receipt_ledger_attachment_download_url')
+                ? zw_receipt_ledger_attachment_download_url((string) $view['id'])
+                : '';
+            if (function_exists('zw_control_file_open_link')) {
+                echo '<p>' . zw_control_file_open_link(array(
+                    'name'         => $att_name,
+                    'source'       => 'receipt',
+                    'id'           => (string) $view['id'],
+                    'size'         => 0,
+                    'download_url' => $att_dl_url,
+                )) . '</p>';
+            } else {
+                echo '<p>' . esc_html($att_name) . '</p>';
+            }
+            if (function_exists('zw_control_file_download_button')) {
+                echo '<p>' . zw_control_file_download_button(array(
+                    'url'   => $att_dl_url,
+                    'name'  => $att_name,
+                    'label' => '下载原件',
+                    'icon'  => false,
+                )) . '</p>';
+            }
+            echo '<p class="zw-doc-muted">点击文件名或图标即默认打开（PDF / docx 在线预览、图片灯箱）；'
+                . '下载只由上面的「下载原件」触发。附件走私有存储，不产生公开直链。</p>';
+        } else {
+            echo '<p class="zw-doc-muted">该收文未上传附件。附件在「收文登记」时随件上传，'
+                . '落私有存储 <code>部委/年份/文件名</code>。</p>';
+        }
+        echo '</div>';
+
+        // —— 卡片 3：办理单（只读列表；办理动作仍去「收文办理」页）——
+        echo '<div class="zw-adm-card" style="margin:0 0 16px">';
+        echo '<h2>办理单</h2>';
+        echo '<p style="margin:0 0 12px"><a class="button button-primary" href="'
+            . esc_url(function_exists('zw_receipt_issue_page_url')
+                ? zw_receipt_issue_page_url(array('source_id' => (string) $view['id']), 1)
+                : zw_receipt_ledger_admin_url('zw-receipt-issues')) . '">去收文办理</a></p>';
+
+        $issues = array();
+        if (function_exists('zw_receipt_issue_query')) {
+            $issue_result = zw_receipt_issue_query(array('source_id' => (string) $view['id'], 'per_page' => 50));
+            $issues = isset($issue_result['rows']) && is_array($issue_result['rows']) ? $issue_result['rows'] : array();
+        }
+
+        echo '<div class="zw-adm-table-wrap"><table class="widefat striped"><thead><tr>'
+            . '<th style="width:90px">状态</th><th>办理事项</th><th style="width:130px">承办部门</th>'
+            . '<th style="width:110px">承办人</th><th style="width:110px">办理时限</th>'
+            . '<th style="width:150px">更新时间</th>'
+            . '</tr></thead><tbody>';
+        if (!$issues) {
+            echo '<tr><td colspan="6">尚无办理单：这份收文还没有指定承办部门与时限。'
+                . '点上面的「去收文办理」派单（一纸收文可派多单）。</td></tr>';
+        } else {
+            foreach ($issues as $issue_row) {
+                $issue_view = function_exists('zw_receipt_issue_row_view')
+                    ? zw_receipt_issue_row_view($issue_row)
+                    : array();
+                if (!$issue_view) {
+                    continue;
+                }
+                echo '<tr>';
+                echo '<td>' . (function_exists('zw_receipt_admin_ui_status_badge')
+                    ? zw_receipt_admin_ui_status_badge($issue_view['status'], (bool) $issue_view['overdue'])
+                    : esc_html((string) $issue_view['display_status'])) . '</td>';
+                echo '<td>' . esc_html((string) $issue_view['title']) . '</td>';
+                echo '<td>' . esc_html((string) $issue_view['dept_label']) . '</td>';
+                echo '<td>' . esc_html((string) $issue_view['owner']) . '</td>';
+                echo '<td>' . esc_html((string) $issue_view['due_date']) . '</td>';
+                echo '<td>' . esc_html((string) $issue_view['update_time']) . '</td>';
+                echo '</tr>';
+            }
+        }
+        echo '</tbody></table></div>';
+        echo '</div>';
+
         echo '</div>';
     }
 }
@@ -985,9 +1382,12 @@ if (!function_exists('zw_receipt_page_orgs')) {
 
         $tree = zw_receipt_ledger_directory_tree(zw_receipt_ledger_request_args(isset($_GET) ? $_GET : array()));
 
-        echo '<div class="wrap">';
+        echo '<div class="wrap zw-receipt-orgs">';
+        // OA-2462：与台账/发文同一套卡片 / 徽章 / 字段令牌（唯一出处 `includes/oa/admin-ui.php`）。
+        echo function_exists('zw_receipt_admin_ui_table_wrap_style') ? zw_receipt_admin_ui_table_wrap_style() : '';
+        echo function_exists('zw_receipt_admin_ui_style') ? zw_receipt_admin_ui_style() : '';
         echo '<h1>部委与年份目录</h1>';
-        echo '<p style="color:#646970">归档层级固定 <code>部委/年份/文件名</code>；「本会制度」为长期依据，<strong>不按年</strong>；收文日期缺失或非法落「未知年份」。数据源与台账同一查询（<code>origin=incoming</code>）。</p>';
+        echo '<p class="zw-doc-sub">归档层级固定 <code>部委/年份/文件名</code>；「本会制度」为长期依据，<strong>不按年</strong>；收文日期缺失或非法落「未知年份」。数据源与台账同一查询（<code>origin=incoming</code>）。</p>';
 
         if (!$tree['schema_ready']) {
             echo '<div class="notice notice-warning"><p>目录视图暂不可用：数据表尚未迁移（缺少列：'

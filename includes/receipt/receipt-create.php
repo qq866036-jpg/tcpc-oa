@@ -1043,41 +1043,62 @@ if (!function_exists('zw_receipt_page_create')) {
         $msg      = isset($_GET['zw_msg']) ? sanitize_key((string) wp_unslash($_GET['zw_msg'])) : '';
         $notice   = zw_receipt_create_notice($msg);
 
-        echo '<div class="wrap">';
+        echo '<div class="wrap zw-receipt-create">';
+        // OA-2462：与发文「新建发文」同一套卡片 / 字段令牌（唯一出处 `includes/oa/admin-ui.php`）。
+        echo function_exists('zw_receipt_admin_ui_table_wrap_style') ? zw_receipt_admin_ui_table_wrap_style() : '';
+        echo function_exists('zw_receipt_admin_ui_style') ? zw_receipt_admin_ui_style() : '';
         echo '<h1>收文登记</h1>';
         if ($notice !== '') {
             echo '<div class="notice notice-success is-dismissible"><p>' . esc_html($notice) . '</p></div>';
         }
-        echo '<p style="color:#646970">登记上级来文：必填「标题 + 来文单位 + 收文日期」；登记成功即生成收文编号并写入收文台账（复用政策源表，<code>origin=incoming</code>）。</p>';
+        echo '<p class="zw-doc-sub">登记上级来文：必填「标题 + 来文单位 + 收文日期」；登记成功即生成收文编号并写入收文台账（复用政策源表，<code>origin=incoming</code>）。</p>';
 
-        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" enctype="multipart/form-data" class="zw-adm-card" style="padding:14px 16px;max-width:820px">';
+        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" enctype="multipart/form-data" class="zw-adm-card">';
         echo '<input type="hidden" name="action" value="zw_receipt_create">';
         if (function_exists('wp_nonce_field')) {
             wp_nonce_field(ZW_RECEIPT_CREATE_NONCE_ACTION, 'zw_receipt_nonce');
         }
 
-        echo '<p><label>收文标题 *<br><input type="text" name="doc_name" class="regular-text" maxlength="255" required></label></p>';
-        echo '<p><label>来文单位 *<br><select name="org_key" required>';
-        echo '<option value="">请选择</option>';
+        // 字段排版与发文一致：`.zw-adm-field`（上下标签、控件 100% 宽）+ 两列栅格。
+        echo '<div class="zw-adm-grid is-2">';
+        echo '<div class="zw-adm-field"><label for="zw-receipt-doc-name">收文标题 <span style="color:#b30404">*</span></label>'
+            . '<input type="text" id="zw-receipt-doc-name" name="doc_name" maxlength="255" required></div>';
+        echo '<div class="zw-adm-field"><label for="zw-receipt-org">来文单位 <span style="color:#b30404">*</span></label>'
+            . '<select id="zw-receipt-org" name="org_key" required><option value="">请选择</option>';
         foreach ($orgs as $key => $label) {
             echo '<option value="' . esc_attr($key) . '">' . esc_html($label) . '</option>';
         }
-        echo '</select></label></p>';
-        echo '<p><label>来文字号<br><input type="text" name="doc_no" class="regular-text" maxlength="128"></label></p>';
-        echo '<p><label>密级<br><select name="confidentiality_level">';
+        echo '</select></div>';
+        echo '<div class="zw-adm-field"><label for="zw-receipt-doc-no">来文字号</label>'
+            . '<input type="text" id="zw-receipt-doc-no" name="doc_no" maxlength="128" placeholder="如：中传字〔2026〕12号"></div>';
+        echo '<div class="zw-adm-field"><label for="zw-receipt-level">密级</label>'
+            . '<select id="zw-receipt-level" name="confidentiality_level">';
         foreach ($levels as $value => $label) {
             echo '<option value="' . esc_attr($value) . '">' . esc_html($label) . '</option>';
         }
-        echo '</select></label></p>';
-        echo '<p><label>紧急程度<br><select name="urgency">';
+        echo '</select></div>';
+        echo '<div class="zw-adm-field"><label for="zw-receipt-urgency">紧急程度</label>'
+            . '<select id="zw-receipt-urgency" name="urgency">';
         foreach ($urgencies as $value => $label) {
             echo '<option value="' . esc_attr($value) . '">' . esc_html($label) . '</option>';
         }
-        echo '</select></label></p>';
-        echo '<p><label>份数<br><input type="number" name="copy_count" min="1" max="65535" step="1"></label></p>';
-        echo '<p><label>收文日期 *<br><input type="text" name="doc_received_date" class="regular-text" placeholder="2026-10-09" required></label></p>';
-        echo '<p><label>附件<br><input type="file" name="zw_receipt_attachment"></label><br><span style="color:#646970;font-size:12px">走私有存储（<code>部委/年份/文件名</code>），不产生公开直链。</span></p>';
-        echo '<p><button type="submit" class="button button-primary">登记收文</button></p>';
+        echo '</select></div>';
+        echo '<div class="zw-adm-field"><label for="zw-receipt-copy">份数</label>'
+            . '<input type="number" id="zw-receipt-copy" name="copy_count" min="1" max="65535" step="1"></div>';
+        echo '<div class="zw-adm-field"><label for="zw-receipt-date">收文日期 <span style="color:#b30404">*</span></label>'
+            . '<input type="date" id="zw-receipt-date" name="doc_received_date" required></div>';
+        echo '<div class="zw-adm-field"><label for="zw-receipt-file">附件</label>'
+            . '<input type="file" id="zw-receipt-file" name="zw_receipt_attachment">'
+            . '<p class="description">走私有存储（<code>部委/年份/文件名</code>），不产生公开直链；'
+            . '单文件 ≤ 20MB。</p></div>';
+        echo '</div>';
+
+        echo '<div class="zw-adm-foot">'
+            . '<a class="button" href="' . esc_url(function_exists('zw_receipt_ledger_admin_url')
+                ? zw_receipt_ledger_admin_url()
+                : admin_url('admin.php?page=zw-receipt-ledger')) . '">返回收文台账</a>'
+            . '<button type="submit" class="button button-primary">登记收文</button>'
+            . '</div>';
         echo '</form>';
         echo '</div>';
     }
