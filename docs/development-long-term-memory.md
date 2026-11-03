@@ -384,3 +384,12 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
 - **导出**：`admin-post.php?action=zw_receipt_export`，`tcpc_perm_doc` + **按筛选指纹绑定的 nonce**
   （换筛选即换 nonce，防手拼链接批量拉库）；CSV 带 UTF-8 BOM；上限 5000 行；不含 OCR 正文与个人信息明细。
 - 导出另起一条 `SELECT ... LIMIT`（不复用台账分页查询，避免把「契约面 SQL」拉长），归档三列缺列时不查。
+
+## 2026-11-03 · 收文呈批单/传阅卡打印（OA-2471，载体单 TASK-2558）
+
+- **不引第三方 PDF 库**：打印走「打印友好 HTML + @media print」，浏览器原生打印/另存为 PDF。
+  理由：中文字体嵌入、分页断行在 PHP 侧自己算容易出错；打印件也不需要服务器落盘。
+- 端点：`admin-post.php?action=zw_receipt_print&id=<ID>&doc=approval|circulation`，
+  鉴权 `tcpc_perm_doc` + **按记录+单据类型绑定的 nonce**；只读、不写任何表。
+- 单据内容边界：来文要素 + 拟办/批示/办理单/传阅；**不含 OCR 正文与个人信息明细**。
+- 版式：A4 竖版、`@page` 15mm、正文 14px/1.6、表格 1px 实线；打印栏 `@media print{display:none}`。
