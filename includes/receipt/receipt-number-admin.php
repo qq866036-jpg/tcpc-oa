@@ -208,13 +208,15 @@ if (!function_exists('zw_receipt_number_page')) {
             }
         }
         ?>
-        <div class="wrap zw-receipt-number-wrap">
+        <div class="wrap zw-receipt-number-wrap zw-receipt-number">
             <h1>收文编号设置</h1>
             <?php
             // TASK-1633（TASK-1579 P1-6 第四批）：收文管理域不在会员域外壳作用域内
             // （slug 前缀 `zw-receipt` 不命中 `zw_mc_adm_is_screen()`）⇒ 本页须自带 canonical 规则输出点。
             // 唯一出处仍是 canonical `zw_adm_ui_table_wrap_css()`；本处只透传，不复制第二套声明。
             echo function_exists('zw_receipt_admin_ui_table_wrap_style') ? zw_receipt_admin_ui_table_wrap_style() : '';
+            // OA-2462：共享卡片 / 字段 / 页脚令牌（与发文管理同一套；唯一出处 `includes/oa/admin-ui.php`）。
+            echo function_exists('zw_receipt_admin_ui_style') ? zw_receipt_admin_ui_style() : '';
             ?>
 
             <?php if ($saved) : ?>

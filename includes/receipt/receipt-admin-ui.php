@@ -185,21 +185,81 @@ if (!function_exists('zw_receipt_admin_ui_table_wrap_style')) {
     }
 }
 
+if (!function_exists('zw_receipt_admin_page_classes')) {
+    /**
+     * 收文管理各页面的 `.wrap` 类名（OA-2462：与发文管理共用同一套卡片 / 字段 / 徽章令牌）。
+     *
+     * 令牌唯一出处 = `includes/oa/admin-ui.php` 的 `zw_oa_admin_ui_style()`；发文侧传的是它自己的
+     * 类表（`zw_doc_admin_page_classes()`）。**不得**在本域再写一份 CSS 声明。
+     *
+     * @return string[]
+     */
+    function zw_receipt_admin_page_classes() {
+        return array(
+            'zw-receipt-create',
+            'zw-receipt-ledger',
+            'zw-receipt-detail',
+            'zw-receipt-orgs',
+            'zw-receipt-issues',
+            'zw-receipt-number',
+        );
+    }
+}
+
+if (!function_exists('zw_receipt_admin_ui_style')) {
+    /**
+     * 收文后台页面的共享令牌样式（OA-2462 · 用户要求「UI 界面与发文管理对齐」）。
+     *
+     * 优先走办公协同共享出处；共享文件或主题 canonical 缺失时返回空串（页面仍可用，
+     * 视觉降级为 WP 原生表格），**不**在本域写第二套声明。
+     *
+     * @return string `<style>…</style>` 或空串。
+     */
+    function zw_receipt_admin_ui_style() {
+        if (!function_exists('zw_oa_admin_ui_style')) {
+            $shared = dirname(__DIR__) . '/oa/admin-ui.php';
+            if (is_file($shared)) {
+                require_once $shared;
+            }
+            unset($shared);
+        }
+        if (function_exists('zw_oa_admin_ui_style')) {
+            return zw_oa_admin_ui_style(zw_receipt_admin_page_classes());
+        }
+        return '';
+    }
+}
+
+if (!function_exists('zw_receipt_admin_ui_page_class')) {
+    /**
+     * 页面 slug → `.wrap` 类名（白名单；未登记 slug 返回空串，不拼任意类名）。
+     *
+     * @param string $slug 页面 slug。
+     * @return string
+     */
+    function zw_receipt_admin_ui_page_class($slug) {
+        $slug = trim((string) $slug);
+        return in_array($slug, zw_receipt_admin_page_classes(), true) ? $slug : '';
+    }
+}
+
 if (!function_exists('zw_receipt_admin_ui_page_open')) {
     /**
-     * 收文管理页面壳（`.wrap` + 标题 + 说明 + 同域导航）。
+     * 收文管理页面壳（`.wrap` + 页面类 + 共享令牌 + 标题 + 说明 + 同域导航）。
      *
      * @param string $title    标题。
      * @param string $subtitle 说明（允许安全 HTML 片段，调用方负责转义）。
-     * @param string $current  当前页面 slug（用于高亮，不改变渲染结构）。
+     * @param string $current  当前页面 slug（用于高亮与 `.wrap` 页面类）。
      * @return void
      */
     function zw_receipt_admin_ui_page_open($title, $subtitle = '', $current = '') {
-        echo '<div class="wrap">';
+        $page_class = zw_receipt_admin_ui_page_class($current);
+        echo '<div class="wrap' . ($page_class !== '' ? ' ' . zw_receipt_admin_ui_attr($page_class) : '') . '">';
         echo zw_receipt_admin_ui_table_wrap_style();
+        echo zw_receipt_admin_ui_style();
         echo '<h1>' . zw_receipt_admin_ui_esc($title) . '</h1>';
         if ($subtitle !== '') {
-            echo '<p style="color:#646970">' . $subtitle . '</p>';
+            echo '<p class="zw-doc-sub">' . $subtitle . '</p>';
         }
         echo zw_receipt_admin_ui_nav($current);
     }

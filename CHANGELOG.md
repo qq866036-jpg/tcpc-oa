@@ -2,6 +2,31 @@
 
 ## [Unreleased]
 
+### Added
+
+- **收文详情页 + 收文台账 UI 对齐发文管理（OA-2462，2026-11-03）**：用户指令「进一步开发收文管理…主要注重
+  功能完整性，UI界面与发文管理对齐」。本次为第一批（只动展示层，**不动数据模型**）：
+  - **收文详情页**：同一个后台页的 `view=detail&id=SRC-…`（与发文 `zw-doc&view=detail` 同构，**不新增菜单项**、
+    不动主题导航注册表）。卡片式三段——来文信息（编号/单位/字号/日期/密级/份数/紧急程度/办理状态/归档目录/登记时间）、
+    附件（文件名=默认打开、下载只走显式按钮，SPEC-85 canonical）、办理单列表（状态徽章 + 承办部门/人 + 时限）；
+  - **收文台账重写**：办理状态列（无单=`待派单`、逾期为派生）、操作列（查看 / 办理）、主按钮「登记收文」+
+    「重置」筛选、空态写在表内并给**就地登记入口**、有 WP 时用 `paginate_links` 原生分页、列宽显式声明；
+  - **登记页排版对齐**：`.zw-adm-card` + `.zw-adm-field` 两列栅格 + `input[type=date]` + 页脚 `zw-adm-foot`
+    （主按钮 + 返回台账）；
+  - **目录页 / 编号设置页**接入同一套共享令牌；
+  - 新增 `docs/research/OA-2462-收文管理开源案例调研与功能补全方案-20261103.md`（GitHub 案例调研、22 项功能矩阵、
+    第二批数据模型裁定建议、不采纳清单、未验证项）。
+
+### Changed
+
+- **办公协同后台样式令牌抽取为共享唯一出处（OA-2462）**：新增 `includes/oa/admin-ui.php` 的
+  `zw_oa_admin_ui_style($page_classes)`（卡片 / 字段 / 徽章 / 分页 / 触屏），`zw_doc_admin_ui_style()` 改为
+  `zw_oa_admin_ui_style(zw_doc_admin_page_classes())` —— **输出逐字节不变**（主题 `tests/test-doc-admin-ui.php`
+  102 项字符串断言仍全绿）；收文侧新增 `zw_receipt_admin_ui_style()` / `zw_receipt_admin_page_classes()` 传自己的
+  页面类。收文台账的主查询 `zw_receipt_ledger_query()` **一字未改**（主题契约面 + `test-receipt-ledger.php` 的
+  SQL 形状断言），办理状态改由新函数 `zw_receipt_ledger_issue_map()` 按当页 ID 批量查（办理表缺失 ⇒ 空 map，
+  页面不失败）。
+
 ### Docs
 
 - **卫星单收口流程回写：从「已知缺口 + 临时处置」改为「已修复 + 标准步骤」（OA-2459，2026-11-02）**：

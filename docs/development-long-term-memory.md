@@ -271,3 +271,22 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
   同样是合法载体单（本单载体 = `MEMBER-0004`）。已放宽为
   `^(TASK|MEMBER|CONTENT|BIZ|SYS|AGENT)-[0-9]{3,4}$`，仍是白名单 + fail-closed（其它形态 rc=2）。
 - 卫星仓 `workbench/preflight.sh` / `finish.sh` 属门禁自编辑：提交信息带 `[self-edit]`。
+
+## 2026-11-03 · 收文管理功能补全第一批：共享样式令牌 + 详情页（OA-2462，载体单 TASK-2544）
+
+- **后台样式令牌的唯一出处已不是发文模块**：卡片/字段/徽章/分页/触屏 CSS 抽到
+  `includes/oa/admin-ui.php` 的 `zw_oa_admin_ui_style($page_classes)`；`zw_doc_admin_ui_style()` 只是
+  「传发文页面类」的薄入口（输出逐字节不变），收文侧 `zw_receipt_admin_ui_style()` 传
+  `zw_receipt_admin_page_classes()`。以后**任何办公协同后台页**要卡片范式都走这一处，禁止再写第二份 CSS。
+- **收文台账主查询属于主题契约面，不能改**：`zw_receipt_ledger_query()` 的 SQL 形状被主题
+  `tests/test-receipt-ledger.php` 逐项断言（`FROM 政策源表 WHERE origin = %s`、`ORDER BY (doc_received_date REGEXP …)`、
+  `LIMIT %d OFFSET %d` 必须是**最后一条** prepare），且主题 `inc/oa/contract-api.php` 的门户快照直接调它。
+  ⇒ 新增展示字段（如办理状态）只能**另起一条**按当页 ID 的查询（`zw_receipt_ledger_issue_map()`），
+  不得在原查询上加 LEFT JOIN。
+- **收文详情页用 `view=detail`，不加菜单项**：与发文 `zw-doc&view=detail` 同构；主题导航注册表
+  （`inc/admin/admin-nav-registry.php` 的 `receipt` 条目）与父菜单落地页 `zw-receipt-ledger` 都不动。
+- **办理状态词不要扩**：`待派单` 只是展示态（无办理单），`逾期` 仍是 `zw_receipt_issue_is_overdue()` 的派生；
+  拟办/批示/传阅应做 **append-only 流水表**，不许往 `zw_policy_issue` 加状态值（它同时服务法务整改台账）。
+- **收文页新增 `<table>` 必须包 `.zw-adm-table-wrap`**：主题 `test-admin-h5-gate.php` 有「全树未包裹 0」判据。
+- 第一批回归口径（读插件源码）：主题 `test-receipt-{ledger,issues,create,orgs,permissions,number-org,portal-office-receipt}`
+  + `test-doc-admin-ui` 全绿；插件 `scripts/ci-check.sh` 七项全绿。
