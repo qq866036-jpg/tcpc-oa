@@ -705,7 +705,8 @@ if (!function_exists('zw_receipt_handle_render_cards')) {
         $missing = zw_receipt_handle_missing();
         // OA-2468：展示用动作名（含内部动作 `sign`；人工表单仍只给三项）。
         $actions = zw_receipt_handle_actions();
-        $actions['sign'] = '自动签阅';
+        $actions['sign']     = '自动签阅';
+        $actions['dispatch'] = '自动派单';
         $msg     = isset($_GET['zw_msg']) ? sanitize_key((string) wp_unslash($_GET['zw_msg'])) : '';
         $notices = zw_receipt_handle_notice_map();
 
