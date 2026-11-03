@@ -152,6 +152,13 @@
   `party_upper→office/3天`；`self_rules`/`other` 不配 = 保持人工）。
   `auto_dispatch` 仍**默认关**；预览不生成任何办理单。
 
+## [0.1.22] - 2026-11-04
+
+### Added
+
+- **派单通配规则（OA-2482）**：规则框支持 `*` 通配 —— 一行 `* | office | 5` 即「所有来文都派办公室、时限 5 天」；
+  具体部委 key 的规则优先于 `*`。派单与干跑预览共用同一解析函数 `zw_receipt_auto_dispatch_rule_for()`。
+
 ## [Unreleased]
 
 ### Added
