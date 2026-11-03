@@ -248,10 +248,14 @@ if (!function_exists('zw_receipt_urgency_options')) {
      * @return array<string,string>
      */
     function zw_receipt_urgency_options() {
+        // OA-2464：扩到 4 档（一般 / 平件 / 加急 / 特急）+ 未标注。保留 `加急` 作历史取值，
+        // 「急件」在展示上与 `加急` 同义（不新增第二个 key，避免存量数据被拆成两档）。
         $options = array(
             ''     => '未标注',
+            '一般' => '一般',
+            '平件' => '平件',
+            '加急' => '加急（急件）',
             '特急' => '特急',
-            '加急' => '加急',
         );
         if (function_exists('apply_filters')) {
             $options = apply_filters('zw_receipt_urgency_options', $options);

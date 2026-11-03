@@ -4,6 +4,20 @@
 
 ### Added
 
+- **收文办理后半段：拟办 / 批示 / 传阅 / 催办 / 归档（OA-2464，2026-11-03）**：用户同意方案后「开」。
+  - **新表（append-only）**：`zw_receipt_handle_log`（拟办 `suggest` / 批示 `instruction` / 催办 `urge`，只 INSERT）、
+    `zw_receipt_circulation`（传阅，`(receipt,target)` 唯一；签阅只写 `read_at` 一列）。
+    不扩 `zw_policy_issue` 状态值——它同时服务法务整改台账，扩状态会污染既有语义。
+  - **政策源新增 3 列**：`page_count` / `archive_box_no` / `archive_year`（只 ADD COLUMN，单行 UPDATE 只写这 3 列）。
+  - **详情页新增 3 张卡片**：拟办与批示（时间线 + 追加表单）、传阅与签阅（列表 + 登记 + 签阅按钮）、
+    归档信息（盒号/年度/页数）；写入走 4 个 `admin-post`（`tcpc_perm_doc` + 按记录绑定 nonce + 失败回详情页带原因）。
+  - **待批示角标**：有拟办、无批示的收文数挂到左侧菜单标题（`awaiting-mod` 原生气泡），
+    并在台账顶部给可读提示条；**不新增子菜单**（避免改权限功能树 ID 集与「子页 slug 与登记表一致」判据）。
+  - **紧急程度扩 4 档**：未标注 / 一般 / 平件 / 加急（急件）/ 特急（保留历史 `加急` 取值，不拆存量）。
+  - 迁移：`scripts/migrate-receipt-handle.php dry-run|execute|verify`（`dbDelta` 建表 + 逐列 ADD，幂等）。
+  - 设计说明：`docs/research/OA-2464-收文办理后半段设计与落地-20261103.md`。
+  - 兼容：台账主查询 `zw_receipt_ledger_query()` 一字未改；归档字段走独立小查询；收文状态机 4 态不变。
+
 - **收文附件 OCR 接入（OA-2463，2026-11-03）**：用户指令「收文需要专业的ocr文字识别 再次调研github中star最高的
   适合的仓库代码」。调研结论与实现：
   - **选型**：GitHub star 实测（2026-11-03）——PaddleOCR **92,195**（Apache-2.0）/ MinerU 83,048 / tesseract 77,313 /

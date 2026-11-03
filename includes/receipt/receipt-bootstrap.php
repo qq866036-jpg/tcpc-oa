@@ -41,6 +41,7 @@ if (!function_exists('zw_receipt_admin_module_files')) {
             'receipt-ledger.php',      // R4 收文台账
             'receipt-issues.php',      // R5 办理视图
             'receipt-admin-ui.php',    // R5 后台 UI 片段
+            'receipt-handle.php',      // OA-2464 拟办/批示/传阅/催办/归档（append-only 流水 + 3 列）
             'receipt-number-admin.php', // TASK-1306 收文编号设置页 + admin-post 保存入口
             'receipt-permissions.php', // R6 权限登记
         );
@@ -194,6 +195,21 @@ if (!function_exists('zw_receipt_register_admin_menu')) {
             // 无任何核心键占用。顺序不变：收文 → 发文 → 秘书处 → 法务 → 网盘 → 组织。
             58.6
         );
+
+        // OA-2464：待批示角标（有拟办、无批示）—— 在 add_menu_page 之后改 `$menu` 里的标题，
+        // **不改菜单调用本体**（既有判据按「add_menu_page 块内出现 58.6」取源，改实参会撞断言）。
+        if (function_exists('zw_receipt_handle_pending_instruction')) {
+            $zw_receipt_pending_n = (int) zw_receipt_handle_pending_instruction();
+            if ($zw_receipt_pending_n > 0 && isset($GLOBALS['menu']) && is_array($GLOBALS['menu'])) {
+                foreach ($GLOBALS['menu'] as $zw_receipt_menu_i => $zw_receipt_menu_item) {
+                    if (isset($zw_receipt_menu_item[2]) && (string) $zw_receipt_menu_item[2] === zw_receipt_menu_slug()) {
+                        $GLOBALS['menu'][$zw_receipt_menu_i][0] = '收文管理'
+                            . ' <span class="awaiting-mod count-' . $zw_receipt_pending_n . '">'
+                            . '<span class="pending-count">' . $zw_receipt_pending_n . '</span></span>';
+                    }
+                }
+            }
+        }
 
         foreach ($submenus as $page) {
             add_submenu_page(

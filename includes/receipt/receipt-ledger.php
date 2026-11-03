@@ -1061,6 +1061,16 @@ if (!function_exists('zw_receipt_page_ledger')) {
         }
         echo '</div>';
 
+        // OA-2464：待批示提示（有拟办、无批示）。角标在左侧菜单，这里给可读入口。
+        if (function_exists('zw_receipt_handle_pending_instruction')) {
+            $zw_pending = (int) zw_receipt_handle_pending_instruction();
+            if ($zw_pending > 0) {
+                echo '<div class="notice notice-warning inline" style="margin:0 0 14px"><p><strong>'
+                    . $zw_pending . ' 件收文待批示</strong>（已填拟办、尚无领导批示）。'
+                    . '点开对应收文的「查看」→「拟办与批示」卡片补批示。</p></div>';
+            }
+        }
+
         if (!$result['schema_ready']) {
             echo '<div class="notice notice-warning"><p>收文台账暂不可用：数据表尚未迁移（缺少列：'
                 . esc_html(implode('、', $result['missing'])) . '），本次返回 0 行（不显示任何记录）。</p></div>';
@@ -1438,6 +1448,11 @@ if (!function_exists('zw_receipt_page_ledger_detail')) {
         }
         echo '</tbody></table></div>';
         echo '</div>';
+
+        // —— 卡片 4/5/6：拟办与批示 / 传阅与签阅 / 归档信息（OA-2464）——
+        if (function_exists('zw_receipt_handle_render_cards')) {
+            zw_receipt_handle_render_cards((string) $view['id']);
+        }
 
         echo '</div>';
     }
