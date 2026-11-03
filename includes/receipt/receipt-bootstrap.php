@@ -42,6 +42,7 @@ if (!function_exists('zw_receipt_admin_module_files')) {
             'receipt-issues.php',      // R5 办理视图
             'receipt-admin-ui.php',    // R5 后台 UI 片段
             'receipt-handle.php',      // OA-2464 拟办/批示/传阅/催办/归档（append-only 流水 + 3 列）
+            'receipt-auto.php',        // OA-2468 批示库 + 20 秒自动签阅（复用 handle_log，无新表）
             'receipt-number-admin.php', // TASK-1306 收文编号设置页 + admin-post 保存入口
             'receipt-permissions.php', // R6 权限登记
         );

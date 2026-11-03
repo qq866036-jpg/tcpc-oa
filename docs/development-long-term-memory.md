@@ -356,3 +356,15 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
 - **迁移脚本的收尾自检要传 `$fresh = true`**：`zw_ocr_missing_columns()` 原先不接受参数、走请求级缓存，
   `execute` 刚加完列就自检会误报「仍缺列」（数据其实已写入）。现已支持透传。
 - 教训：**列探测函数返回值形状要写进 docblock 并配一条断言**（本次是「函数名叫 columns，返回却是 map」的典型陷阱）。
+
+## 2026-11-03 · 收文自动办理：批示库 + 20 秒自动签阅（OA-2468，载体单 TASK-2554）
+
+- **用户口径**：「领导批示 和 签阅 为我根据政治站位编一个批示库，签阅 在收文20秒后设置一个签名时间戳即可」。
+  落地为两个开关（`auto_instruction` / `auto_sign`，默认**开**），复用 `zw_receipt_handle_log`，**无新表无迁移**。
+- **审计红线（不许让路）**：自动条目 `author_login=system:auto-instruction|auto-sign`、`author_name=系统自动…`，
+  时间线渲染灰标「系统自动」。批示是「系统按库生成」、签阅是「系统时间戳」，**不得伪装成领导/本人操作**。
+- **批示库选词是确定性的**：`crc32(receipt_id|category) % count` ⇒ 同一收文永远同一条（复现、可审计），
+  不同收文自然分散；匹配顺序固定「督查整改→请示报告→人事→财务→贯彻落实→部署落实→常规阅办」。
+- **内部动作 `sign` 只能内部写**：`zw_receipt_handle_add($raw, $extra_actions, $system_login)` 第三参传 system 标识；
+  人工表单仍只给 拟办/批示/催办 三项（否则任何人可手写"签阅"）。
+- 未做（等确认）：auto_dispatch / auto_circulate / auto_urge / auto_archive；LLM 生成批示需另立合规评估。
