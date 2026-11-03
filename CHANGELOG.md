@@ -9,6 +9,15 @@
   `docs/ops/发布窗口-OA收文OCR与办理后半段-执行清单-20261103.md` 执行（备份 → 发版 → OCR 五列 → 两表三列 →
   OCR 服务 → 开关 → 冒烟 → 抽检），每步带回滚点。
 
+## [0.1.8] - 2026-11-03
+
+### Fixed
+
+- **上线热修（OA-2467）**：`zw_receipt_handle_missing()` 把 `zw_receipt_source_columns()` 返回的**关联数组**
+  当列名列表用 `in_array()` 比对 ⇒ 恒判「缺列」，导致 0.1.7 生产上「拟办/批示/传阅/归档」三卡显示「尚未迁移」、
+  待批示角标恒为 0（DB 里三列其实已加）。改为 `isset($cols[$col])`。
+- `zw_ocr_missing_columns()` 增加 `$fresh` 透传：迁移脚本 `execute` 的收尾自检不再误报「仍缺列」。
+
 ## [Unreleased]
 
 ### Added

@@ -80,10 +80,13 @@ if (!function_exists('zw_receipt_handle_missing')) {
             }
         }
         if (function_exists('zw_receipt_source_columns')) {
+            // OA-2467 热修：`zw_receipt_source_columns()` 返回的是**关联数组（列名 => true）**，
+            // 不是列名列表 ⇒ 必须用 `isset($cols[$col])` 判存在；用 `in_array($col, $cols)` 比对的是
+            // 值（全是 true）⇒ 恒判「缺列」，0.1.7 上「三卡 + 角标」因此整块不生效（生产实测）。
             $cols = (array) zw_receipt_source_columns($fresh);
             if ($cols) {
                 foreach (array_keys(zw_receipt_handle_new_columns()) as $col) {
-                    if (!in_array($col, $cols, true)) {
+                    if (!isset($cols[$col])) {
                         $missing['columns'][] = $col;
                     }
                 }
