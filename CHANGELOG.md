@@ -171,6 +171,15 @@
   - **系统永不删除文件或记录**：只写 `zw_receipt_disposal`（append-only）+ `disposal` 审计留痕；物理删除由人线下做；
   - 新增表 `zw_receipt_disposal`（迁移脚本 `scripts/migrate-receipt-disposal.php`，dry-run/execute/verify）。
 
+## [0.1.24] - 2026-11-04
+
+### Fixed
+
+- **热修（OA-2484）：处置表排序规则** —— 0.1.23 的 `zw_receipt_disposal` 被建成 `utf8mb4_unicode_520_ci`，
+  而 `zw_policy_source.id` 是 `utf8mb4_general_ci`，到期清单的 JOIN 直接报 `Illegal mix of collations`。
+  - 迁移脚本改为**跟随主表排序规则**建表；表已存在但规则不同时自动 `ALTER ... CONVERT`；
+  - 到期清单**去掉跨表 JOIN**，先取到期处置行再逐件判已归档（不再受排序规则影响）。
+
 ## [Unreleased]
 
 ### Added

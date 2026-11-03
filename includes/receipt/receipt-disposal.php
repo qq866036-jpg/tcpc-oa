@@ -281,16 +281,28 @@ if (!function_exists('zw_receipt_disposal_due_list')) {
         global $wpdb;
         $table = zw_receipt_ledger_source_table();
         $today = function_exists('current_time') ? (string) current_time('Y-m-d') : date('Y-m-d');
-        $rows  = $wpdb->get_results($wpdb->prepare(
-            "SELECT d.receipt_id, d.years, d.until FROM " . zw_receipt_disposal_table() . " d"
-            . " INNER JOIN {$table} s ON s.id = d.receipt_id"
-            . " WHERE d.kind = 'retention' AND d.until IS NOT NULL AND d.until <= %s"
-            . " AND s.archive_box_no IS NOT NULL AND s.archive_box_no <> ''"
-            . " ORDER BY d.until ASC LIMIT %d",
+        // OA-2484：**不做跨表 JOIN**（排序规则不一致会报 Illegal mix of collations）。
+        // 先取到期处置行，再逐件判「已归档」——协会量级（数百件）可忽略。
+        $rows = $wpdb->get_results($wpdb->prepare(
+            'SELECT receipt_id, years, until FROM ' . zw_receipt_disposal_table()
+            . ' WHERE kind = %s AND until IS NOT NULL AND until <= %s ORDER BY until ASC LIMIT %d',
+            'retention',
             $today,
             max(1, (int) $limit)
         ), 'ARRAY_A');
-        return is_array($rows) ? $rows : array();
+        $out = array();
+        foreach (is_array($rows) ? $rows : array() as $one) {
+            $rid = isset($one['receipt_id']) ? (string) $one['receipt_id'] : '';
+            if ($rid === '') {
+                continue;
+            }
+            $arch = function_exists('zw_receipt_handle_archive_info') ? zw_receipt_handle_archive_info($rid) : array();
+            if (empty($arch['archive_box_no'])) {
+                continue; // 未归档不列入销毁清单
+            }
+            $out[] = $one;
+        }
+        return $out;
     }
 }
 

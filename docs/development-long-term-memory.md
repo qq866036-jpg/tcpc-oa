@@ -488,3 +488,10 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
 - 销毁三条门禁：已归档（有盒号）+ 保管期限已到 + 填批准人；缺一不可。
 - 清退（returned）≠ 销毁：归还来文单位，档案件与文件都保留。
 - 数据在独立表 `zw_receipt_disposal`（append-only，不改主表）；迁移 `scripts/migrate-receipt-disposal.php`。
+
+## 2026-11-04 · 新建表必须跟随主表排序规则（OA-2484，载体单 TASK-2574）
+
+- 事故：`dbDelta()` 建的处置表拿到 `utf8mb4_unicode_520_ci`，与主表 `utf8mb4_general_ci` JOIN 报
+  `Illegal mix of collations`（页面与函数都拿不到数据）。
+- 规矩：**任何新表的外键式字符列，建表时显式 `DEFAULT CHARSET/COLLATE` 取主表的规则**；
+  跨表比对**优先在 PHP 里做**，不要动辄 JOIN（排序规则不一致在生产很难第一时间发现）。
