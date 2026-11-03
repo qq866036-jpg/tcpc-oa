@@ -79,6 +79,12 @@ if (!function_exists('zw_receipt_auto_switches')) {
                 'note'    => '开启后，新登记的收文按「部委 → 承办部门 + 默认天数」规则自动生成办理单'
                     . '（走既有派单写入器）；无规则/部门不存在则不派。默认关，只对新登记生效。',
             ),
+            'auto_archive'     => array(
+                'label'   => '自动归档（办结后写归档年度/盒号）',
+                'default' => 0,
+                'note'    => '开启后，每日扫描「办理单全部收口且未归档」的收文，按模板生成归档盒号并写归档年度'
+                    . '（盒号重复会自动换号重试）；无办理单的收文也视为收口。默认关。',
+            ),
         );
     }
 }
@@ -535,6 +541,10 @@ if (!function_exists('zw_receipt_auto_handle_save')) {
         if (isset($_POST['auto_urge_days'])) {
             update_option(ZW_RECEIPT_AUTO_URGE_DAYS_OPTION, (string) max(0, min(30, (int) wp_unslash($_POST['auto_urge_days']))));
         }
+        if (isset($_POST['auto_archive_template'])) {
+            $tpl = trim((string) wp_unslash($_POST['auto_archive_template']));
+            update_option(ZW_RECEIPT_AUTO_ARCHIVE_TEMPLATE_OPTION, $tpl);
+        }
         if (isset($_POST['auto_dispatch_rules'])) {
             $rules = array();
             $raw   = (string) wp_unslash($_POST['auto_dispatch_rules']);
@@ -934,6 +944,11 @@ if (!function_exists('zw_receipt_auto_render_rule_section')) {
             . '<input type="number" id="zw-auto-urge-days" name="auto_urge_days" min="0" max="30" value="' . esc_attr((string) $days) . '">'
             . '<p class="description">时限前 N 天（含已逾期）开始催办；0 = 只在逾期当天催。</p></div>';
         echo '</div>';
+        echo '<div class="zw-adm-field"><label for="zw-auto-archive-tpl">归档盒号模板</label>'
+            . '<input type="text" id="zw-auto-archive-tpl" name="auto_archive_template" value="'
+            . esc_attr(zw_receipt_auto_archive_template()) . '" placeholder="{year}-{org}-{seq}">'
+            . '<p class="description">占位：<code>{year}</code> 归档年度、<code>{org}</code> 部委 key、'
+            . '<code>{seq}</code> 同年度序号（4 位补零）。盒号重复会自动换号重试。</p></div>';
         echo '<div class="zw-adm-field"><label for="zw-auto-rules">自动派单规则（一行一条：部委 key | 承办部门 key | 天数）</label>'
             . '<textarea id="zw-auto-rules" name="auto_dispatch_rules" rows="5" placeholder="mca | office | 5">'
             . esc_html(implode("\n", $lines)) . '</textarea>'
@@ -941,4 +956,244 @@ if (!function_exists('zw_receipt_auto_render_rule_section')) {
             . '留空 = 不自动派单。承办部门用组织架构部门 key。</p></div>';
         echo '</div>';
     }
+}
+
+if (!defined('ZW_RECEIPT_AUTO_SYSTEM_ARCHIVE')) {
+    define('ZW_RECEIPT_AUTO_SYSTEM_ARCHIVE', 'system:auto-archive');
+}
+if (!defined('ZW_RECEIPT_AUTO_ARCHIVE_HOOK')) {
+    define('ZW_RECEIPT_AUTO_ARCHIVE_HOOK', 'zw_receipt_auto_archive_event');
+}
+if (!defined('ZW_RECEIPT_AUTO_ARCHIVE_TEMPLATE_OPTION')) {
+    define('ZW_RECEIPT_AUTO_ARCHIVE_TEMPLATE_OPTION', 'zw_receipt_archive_template');
+}
+
+if (!function_exists('zw_receipt_auto_archive_template')) {
+    /**
+     * 盒号模板（默认 `{year}-{org}-{seq}`；可用占位 {year}/{org}/{seq}）。
+     *
+     * @return string
+     */
+    function zw_receipt_auto_archive_template() {
+        $tpl = function_exists('get_option') ? (string) get_option(ZW_RECEIPT_AUTO_ARCHIVE_TEMPLATE_OPTION, '') : '';
+        $tpl = trim($tpl);
+        return $tpl !== '' ? $tpl : '{year}-{org}-{seq}';
+    }
+}
+
+if (!function_exists('zw_receipt_auto_archive_box')) {
+    /**
+     * 生成盒号（纯函数；`seq` 由调用方给）。
+     *
+     * @param string $template 模板。
+     * @param int    $year     年度。
+     * @param string $org     部委 key。
+     * @param int    $seq      序号。
+     * @return string
+     */
+    function zw_receipt_auto_archive_box($template, $year, $org, $seq) {
+        $box = str_replace(
+            array('{year}', '{org}', '{seq}'),
+            array((string) (int) $year, (string) $org, str_pad((string) (int) $seq, 4, '0', STR_PAD_LEFT)),
+            (string) $template
+        );
+        $box = trim($box);
+        // 与 `zw_receipt_archive_save()` 的字符白名单保持一致（中文/字母/数字/连字符）。
+        $box = preg_replace('/[^A-Za-z0-9_\-\x{4e00}-\x{9fa5}]/u', '', $box);
+        if (function_exists('mb_substr')) {
+            $box = mb_substr($box, 0, 64);
+        }
+        return $box;
+    }
+}
+
+if (!function_exists('zw_receipt_auto_archive_year')) {
+    /**
+     * 归档年度：取收文日期年；缺失/非法 ⇒ 当前年。
+     *
+     * @param array $view 台账行视图。
+     * @return int
+     */
+    function zw_receipt_auto_archive_year($view) {
+        $date = isset($view['received_date']) ? (string) $view['received_date'] : '';
+        if (preg_match('/^(\d{4})/', $date, $m)) {
+            $year = (int) $m[1];
+            if ($year >= 1900 && $year <= 2999) {
+                return $year;
+            }
+        }
+        return function_exists('current_time') ? (int) current_time('Y') : (int) date('Y');
+    }
+}
+
+if (!function_exists('zw_receipt_auto_archive_one')) {
+    /**
+     * 给单个收文归档（幂等：已归档则跳过）。
+     *
+     * @param string $receipt_id 收文 ID。
+     * @return array{result:string,box:string,year:int,note:string}|WP_Error
+     */
+    function zw_receipt_auto_archive_one($receipt_id) {
+        $receipt_id = function_exists('zw_receipt_handle_sanitize_id')
+            ? zw_receipt_handle_sanitize_id($receipt_id)
+            : trim((string) $receipt_id);
+        if ($receipt_id === '' || !function_exists('zw_receipt_archive_save')) {
+            return new WP_Error('zw_receipt_auto_archive_unavailable', '归档写入器未加载。');
+        }
+        $info = function_exists('zw_receipt_handle_archive_info') ? zw_receipt_handle_archive_info($receipt_id) : array();
+        if (!empty($info['archive_box_no'])) {
+            return array('result' => 'skipped', 'box' => (string) $info['archive_box_no'], 'year' => (int) $info['archive_year'], 'note' => 'already_archived');
+        }
+
+        // 门禁①：所有办理单已收口（无办理单 ⇒ 视为收口）。
+        if (function_exists('zw_receipt_issue_table')) {
+            global $wpdb;
+            $table = zw_receipt_issue_table();
+            if ($table !== '' && is_object($wpdb) && method_exists($wpdb, 'get_var')) {
+                $open = (int) $wpdb->get_var($wpdb->prepare(
+                    "SELECT COUNT(*) FROM {$table} WHERE source_type = %s AND source_id = %s AND status NOT IN (%s, %s)",
+                    'incoming',
+                    $receipt_id,
+                    '已办结',
+                    '归档'
+                ));
+                if ($open > 0) {
+                    return array('result' => 'skipped', 'box' => '', 'year' => 0, 'note' => 'open_issues:' . $open);
+                }
+            }
+        }
+
+        $row  = function_exists('zw_receipt_ledger_row_by_id') ? zw_receipt_ledger_row_by_id($receipt_id) : array();
+        if (!$row) {
+            return new WP_Error('zw_receipt_auto_no_receipt', '找不到该收文。');
+        }
+        $view = function_exists('zw_receipt_ledger_row_view') ? zw_receipt_ledger_row_view($row) : $row;
+        $year = zw_receipt_auto_archive_year($view);
+        $org  = isset($view['org_key']) && (string) $view['org_key'] !== '' ? (string) $view['org_key'] : 'other';
+        $tpl  = zw_receipt_auto_archive_template();
+
+        // 门禁②：盒号查重（同年度已有归档数 + 1 起，最多试 20 次）。
+        $base_seq = 1;
+        if (function_exists('zw_ocr_source_table') || function_exists('zw_receipt_ledger_source_table')) {
+            global $wpdb;
+            $src = function_exists('zw_receipt_ledger_source_table') ? zw_receipt_ledger_source_table() : '';
+            if ($src !== '' && is_object($wpdb) && method_exists($wpdb, 'get_var')) {
+                $n = (int) $wpdb->get_var($wpdb->prepare(
+                    "SELECT COUNT(*) FROM {$src} WHERE origin = 'incoming' AND archive_year = %d",
+                    $year
+                ));
+                $base_seq = $n + 1;
+            }
+        }
+        $box   = '';
+        $tries = 0;
+        while ($tries < 20) {
+            $candidate = zw_receipt_auto_archive_box($tpl, $year, $org, $base_seq + $tries);
+            $tries++;
+            if ($candidate === '') {
+                break;
+            }
+            $taken = false;
+            global $wpdb;
+            $src = function_exists('zw_receipt_ledger_source_table') ? zw_receipt_ledger_source_table() : '';
+            if ($src !== '' && is_object($wpdb) && method_exists($wpdb, 'get_var')) {
+                $hit = $wpdb->get_var($wpdb->prepare(
+                    "SELECT id FROM {$src} WHERE archive_box_no = %s LIMIT 1",
+                    $candidate
+                ));
+                $taken = !empty($hit);
+            }
+            if (!$taken) {
+                $box = $candidate;
+                break;
+            }
+        }
+        if ($box === '') {
+            return array('result' => 'skipped', 'box' => '', 'year' => $year, 'note' => 'box_conflict');
+        }
+
+        $saved = zw_receipt_archive_save(array(
+            'receipt_id'     => $receipt_id,
+            'archive_box_no' => $box,
+            'archive_year'   => $year,
+        ));
+        if (is_wp_error($saved)) {
+            return $saved;
+        }
+        if (function_exists('zw_receipt_handle_add')) {
+            zw_receipt_handle_add(array(
+                'receipt_id' => $receipt_id,
+                'action'     => 'archive',
+                'content'    => '系统自动归档：盒号 ' . $box . '，年度 ' . $year,
+            ), array('archive'), ZW_RECEIPT_AUTO_SYSTEM_ARCHIVE);
+        }
+        return array('result' => 'done', 'box' => $box, 'year' => $year, 'note' => '');
+    }
+}
+
+if (!function_exists('zw_receipt_auto_archive_scan')) {
+    /**
+     * 每日扫描：对「已收口且未归档」的收文自动归档。
+     *
+     * @param int $limit 单次上限。
+     * @return array{scanned:int,archived:int,skipped:int}
+     */
+    function zw_receipt_auto_archive_scan($limit = 100) {
+        $out = array('scanned' => 0, 'archived' => 0, 'skipped' => 0);
+        if (!zw_receipt_auto_enabled('auto_archive')) {
+            return $out;
+        }
+        $missing = function_exists('zw_receipt_handle_missing') ? zw_receipt_handle_missing() : array('columns' => array('x'));
+        if (!empty($missing['columns'])) {
+            return $out; // 归档三列未迁移 ⇒ 零行为
+        }
+        global $wpdb;
+        $src = function_exists('zw_receipt_ledger_source_table') ? zw_receipt_ledger_source_table() : '';
+        if ($src === '' || !is_object($wpdb) || !method_exists($wpdb, 'get_results')) {
+            return $out;
+        }
+        $rows = $wpdb->get_results($wpdb->prepare(
+            "SELECT id FROM {$src} WHERE origin = 'incoming' AND (archive_box_no IS NULL OR archive_box_no = '')"
+            . " ORDER BY id ASC LIMIT %d",
+            max(1, (int) $limit)
+        ), 'ARRAY_A');
+        foreach (is_array($rows) ? $rows : array() as $one) {
+            $id = isset($one['id']) ? (string) $one['id'] : '';
+            if ($id === '') {
+                continue;
+            }
+            $out['scanned']++;
+            $r = zw_receipt_auto_archive_one($id);
+            if (is_array($r) && $r['result'] === 'done') {
+                $out['archived']++;
+            } else {
+                $out['skipped']++;
+            }
+        }
+        return $out;
+    }
+}
+
+if (!function_exists('zw_receipt_auto_archive_schedule')) {
+    /**
+     * 排每日归档扫描（09:10）。
+     *
+     * @return void
+     */
+    function zw_receipt_auto_archive_schedule() {
+        if (!function_exists('wp_next_scheduled') || !function_exists('wp_schedule_event')) {
+            return;
+        }
+        if (!zw_receipt_auto_enabled('auto_archive')) {
+            return;
+        }
+        if (!wp_next_scheduled(ZW_RECEIPT_AUTO_ARCHIVE_HOOK)) {
+            wp_schedule_event(strtotime('tomorrow 09:10'), 'daily', ZW_RECEIPT_AUTO_ARCHIVE_HOOK);
+        }
+    }
+}
+
+if (function_exists('add_action')) {
+    add_action(ZW_RECEIPT_AUTO_ARCHIVE_HOOK, 'zw_receipt_auto_archive_scan', 10, 0);
+    add_action('init', 'zw_receipt_auto_archive_schedule', 21);
 }
