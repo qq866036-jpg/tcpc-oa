@@ -512,3 +512,8 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
 - **为什么 oa 优先**：四个卫星仓里，oa 是**唯一没有任何跨仓兜底**的（cert 曾有专属契约门禁、
   workbench 自举、mapp 有专属 CI），所以「oa 绿、主题红」此前无任何机制拦截。
 - **失败语义**：红 ⇒ 中断收口（marker 保留），不静默放行。
+
+## 10. 工作台卡片 provider（OA-2487 / 载体 AGENT-0248，2026-11-04）
+
+- `includes/workbench-card.php`（照抄 workbench 模板，id=`oa`，版本取 `TCPC_OA_VERSION`）；`tcpc-oa.php` 在 load-list 之后 require。
+- 纪律：只返回数组、不渲染、不读文件。

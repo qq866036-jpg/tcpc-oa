@@ -46,6 +46,10 @@ if (!defined('TCPC_OA_MIN_THEME')) {
  */
 if (file_exists(TCPC_OA_DIR . '/includes/load-list.php')) {
     require_once TCPC_OA_DIR . '/includes/load-list.php';
+    // AGENT-0248：工作台卡片 provider（只返回数据，渲染由 tcpc-workbench 负责）。
+    if (file_exists(TCPC_OA_DIR . '/includes/workbench-card.php')) {
+        require_once TCPC_OA_DIR . '/includes/workbench-card.php';
+    }
     if (function_exists('tcpc_oa_load_modules')) {
         tcpc_oa_load_modules();
     }
