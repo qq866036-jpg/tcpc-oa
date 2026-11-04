@@ -503,3 +503,12 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
   `zw_receipt_print_css()` 内**透传** `zw_adm_ui_table_wrap_css()`，不复制第二套声明；统计页规则由
   `zw_receipt_admin_ui_page_open()` 透传。
 - 复核命令：`php scripts/admin-h5-static.php --paths <OA includes> --json` ⇒ **52/52 全包裹**（本单前 47/52）。
+
+## 9. 跨仓验证已接线（OA-2486 / 载体单 AGENT-0244，2026-11-04）
+
+- **本仓 `workbench/finish.sh` 已接**：在「本仓质量门」之后调用主题仓
+  `scripts/plugin-gate.sh dev-tcpc-oa`（唯一入口；本仓不复制判据）。
+- 跑的是：本仓 `ci-check.sh` + 主题里断言本仓源码的 **10 条** `test-oa-*`。
+- **为什么 oa 优先**：四个卫星仓里，oa 是**唯一没有任何跨仓兜底**的（cert 曾有专属契约门禁、
+  workbench 自举、mapp 有专属 CI），所以「oa 绿、主题红」此前无任何机制拦截。
+- **失败语义**：红 ⇒ 中断收口（marker 保留），不静默放行。

@@ -70,6 +70,20 @@ if ! bash scripts/ci-check.sh 2>&1 | tee "$OUT"; then
 fi
 rm -f "$OUT"
 
+# ── AGENT-0244 / OA-2486（方案 §7 H）：**跨仓验证** —— 本仓收口同时跑「主题里断言本仓源码的测试」。
+# 为什么 oa 优先：四个卫星仓里 oa 是**唯一没有任何跨仓兜底**的，「oa 绿、主题红」此前无机制可拦。
+# 唯一入口在主题仓（本段只调用，不复制测试清单）；红 ⇒ 中断收口（marker 保留）。
+THEME_MAIN="${ZW_WORKBENCH_THEME:-/srv/git/worktrees/dev-tcpc/main}"
+if [[ -f "$THEME_MAIN/scripts/plugin-gate.sh" ]]; then
+  echo "==> 跨仓验证：plugin-gate dev-tcpc-oa"
+  if ! bash "$THEME_MAIN/scripts/plugin-gate.sh" dev-tcpc-oa; then
+    echo "✗ 跨仓验证未通过（本仓绿 ≠ 主题绿），收口中止（marker 保留）" >&2
+    exit 1
+  fi
+else
+  echo "  （主题仓尚无 scripts/plugin-gate.sh —— 跳过跨仓验证；主题侧并入后自动生效）"
+fi
+
 echo "==> 记录插件侧收口流水"
 python3 - "$GD/zw-workbench-history.jsonl" "$MARKER_TASK" "$MARKER_ROLES_SPEC" "$NOTE" "$REPO" "$MARKER_THEME_WORKTREE" <<'PY'
 import json, subprocess, sys, time
