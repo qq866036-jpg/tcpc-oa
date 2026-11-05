@@ -517,3 +517,9 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
 
 - `includes/workbench-card.php`（照抄 workbench 模板，id=`oa`，版本取 `TCPC_OA_VERSION`）；`tcpc-oa.php` 在 load-list 之后 require。
 - 纪律：只返回数组、不渲染、不读文件。
+
+## 收口 marker 的 finally 语义（OA-2488，2026-11-04）
+
+- `workbench/finish.sh` 在「本仓质量门通过之后」置 `ZW_MARKER_CLEAR_ON_EXIT=1` 并 `trap ... EXIT`：
+  之后任何失败（含长期记忆判据、跨仓验证）都会清 marker，不再残留拦住下一单。
+- 质量门**之前**失败仍**保留** marker（在制语义不变）。

@@ -19,6 +19,24 @@ fi
 REPO="$(git rev-parse --show-toplevel)"
 GD="$(git -C "$REPO" rev-parse --absolute-git-dir)"
 MARKER="$GD/zw-workbench-active.json"
+
+# ── AGENT-0254：marker **finally 语义** ─────────────────────────────────────────
+# 背景（今天实测咬 4 次）：本脚本在**提交后**重跑时会在长期记忆判据处失败（`dev...HEAD` 已空），
+# 却把 marker 留着 ⇒ 下次任务 preflight 直接拒「本仓已有其它任务的活动 marker」。
+# 判据：
+#   · **本仓质量门通过之后**的任何失败（含长期记忆、跨仓验证）⇒ 清 marker（工作已过验证点，不该拦后手）；
+#   · 质量门**之前**失败（真没干完）⇒ 保留 marker（在制语义不变，不放宽）。
+ZW_MARKER_CLEARED=0
+zw_finish_cleanup() {
+    local rc=$?
+    if [ "${ZW_MARKER_CLEAR_ON_EXIT:-0}" = "1" ] && [ "$ZW_MARKER_CLEARED" = "0" ] && [ -n "${MARKER:-}" ]; then
+        rm -f "$MARKER" 2>/dev/null || true
+        ZW_MARKER_CLEARED=1
+        echo "   已清 marker（收口中止于验证点之后，避免残留拦住下一单）"
+    fi
+    return $rc
+}
+trap zw_finish_cleanup EXIT
 [[ -f "$MARKER" ]] || {
   echo "✗ 没有活动 marker：$MARKER" >&2
   echo "  先跑：bash workbench/preflight.sh TASK-xxxx \"...\"" >&2
@@ -69,6 +87,7 @@ if ! bash scripts/ci-check.sh 2>&1 | tee "$OUT"; then
   exit 1
 fi
 rm -f "$OUT"
+ZW_MARKER_CLEAR_ON_EXIT=1   # 质量门已过：此后任何失败都清 marker
 
 # ── AGENT-0244 / OA-2486（方案 §7 H）：**跨仓验证** —— 本仓收口同时跑「主题里断言本仓源码的测试」。
 # 为什么 oa 优先：四个卫星仓里 oa 是**唯一没有任何跨仓兜底**的，「oa 绿、主题红」此前无机制可拦。
