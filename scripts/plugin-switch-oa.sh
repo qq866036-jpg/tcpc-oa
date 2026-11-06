@@ -138,6 +138,21 @@ run mv "$STAGING" "$PLUGIN_DIR"
 run rm -rf "$PLUGIN_DIR.old-$STAMP"
 echo "  ✓ 已落盘：$PLUGIN_DIR（v$VERSION）"
 
+# ── ⑤b 属主/权限归一（2026-11-06 事故教训，必须做）────────────────────────────
+# 背景：同源的 learning 插件曾因安装目录变成 `root:root 700` ⇒ PHP-FPM(www) 连目录都进不去 ⇒
+#   插件"显示 active 却从不加载"；而 CLI 以 root 运行、`wp eval` **看不出来**。本仓实测曾是
+#   `root:root 755`（靠 o+r 兜着），一旦某次复制带来 600 文件就会复现。这里强制归一 + 回读。
+OWNER="${ZW_OA_OWNER:-www:www}"
+run chown -R "$OWNER" "$PLUGIN_DIR" 2>/dev/null || echo "  ⚠ 属主归一失败（$OWNER），请手工 chown -R"
+find "$PLUGIN_DIR" -type d -exec chmod 755 {} \; 2>/dev/null || true
+find "$PLUGIN_DIR" -type f -exec chmod 644 {} \; 2>/dev/null || true
+PLUGIN_MODE="$(stat -c '%a %U:%G' "$PLUGIN_DIR" 2>/dev/null || echo '?')"
+if [[ "$PLUGIN_MODE" == "755 www:www" ]]; then
+  echo "  ✓ 属主/权限：$PLUGIN_MODE"
+else
+  echo "  ⚠ 属主/权限异常：$PLUGIN_MODE（期望 755 www:www）—— 可能导致插件不加载"
+fi
+
 # ── ⑥ 冒烟 ───────────────────────────────────────────────────────────────────
 if [[ "$NO_SMOKE" -eq 1 ]]; then
   say "冒烟已跳过（--no-smoke，不作为放行依据）"

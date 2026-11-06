@@ -523,3 +523,12 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
 - `workbench/finish.sh` 在「本仓质量门通过之后」置 `ZW_MARKER_CLEAR_ON_EXIT=1` 并 `trap ... EXIT`：
   之后任何失败（含长期记忆判据、跨仓验证）都会清 marker，不再残留拦住下一单。
 - 质量门**之前**失败仍**保留** marker（在制语义不变）。
+
+## OA-2490 发版脚本补属主/权限归一（2026-11-06）
+
+- **背景**：2026-11-06 学习插件上线事故 —— 安装目录 `root:root 700` ⇒ PHP-FPM(www) 无法进入 ⇒
+  插件"显示 active 却从不加载"，而 root 下 `wp eval` 完全看不出异常。
+- **本仓实测**：生产 `tcpc-oa` 目录曾为 `root:root 755`（靠 o+r 兜着能跑），一旦某次复制带来 `600` 文件即复现同款故障。
+- **改动**：`scripts/plugin-switch-oa.sh` 原子交换后**强制** `chown -R ${ZW_OA_OWNER:-www:www}` + 目录 755 / 文件 644，
+  并**回读** `stat -c '%a %U:%G'`；不符打印告警（不静默放过）。
+- **现场**：生产 `tcpc-oa` / `tcpc-mapp` 已 `chown -R www:www`，回读 `755 www:www`，HTTP 探针确认两插件仍加载。
