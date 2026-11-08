@@ -80,9 +80,9 @@ function zw_policy_platform_page_content_review() {
 
     zw_policy_platform_page_header('内容审核', '分支机构对外文字内容的 AI法务初审、人工复核、结果标记与审计日志。');
     ?>
-    <div class="zw-adm-card" style="margin:14px 0">
-        <div class="zw-adm-card-head"><span class="ct">接入流程</span><span class="desc">保存不直接覆盖线上，审核通过才发布</span></div>
-        <div class="zw-adm-card-body" style="font-size:13px;line-height:1.9;color:#50575e">
+    <div class="tco-card" style="margin:14px 0">
+        <div class="tco-card-head"><span class="ct">接入流程</span><span class="desc">保存不直接覆盖线上，审核通过才发布</span></div>
+        <div class="tco-card-body" style="font-size:13px;line-height:1.9;color:#50575e">
             1. 分支机构管理员/仪表盘管理员修改对外文字字段 →
             2. 系统保存为候选草稿并写修改审计 →
             3. AI法务初审 →
@@ -111,9 +111,9 @@ function zw_policy_platform_page_content_review() {
             ? zw_branch_content_review_clause_limits()
             : array('max_items' => 0, 'max_chars' => 0);
         ?>
-        <div class="zw-adm-card" style="margin:14px 0">
-            <div class="zw-adm-card-head"><span class="ct">送审依据预览</span><span class="desc">只读；不发任何请求</span></div>
-            <div class="zw-adm-card-body" style="font-size:13px;line-height:1.9;color:#50575e">
+        <div class="tco-card" style="margin:14px 0">
+            <div class="tco-card-head"><span class="ct">送审依据预览</span><span class="desc">只读；不发任何请求</span></div>
+            <div class="tco-card-body" style="font-size:13px;line-height:1.9;color:#50575e">
                 已确认条款快照 <strong><?php echo (int) $zw_cr_total; ?></strong> 条 ⇒ 本次送审选取 <strong><?php echo count($zw_cr_picked); ?></strong> 条，
                 覆盖 <strong><?php echo count($zw_cr_by_src); ?></strong> 个来源<?php echo !empty($zw_cr_selected['truncated'])
                     ? '（已达选取预算：' . (int) $zw_cr_limits['max_items'] . ' 条 / ' . (int) $zw_cr_limits['max_chars'] . ' 字节）'
@@ -122,7 +122,7 @@ function zw_policy_platform_page_content_review() {
                 <?php if ($zw_cr_by_src) : ?>
                     <div style="margin-top:8px">
                         <?php foreach ($zw_cr_by_src as $zw_cr_sid => $zw_cr_n) : ?>
-                            <span class="zw-adm-badge off" style="margin:0 6px 6px 0"><?php echo esc_html($zw_cr_sid !== '' ? $zw_cr_sid : '(无来源)'); ?> · <?php echo (int) $zw_cr_n; ?> 条</span>
+                            <span class="tco-badge off" style="margin:0 6px 6px 0"><?php echo esc_html($zw_cr_sid !== '' ? $zw_cr_sid : '(无来源)'); ?> · <?php echo (int) $zw_cr_n; ?> 条</span>
                         <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
@@ -140,14 +140,14 @@ function zw_policy_platform_page_content_review() {
         </div>
     <?php endif; ?>
 
-    <div class="zw-adm-grid zw-adm-g4" style="margin:16px 0 18px">
-        <div class="zw-adm-kpi warn"><div class="l">待AI审核</div><div class="n"><?php echo (int) $counts['pending_ai']; ?></div></div>
-        <div class="zw-adm-kpi red"><div class="l">待人工审核</div><div class="n"><?php echo (int) $counts['pending_manual']; ?></div></div>
-        <div class="zw-adm-kpi green"><div class="l">已通过</div><div class="n"><?php echo (int) $counts['approved']; ?></div></div>
-        <div class="zw-adm-kpi blue"><div class="l">历史未审核</div><div class="n"><?php echo (int) $counts['legacy']; ?></div></div>
+    <div class="tco-grid tco-g4" style="margin:16px 0 18px">
+        <div class="tco-kpi warn"><div class="l">待AI审核</div><div class="n"><?php echo (int) $counts['pending_ai']; ?></div></div>
+        <div class="tco-kpi red"><div class="l">待人工审核</div><div class="n"><?php echo (int) $counts['pending_manual']; ?></div></div>
+        <div class="tco-kpi green"><div class="l">已通过</div><div class="n"><?php echo (int) $counts['approved']; ?></div></div>
+        <div class="tco-kpi blue"><div class="l">历史未审核</div><div class="n"><?php echo (int) $counts['legacy']; ?></div></div>
     </div>
 
-    <div class="zw-adm-tabbar">
+    <div class="tco-tabbar">
         <a<?php echo $filter_status === '' ? ' class="on"' : ''; ?> href="<?php echo esc_url(zw_policy_platform_content_review_url()); ?>">全部 (<?php echo count($items); ?>)</a>
         <a<?php echo $filter_status === 'pending_ai' ? ' class="on"' : ''; ?> href="<?php echo esc_url(zw_policy_platform_content_review_url(array('review_status' => 'pending_ai'))); ?>">待AI审核 (<?php echo (int) $counts['pending_ai']; ?>)</a>
         <a<?php echo $filter_status === 'pending_manual' ? ' class="on"' : ''; ?> href="<?php echo esc_url(zw_policy_platform_content_review_url(array('review_status' => 'pending_manual'))); ?>">待人工审核 (<?php echo (int) $counts['pending_manual']; ?>)</a>
@@ -155,11 +155,11 @@ function zw_policy_platform_page_content_review() {
         <a<?php echo $filter_status === 'rejected' ? ' class="on"' : ''; ?> href="<?php echo esc_url(zw_policy_platform_content_review_url(array('review_status' => 'rejected'))); ?>">不通过 (<?php echo (int) $counts['rejected']; ?>)</a>
     </div>
 
-    <div class="zw-adm-card" style="overflow-x:auto;margin-bottom:18px">
+    <div class="tco-card" style="overflow-x:auto;margin-bottom:18px">
         <!-- TASK-1633（TASK-1579 P1-6 第四批）：宽表落 canonical 横滑包裹。
-             规则由 ai法务部外壳（slug 前缀 zw-policy ⇒ 命中 zw_mc_adm_is_screen()）下沉，本页不新增 <style>。 -->
-        <div class="zw-adm-table-wrap">
-        <table class="zw-adm-tbl">
+             规则由 ai法务部外壳（slug 前缀 zw-policy ⇒ 命中 会员域后台壳判定()）下沉，本页不新增 <style>。 -->
+        <div class="tco-table-wrap">
+        <table class="tco-tbl">
             <thead><tr><th>机构</th><th>状态</th><th>提交</th><th>AI/人工结论</th><th>政策版本</th><th>操作</th></tr></thead>
             <tbody>
             <?php if (empty($rows)) : ?>
@@ -167,7 +167,7 @@ function zw_policy_platform_page_content_review() {
             <?php else : foreach ($rows as $row) : ?>
                 <tr>
                     <td><strong><?php echo esc_html($row['title']); ?></strong><div style="color:#999;font-size:12px">ID <?php echo (int) $row['id']; ?></div></td>
-                    <td><?php echo function_exists('zw_mc_adm_badge') ? zw_mc_adm_badge(function_exists('zw_branch_content_review_status_badge_type') ? zw_branch_content_review_status_badge_type($row['status']) : 'off', $row['status_label']) : esc_html($row['status_label']); ?></td>
+                    <td><?php echo function_exists('tco_badge') ? tco_badge(function_exists('zw_branch_content_review_status_badge_type') ? zw_branch_content_review_status_badge_type($row['status']) : 'off', $row['status_label']) : esc_html($row['status_label']); ?></td>
                     <td><?php echo esc_html($row['submitted_at'] !== '' ? $row['submitted_at'] : '—'); ?><div style="color:#999;font-size:12px">UID <?php echo (int) $row['submitted_by']; ?></div></td>
                     <td style="max-width:360px">
                         <?php if ($row['summary'] !== '') : ?><div><?php echo esc_html($row['summary']); ?></div><?php endif; ?>
@@ -214,10 +214,10 @@ function zw_policy_platform_page_content_review() {
         </div>
     </div>
 
-    <div class="zw-adm-sec" style="margin-top:22px">审核日志</div>
-    <div class="zw-adm-card" style="overflow-x:auto">
-        <div class="zw-adm-table-wrap">
-        <table class="zw-adm-tbl">
+    <div class="tco-sec" style="margin-top:22px">审核日志</div>
+    <div class="tco-card" style="overflow-x:auto">
+        <div class="tco-table-wrap">
+        <table class="tco-tbl">
             <thead><tr><th>时间</th><th>动作</th><th>机构</th><th>操作/审核人</th><th>说明</th></tr></thead>
             <tbody>
             <?php if (empty($logs)) : ?>

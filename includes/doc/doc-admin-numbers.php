@@ -188,59 +188,59 @@ if (!function_exists('zw_doc_page_numbers')) {
             ? (string) zw_doc_copy_number_next_free()
             : '';
         ?>
-        <div class="wrap zw-doc-numbers">
+        <div class="wrap tco-doc-numbers">
             <?php echo zw_doc_admin_ui_style(); // 唯一出处：SPEC-10 §1.9 卡片范式（TASK-778） ?>
             <style>
-            .zw-doc-numbers .zw-doc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;align-items:start}
-            .zw-doc-numbers .zw-adm-sec:first-child{margin-top:0}
+            .tco-doc-numbers .tco-doc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;align-items:start}
+            .tco-doc-numbers .tco-sec:first-child{margin-top:0}
             </style>
             <h1>文号管理</h1>
-            <p class="zw-doc-muted">本页负责取号 / 预留 / 作废与台账查询；起始序号固定从 1 开始，默认 3 位不补零。</p>
-            <p class="zw-doc-muted">文号规则（前缀 / 年份 / 位数）与文种已**统一收敛**到 <a href="<?php echo esc_url(zw_doc_dict_admin_url()); ?>">发文管理 → 数据字典</a>（首行「文号基本参数」+「文种字典」）：那边有「任」字保护与默认文种二次确认，本页只读回显、不再接收保存。</p>
+            <p class="tco-doc-muted">本页负责取号 / 预留 / 作废与台账查询；起始序号固定从 1 开始，默认 3 位不补零。</p>
+            <p class="tco-doc-muted">文号规则（前缀 / 年份 / 位数）与文种已**统一收敛**到 <a href="<?php echo esc_url(zw_doc_dict_admin_url()); ?>">发文管理 → 数据字典</a>（首行「文号基本参数」+「文种字典」）：那边有「任」字保护与默认文种二次确认，本页只读回显、不再接收保存。</p>
             <?php if ($notice !== '') { zw_doc_admin_notice($notice, stripos($notice, '失败') !== false || stripos($notice, '不能') !== false ? 'error' : 'success'); } ?>
 
-            <div class="zw-doc-grid">
+            <div class="tco-doc-grid">
                 <?php
                 // TASK-2165（S1，用户拍板）：本页「文号规则」改为**只读回显**，唯一可写面是
                 // 「数据字典 → 首行 文号基本参数 / 文种字典」。回显值全部取自同一读取入口
                 // zw_doc_number_settings()，格式预览复用唯一格式化函数 zw_doc_format_number()（不另造格式）。
                 $zw_num_preview_type = isset($settings['doc_types'][0]) ? (string) $settings['doc_types'][0] : '函';
                 ?>
-                <div class="zw-doc-card" id="zw-doc-number-rule-readonly">
+                <div class="tco-doc-card" id="tco-doc-number-rule-readonly">
                     <h2>文号规则（只读）</h2>
-                    <p class="zw-doc-muted">
+                    <p class="tco-doc-muted">
                         文号规则与文种只在
                         <a href="<?php echo esc_url(zw_doc_dict_admin_url()); ?>">发文管理 → 数据字典</a>
                         维护（那边有「任」字保护与「默认文种」二次确认）；本页只读回显，<strong>不再提供修改入口</strong>。
                     </p>
-                    <div class="zw-doc-field">
+                    <div class="tco-doc-field">
                         <label>机关前缀</label>
                         <input type="text" value="<?php echo esc_attr($settings['prefix']); ?>" readonly>
-                        <div class="zw-doc-muted">按用户确认固定为“中传”，不可配置。</div>
+                        <div class="tco-doc-muted">按用户确认固定为“中传”，不可配置。</div>
                     </div>
-                    <div class="zw-doc-field">
+                    <div class="tco-doc-field">
                         <label>文种（<?php echo (int) count($settings['doc_types']); ?> 项）</label>
                         <input type="text" value="<?php echo esc_attr(implode('，', $settings['doc_types'])); ?>" readonly>
-                        <div class="zw-doc-muted">增删与就地改名请到「数据字典 → 文种字典」；此处只回显当前字典。</div>
+                        <div class="tco-doc-muted">增删与就地改名请到「数据字典 → 文种字典」；此处只回显当前字典。</div>
                     </div>
-                    <div class="zw-doc-field">
+                    <div class="tco-doc-field">
                         <label>默认年份 / 序号位数</label>
                         <input type="text" value="<?php echo esc_attr((string) (int) $settings['default_year'] . ' 年 / ' . (int) $settings['digits'] . ' 位'); ?>" readonly>
                     </div>
-                    <div class="zw-doc-field">
+                    <div class="tco-doc-field">
                         <label>整体格式预览</label>
-                        <div class="zw-doc-preview" id="zw-doc-format-preview"><?php echo esc_html(zw_doc_format_number($settings, $zw_num_preview_type, (int) $settings['default_year'], 1)); ?></div>
-                        <div class="zw-doc-muted">按当前文种字典**首项**与默认年份生成；起始序号固定从 1 开始，不补零。</div>
+                        <div class="tco-doc-preview" id="tco-doc-format-preview"><?php echo esc_html(zw_doc_format_number($settings, $zw_num_preview_type, (int) $settings['default_year'], 1)); ?></div>
+                        <div class="tco-doc-muted">按当前文种字典**首项**与默认年份生成；起始序号固定从 1 开始，不补零。</div>
                     </div>
                     <p><a class="button" href="<?php echo esc_url(zw_doc_dict_admin_url()); ?>">去「数据字典」修改文号规则与文种</a></p>
                 </div>
 
-                <div class="zw-doc-card">
+                <div class="tco-doc-card">
                     <h2>新增预留文号</h2>
                     <form method="post">
                         <?php wp_nonce_field('zw_doc_reserve_number'); ?>
                         <input type="hidden" name="zw_doc_action" value="reserve_number">
-                        <div class="zw-doc-field">
+                        <div class="tco-doc-field">
                             <label>年份</label>
                             <select name="reserve_year">
                                 <?php foreach (zw_doc_year_options() as $year) : ?>
@@ -248,7 +248,7 @@ if (!function_exists('zw_doc_page_numbers')) {
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <div class="zw-doc-field">
+                        <div class="tco-doc-field">
                             <label>文种</label>
                             <select name="reserve_type">
                                 <?php foreach ($settings['doc_types'] as $type) : ?>
@@ -256,12 +256,12 @@ if (!function_exists('zw_doc_page_numbers')) {
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <div class="zw-doc-field">
+                        <div class="tco-doc-field">
                             <label>预留序号（支持单个或范围）</label>
                             <input type="text" name="reserve_range" value="" placeholder="如：33 或 1-10 或 1-3,5,8-10" style="width:100%" required>
-                            <div class="zw-doc-muted">支持单个、连续范围、多个范围组合；范围冲突时整体不预留。</div>
+                            <div class="tco-doc-muted">支持单个、连续范围、多个范围组合；范围冲突时整体不预留。</div>
                         </div>
-                        <div class="zw-doc-field">
+                        <div class="tco-doc-field">
                             <label>用途备注</label>
                             <input type="text" name="reserve_note" maxlength="255" style="width:100%">
                         </div>
@@ -271,9 +271,9 @@ if (!function_exists('zw_doc_page_numbers')) {
             </div>
 
             <h2>操作记录</h2>
-            <p class="zw-doc-muted" style="margin:4px 0 8px">默认隐藏已作废记录；选择状态“已作废”可查看并保留审计。</p>
+            <p class="tco-doc-muted" style="margin:4px 0 8px">默认隐藏已作废记录；选择状态“已作废”可查看并保留审计。</p>
             <form method="get" style="margin:10px 0">
-                <input type="hidden" name="page" value="zw-doc-numbers">
+                <input type="hidden" name="page" value="tco-doc-numbers">
                 <select name="f_year">
                     <option value="0">全部年份</option>
                     <?php foreach (zw_doc_year_options() as $year) : ?>
@@ -297,8 +297,8 @@ if (!function_exists('zw_doc_page_numbers')) {
 
             <?php /* TASK-1586（P1-1c）/ SPEC-10 §1.9.2 第 5 条：8 列宽表（≈760px）必须落在
                  canonical 横滑包裹内。该类由本页 :114 的 zw_doc_admin_ui_style() 提供
-                 （唯一出处＝inc/admin/admin-ui-tokens.php 的 zw_adm_ui_table_wrap_css()）。 */ ?>
-            <div class="zw-adm-table-wrap">
+                 （唯一出处＝includes/ui/ui-tokens.php 的 tco_ui_table_wrap_css()）。 */ ?>
+            <div class="tco-table-wrap">
             <table class="widefat striped">
                 <thead>
                 <tr>
@@ -322,7 +322,7 @@ if (!function_exists('zw_doc_page_numbers')) {
                             <td><?php echo esc_html((string) $row['doc_year']); ?></td>
                             <td><?php echo esc_html($row['doc_type']); ?></td>
                             <td><?php echo esc_html((string) $row['seq']); ?></td>
-                            <td><span class="zw-doc-status"><?php echo esc_html(zw_doc_number_status_label($row['status'])); ?></span></td>
+                            <td><span class="tco-doc-status"><?php echo esc_html(zw_doc_number_status_label($row['status'])); ?></span></td>
                             <td>
                                 <?php if ($row['document_id'] > 0) : ?>
                                     <a href="<?php echo esc_url(add_query_arg(array('page' => 'zw-doc', 'view' => 'detail', 'doc_id' => $row['document_id']), admin_url('admin.php'))); ?>">#<?php echo (int) $row['document_id']; ?></a>
@@ -332,7 +332,7 @@ if (!function_exists('zw_doc_page_numbers')) {
                             </td>
                             <td>
                                 <?php echo esc_html(zw_doc_user_label($row['operator_id'])); ?><br>
-                                <span class="zw-doc-muted"><?php echo esc_html($row['updated_at']); ?></span>
+                                <span class="tco-doc-muted"><?php echo esc_html($row['updated_at']); ?></span>
                             </td>
                             <td>
                                 <?php if ($row['status'] === 'reserved') : ?>
@@ -374,21 +374,21 @@ if (!function_exists('zw_doc_page_numbers')) {
             // 与文号台账并列：份号＝**一件公文一个号**（全局唯一、6 位、从 000001 起，不按年重置）。
             // 预留 / 跳过 = 占用但不下发；作废 = 号回到可用池。取号入口在「新建发文 → 第 1 步」。
             ?>
-            <h2 style="margin-top:28px">份号台账 <span class="zw-doc-muted" style="font-weight:400">（自动取号 / 手动指定 / 不标注 三种方式在「新建发文」第 1 步选择）</span></h2>
-            <p class="zw-doc-muted">下一可用份号：<code><?php echo esc_html($copy_next_free !== '' ? $copy_next_free : '—（6 位号段已用尽）'); ?></code>。份号会读取存量公文里的既有值，故不回填也不会发出重号。</p>
+            <h2 style="margin-top:28px">份号台账 <span class="tco-doc-muted" style="font-weight:400">（自动取号 / 手动指定 / 不标注 三种方式在「新建发文」第 1 步选择）</span></h2>
+            <p class="tco-doc-muted">下一可用份号：<code><?php echo esc_html($copy_next_free !== '' ? $copy_next_free : '—（6 位号段已用尽）'); ?></code>。份号会读取存量公文里的既有值，故不回填也不会发出重号。</p>
 
-            <div class="zw-doc-grid">
-                <div class="zw-doc-card">
+            <div class="tco-doc-grid">
+                <div class="tco-doc-card">
                     <h2>预留份号</h2>
                     <form method="post">
                         <?php wp_nonce_field('zw_doc_reserve_copy'); ?>
                         <input type="hidden" name="zw_doc_action" value="reserve_copy">
-                        <div class="zw-doc-field">
+                        <div class="tco-doc-field">
                             <label>份号（支持单个或范围）</label>
                             <input type="text" name="copy_spec" value="" placeholder="如：000012 或 000001-000010 或 1-3,5" style="width:100%" required>
-                            <div class="zw-doc-muted">支持单个、连续范围、多段组合；单次不超过 200 个。</div>
+                            <div class="tco-doc-muted">支持单个、连续范围、多段组合；单次不超过 200 个。</div>
                         </div>
-                        <div class="zw-doc-field">
+                        <div class="tco-doc-field">
                             <label>用途备注</label>
                             <input type="text" name="copy_note" maxlength="255" style="width:100%">
                         </div>
@@ -396,17 +396,17 @@ if (!function_exists('zw_doc_page_numbers')) {
                     </form>
                 </div>
 
-                <div class="zw-doc-card">
+                <div class="tco-doc-card">
                     <h2>跳过份号</h2>
                     <form method="post">
                         <?php wp_nonce_field('zw_doc_skip_copy'); ?>
                         <input type="hidden" name="zw_doc_action" value="skip_copy">
-                        <div class="zw-doc-field">
+                        <div class="tco-doc-field">
                             <label>份号（支持单个或范围）</label>
                             <input type="text" name="copy_spec" value="" placeholder="如：000013" style="width:100%" required>
-                            <div class="zw-doc-muted">跳过 = 该号永不再用（占用并保留审计），与「作废」不同。</div>
+                            <div class="tco-doc-muted">跳过 = 该号永不再用（占用并保留审计），与「作废」不同。</div>
                         </div>
-                        <div class="zw-doc-field">
+                        <div class="tco-doc-field">
                             <label>跳过原因</label>
                             <input type="text" name="copy_reason" maxlength="255" style="width:100%">
                         </div>
@@ -414,9 +414,9 @@ if (!function_exists('zw_doc_page_numbers')) {
                     </form>
                 </div>
 
-                <div class="zw-doc-card">
+                <div class="tco-doc-card">
                     <h2>从存量公文回填</h2>
-                    <p class="zw-doc-muted">把已保存发文的 <code>body.meta.copy_no</code> 登记进台账（幂等、只补不覆盖；重号会逐条报冲突，不静默改数据）。</p>
+                    <p class="tco-doc-muted">把已保存发文的 <code>body.meta.copy_no</code> 登记进台账（幂等、只补不覆盖；重号会逐条报冲突，不静默改数据）。</p>
                     <form method="post">
                         <?php wp_nonce_field('zw_doc_backfill_copy'); ?>
                         <input type="hidden" name="zw_doc_action" value="backfill_copy">
@@ -427,7 +427,7 @@ if (!function_exists('zw_doc_page_numbers')) {
 
             <h2>份号记录</h2>
             <form method="get" style="margin:10px 0">
-                <input type="hidden" name="page" value="zw-doc-numbers">
+                <input type="hidden" name="page" value="tco-doc-numbers">
                 <select name="c_status">
                     <option value="">全部状态</option>
                     <?php foreach (array('reserved', 'used', 'skipped', 'void') as $copy_status) : ?>
@@ -437,7 +437,7 @@ if (!function_exists('zw_doc_page_numbers')) {
                 <button class="button" type="submit">筛选份号</button>
             </form>
 
-            <div class="zw-adm-table-wrap">
+            <div class="tco-table-wrap">
             <table class="widefat">
                 <thead>
                 <tr>
@@ -455,7 +455,7 @@ if (!function_exists('zw_doc_page_numbers')) {
                     <?php foreach ($copy_list['items'] as $copy_row) : ?>
                         <tr>
                             <td><strong><?php echo esc_html($copy_row['copy_no']); ?></strong></td>
-                            <td><span class="zw-doc-status"><?php echo esc_html(zw_doc_copy_number_status_label($copy_row['status'])); ?></span></td>
+                            <td><span class="tco-doc-status"><?php echo esc_html(zw_doc_copy_number_status_label($copy_row['status'])); ?></span></td>
                             <td>
                                 <?php if ($copy_row['document_id'] > 0) : ?>
                                     <a href="<?php echo esc_url(add_query_arg(array('page' => 'zw-doc', 'view' => 'detail', 'doc_id' => $copy_row['document_id']), admin_url('admin.php'))); ?>">#<?php echo (int) $copy_row['document_id']; ?></a>
@@ -465,7 +465,7 @@ if (!function_exists('zw_doc_page_numbers')) {
                             </td>
                             <td>
                                 <?php echo esc_html(zw_doc_user_label($copy_row['operator_id'])); ?><br>
-                                <span class="zw-doc-muted"><?php echo esc_html($copy_row['updated_at']); ?></span>
+                                <span class="tco-doc-muted"><?php echo esc_html($copy_row['updated_at']); ?></span>
                             </td>
                             <td>
                                 <?php if (in_array($copy_row['status'], array('reserved', 'skipped'), true)) : ?>

@@ -934,29 +934,29 @@ if (!function_exists('zw_doc_page_dict')) {
         $number = zw_doc_number_settings();
         $flow   = zw_doc_flow_settings();
         ?>
-        <div class="wrap zw-doc-dict">
+        <div class="wrap tco-doc-dict">
             <?php echo zw_doc_admin_ui_style(); // 唯一出处：SPEC-10 §1.9 卡片范式（TASK-778） ?>
             <style>
-            .zw-doc-dict .zw-adm-table-wrap{width:100%;overflow-x:auto}
-            .zw-doc-dict table.zw-dict-table{width:100%;border-collapse:collapse;font-size:13px}
-            .zw-doc-dict table.zw-dict-table th,.zw-doc-dict table.zw-dict-table td{border-bottom:1px solid #f0f1f3;padding:8px 10px;text-align:left;vertical-align:top}
-            .zw-doc-dict table.zw-dict-table th{background:#fafbfc;font-weight:600;white-space:nowrap}
-            .zw-doc-dict table.zw-dict-table code{background:#f4f4f4;border-radius:4px;padding:1px 5px;font-size:12px}
-            .zw-doc-dict .zw-dict-enum{display:block;margin-top:2px;color:#8c8f94;font-size:12px}
-            .zw-doc-dict .zw-dict-group{margin:16px 0 0}
-            .zw-doc-dict .zw-dict-term-add{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0 10px}
-            .zw-doc-dict .zw-dict-term-add input[type=text]{min-width:260px}
-            .zw-doc-dict .zw-dict-term-op{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap;margin:0 10px 4px 0}
-            .zw-doc-dict .zw-dict-term-op input[type=text]{max-width:170px}
-            .zw-doc-dict .zw-dict-confirm{display:inline-flex;gap:4px;align-items:center;font-size:12px;color:#8c8f94}
-            .zw-doc-dict .zw-dict-badge{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:#f0f1f3;color:#50575e;font-size:12px}
-            .zw-doc-dict .zw-dict-danger{color:#b30404;border-color:#b30404}
-            .zw-doc-dict .zw-dict-danger[disabled],.zw-doc-dict .zw-dict-term-op .button[disabled]{opacity:.5;cursor:not-allowed}
+            .tco-doc-dict .tco-table-wrap{width:100%;overflow-x:auto}
+            .tco-doc-dict table.zw-dict-table{width:100%;border-collapse:collapse;font-size:13px}
+            .tco-doc-dict table.zw-dict-table th,.tco-doc-dict table.zw-dict-table td{border-bottom:1px solid #f0f1f3;padding:8px 10px;text-align:left;vertical-align:top}
+            .tco-doc-dict table.zw-dict-table th{background:#fafbfc;font-weight:600;white-space:nowrap}
+            .tco-doc-dict table.zw-dict-table code{background:#f4f4f4;border-radius:4px;padding:1px 5px;font-size:12px}
+            .tco-doc-dict .zw-dict-enum{display:block;margin-top:2px;color:#8c8f94;font-size:12px}
+            .tco-doc-dict .zw-dict-group{margin:16px 0 0}
+            .tco-doc-dict .zw-dict-term-add{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0 10px}
+            .tco-doc-dict .zw-dict-term-add input[type=text]{min-width:260px}
+            .tco-doc-dict .zw-dict-term-op{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap;margin:0 10px 4px 0}
+            .tco-doc-dict .zw-dict-term-op input[type=text]{max-width:170px}
+            .tco-doc-dict .zw-dict-confirm{display:inline-flex;gap:4px;align-items:center;font-size:12px;color:#8c8f94}
+            .tco-doc-dict .zw-dict-badge{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:#f0f1f3;color:#50575e;font-size:12px}
+            .tco-doc-dict .zw-dict-danger{color:#b30404;border-color:#b30404}
+            .tco-doc-dict .zw-dict-danger[disabled],.tco-doc-dict .zw-dict-term-op .button[disabled]{opacity:.5;cursor:not-allowed}
             <?php
-            // TASK-2165（SPEC-10-B §3 / TASK-2149 缺陷③形态）：本页使用 canonical 热区容器类 `.zw-adm-touch`
+            // TASK-2165（SPEC-10-B §3 / TASK-2149 缺陷③形态）：本页使用 canonical 热区容器类 `.tco-touch`
             // （默认文种二次确认勾选标签），必须在**同文件**输出 canonical 触屏块，否则该类在本页规则数恒为 0、
-            // 44×44 热区不存在。唯一出处 `zw_adm_ui_touch_css()`（仅 `@media(pointer:coarse)` 命中 ⇒ 桌面零视觉变更）。
-            echo function_exists('zw_adm_ui_touch_css') ? zw_adm_ui_touch_css('body') : '';
+            // 44×44 热区不存在。唯一出处 `tco_ui_touch_css()`（仅 `@media(pointer:coarse)` 命中 ⇒ 桌面零视觉变更）。
+            echo function_exists('tco_ui_touch_css') ? tco_ui_touch_css('body') : '';
             ?>
             </style>
             <?php echo zw_doc_admin_page_head(
@@ -971,9 +971,9 @@ if (!function_exists('zw_doc_page_dict')) {
             // 因为它的「文种」文本框绕过了本页 CRUD 的护栏（「任」字禁删/禁改名、首项默认文种二次确认）。
             // 落库仍走唯一写入口 zw_doc_dict_save('number', …)；键名 / 形态 / 消费方取值路径一律不变。
             ?>
-            <div class="zw-doc-card" id="zw-dict-number-basics">
+            <div class="tco-doc-card" id="zw-dict-number-basics">
                 <?php echo zw_doc_admin_card_head('文号基本参数', '首行 · 唯一可写面', true, 'ceoicon-book-2-line'); ?>
-                <p class="zw-doc-muted">
+                <p class="tco-doc-muted">
                     原「文号管理 → 文号规则」表单已并入本页：<strong>文号规则与文种只在这里维护</strong>
                     （落 option <code><?php echo esc_html($groups['number']['option']); ?></code>，
                     保存经唯一写入口 <code>zw_doc_dict_save('number', …)</code>）。
@@ -982,34 +982,34 @@ if (!function_exists('zw_doc_page_dict')) {
                 <form method="post">
                     <?php wp_nonce_field('zw_doc_dict_save_number'); ?>
                     <input type="hidden" name="zw_doc_dict_group" value="number">
-                    <div class="zw-doc-field">
+                    <div class="tco-doc-field">
                         <label>机关前缀</label>
                         <input type="text" value="<?php echo esc_attr($number['prefix']); ?>" readonly>
-                        <div class="zw-doc-muted">按用户确认固定为“中传”，不可配置。</div>
+                        <div class="tco-doc-muted">按用户确认固定为“中传”，不可配置。</div>
                     </div>
-                    <div class="zw-doc-field">
+                    <div class="tco-doc-field">
                         <label for="zw-dict-number-year">默认年份</label>
                         <select id="zw-dict-number-year" name="default_year">
                             <?php foreach (zw_doc_year_options() as $year) : ?>
                                 <option value="<?php echo esc_attr((string) $year); ?>"<?php selected((int) $number['default_year'], (int) $year); ?>><?php echo esc_html((string) $year); ?></option>
                             <?php endforeach; ?>
                         </select>
-                        <div class="zw-doc-muted">撰写页与预留下拉的默认年份；<strong>不改写任何历史文号</strong>。</div>
+                        <div class="tco-doc-muted">撰写页与预留下拉的默认年份；<strong>不改写任何历史文号</strong>。</div>
                     </div>
-                    <div class="zw-doc-field">
+                    <div class="tco-doc-field">
                         <label for="zw-dict-number-digits">序号位数</label>
                         <input type="number" id="zw-dict-number-digits" name="digits" min="1" max="6" value="<?php echo esc_attr((string) $number['digits']); ?>">
-                        <div class="zw-doc-muted">起始序号固定从 1 开始，不补零。</div>
+                        <div class="tco-doc-muted">起始序号固定从 1 开始，不补零。</div>
                     </div>
-                    <div class="zw-adm-foot">
+                    <div class="tco-foot">
                         <button class="button button-primary" type="submit">保存文号基本参数</button>
                     </div>
                 </form>
             </div>
 
-            <div class="zw-doc-card">
+            <div class="tco-doc-card">
                 <?php echo zw_doc_admin_card_head('字段字典（只读）', count($rows) . ' 条', true, 'ceoicon-book-2-line'); ?>
-                <p class="zw-doc-muted">
+                <p class="tco-doc-muted">
                     本表由 <code>zw_doc_dict_field_rows()</code> 登记表驱动，禁止手抄成静态 HTML；
                     断言会把登记表与 <code>zw_doc_create_document()</code> 的 meta 字面量、枚举取值函数逐项对账。
                 </p>
@@ -1025,8 +1025,8 @@ if (!function_exists('zw_doc_page_dict')) {
                 }
                 foreach ($grouped as $group_key => $group_rows) :
                     ?>
-                    <p class="zw-adm-sec zw-dict-group"><?php echo esc_html(isset($labels[$group_key]) ? $labels[$group_key] : $group_key); ?></p>
-                    <div class="zw-adm-table-wrap">
+                    <p class="tco-sec zw-dict-group"><?php echo esc_html(isset($labels[$group_key]) ? $labels[$group_key] : $group_key); ?></p>
+                    <div class="tco-table-wrap">
                         <table class="zw-dict-table widefat striped">
                             <thead>
                             <tr>
@@ -1071,13 +1071,13 @@ if (!function_exists('zw_doc_page_dict')) {
                 $dict_type_map  = zw_doc_number_type_labels();
                 $dict_unmapped  = zw_doc_number_type_unregistered();
                 ?>
-                <p class="zw-adm-sec zw-dict-group">文种简称 → 全称映射（只读）</p>
-                <p class="zw-doc-muted">
+                <p class="tco-sec zw-dict-group">文种简称 → 全称映射（只读）</p>
+                <p class="tco-doc-muted">
                     唯一出处 <code>zw_doc_number_type_labels()</code>；供「公文台账」列表「发文类型」列
                     与其他展示位渲染，本页<b>只读展示、不提供编辑</b>。
                     未登记的简称按**原样**显示（不臆造全称）；空值显示友好占位「—」。
                 </p>
-                <div class="zw-adm-table-wrap">
+                <div class="tco-table-wrap">
                     <table class="zw-dict-table widefat striped">
                         <thead>
                         <tr>
@@ -1095,7 +1095,7 @@ if (!function_exists('zw_doc_page_dict')) {
                         </tbody>
                     </table>
                 </div>
-                <p class="zw-doc-muted">
+                <p class="tco-doc-muted">
                     当前文种字典中**未登记**的简称：
                     <?php if ($dict_unmapped === array()) : ?>
                         无（全部已在映射表内）。
@@ -1112,9 +1112,9 @@ if (!function_exists('zw_doc_page_dict')) {
                 ? zw_doc_letterhead_mode_state()
                 : array('mode' => 'auto', 'ready' => false, 'blocked' => false, 'message' => '', 'assets_url' => '');
             ?>
-            <div class="zw-doc-card">
+            <div class="tco-doc-card">
                 <?php echo zw_doc_admin_card_head('红头生成方式（只读）', '全局默认', true, 'ceoicon-book-2-line'); ?>
-                <p class="zw-doc-muted">
+                <p class="tco-doc-muted">
                     唯一取值出处 <code>zw_doc_letterhead_mode()</code>（option <code>zw_doc_letterhead_mode</code>，默认 <code>auto</code>）；
                     版式预览与出件（HTML 打印 / DOCX / 加密 PDF）<strong>同源</strong>使用该值。
                     本页<strong>只读展示、不提供编辑</strong>；切换请在「红头与印章 → 红头模板」页
@@ -1122,7 +1122,7 @@ if (!function_exists('zw_doc_page_dict')) {
                 </p>
                 <!-- TASK-1633（TASK-1579 P1-6 第四批）：宽表落 canonical 横滑包裹。
                      规则由本模块唯一出处 zw_doc_admin_ui_style()（本页 :935 输出）提供 ⇒ 本页不新增 <style>。 -->
-                <div class="zw-adm-table-wrap">
+                <div class="tco-table-wrap">
                 <table class="zw-dict-table widefat striped">
                     <thead>
                     <tr><th>设置项</th><th>取值</th><th>说明</th><th>写入入口</th></tr>
@@ -1138,7 +1138,7 @@ if (!function_exists('zw_doc_page_dict')) {
                             <?php if (!empty($dict_lh_state['blocked'])) : ?>
                                 <span style="color:#b30404">fail-closed：已切到「使用上传的红头文件（图片）」但无已启用红头 —— 预览与出件给出明确提示，不静默回落、不渲染空白红头。</span>
                             <?php else : ?>
-                                <span class="zw-doc-muted">「系统自动生成红头」不需要图片素材；「使用上传的红头文件（图片）」按「单篇指定 → 文种映射 → 默认红头」取已启用图片。</span>
+                                <span class="tco-doc-muted">「系统自动生成红头」不需要图片素材；「使用上传的红头文件（图片）」按「单篇指定 → 文种映射 → 默认红头」取已启用图片。</span>
                             <?php endif; ?>
                         </td>
                         <td>
@@ -1154,22 +1154,22 @@ if (!function_exists('zw_doc_page_dict')) {
                 </div>
             </div>
 
-            <div class="zw-adm-grid is-2">
-                <div class="zw-doc-card">
+            <div class="tco-grid is-2">
+                <div class="tco-doc-card">
                     <?php echo zw_doc_admin_card_head($groups['number']['label'], '唯一写入口', true, 'ceoicon-book-2-line'); ?>
-                    <p class="zw-doc-muted">
+                    <p class="tco-doc-muted">
                         落 option <code><?php echo esc_html($groups['number']['option']); ?></code>；
                         读取入口 <code><?php echo esc_html($groups['number']['reader']); ?></code>；
                         保存经唯一写入口 <code>zw_doc_dict_save('number', …)</code>。
                     </p>
-                    <p class="zw-doc-muted"><?php echo esc_html($groups['number']['origin']); ?></p>
+                    <p class="tco-doc-muted"><?php echo esc_html($groups['number']['origin']); ?></p>
                     <?php
                     // TASK-1402：文种字典改 **CRUD 列表**（顶部输入框 + 确认按钮新增；下方逐项就地改名 / 删除）。
                     // 词条顺序即 rank：第 1 项是既有代码的**默认文种**（`$settings['doc_types'][0]`），
                     // 故首项改名 / 删除必须二次确认；新增一律追加到末尾（顺序语义不变）。
                     $dict_terms = isset($number['doc_types']) && is_array($number['doc_types']) ? array_values($number['doc_types']) : array();
                     ?>
-                    <p class="zw-adm-sec zw-dict-group">文种字典（新增 / 就地改名 / 删除）</p>
+                    <p class="tco-sec zw-dict-group">文种字典（新增 / 就地改名 / 删除）</p>
                     <form method="post" class="zw-dict-term-add">
                         <?php wp_nonce_field('zw_doc_dict_save_number'); ?>
                         <input type="hidden" name="zw_doc_dict_group" value="number">
@@ -1177,7 +1177,7 @@ if (!function_exists('zw_doc_page_dict')) {
                         <input type="text" name="zw_doc_dict_term" value="" maxlength="20" placeholder="输入文种名称，如：通知" aria-label="新增文种名称" required>
                         <button class="button button-primary" type="submit">确认新增</button>
                     </form>
-                    <div class="zw-adm-table-wrap">
+                    <div class="tco-table-wrap">
                         <table class="zw-dict-table widefat striped">
                             <thead>
                             <tr>
@@ -1217,7 +1217,7 @@ if (!function_exists('zw_doc_page_dict')) {
                                                 <input type="hidden" name="zw_doc_dict_index" value="<?php echo (int) $dict_index; ?>">
                                                 <input type="text" name="zw_doc_dict_term" value="<?php echo esc_attr((string) $dict_term); ?>" maxlength="20" aria-label="文种名称"<?php echo $dict_reserved ? ' readonly' : ''; ?>>
                                                 <?php if ($dict_is_default) : ?>
-                                                    <label class="zw-dict-confirm zw-adm-touch" for="<?php echo esc_attr($dict_confirm_id); ?>">
+                                                    <label class="zw-dict-confirm tco-touch" for="<?php echo esc_attr($dict_confirm_id); ?>">
                                                         <input type="checkbox" id="<?php echo esc_attr($dict_confirm_id); ?>" name="zw_doc_confirm_default" value="1">
                                                         确认修改默认文种
                                                     </label>
@@ -1230,7 +1230,7 @@ if (!function_exists('zw_doc_page_dict')) {
                                                 <input type="hidden" name="zw_doc_dict_action" value="delete">
                                                 <input type="hidden" name="zw_doc_dict_index" value="<?php echo (int) $dict_index; ?>">
                                                 <?php if ($dict_is_default) : ?>
-                                                    <label class="zw-dict-confirm zw-adm-touch" for="<?php echo esc_attr($dict_confirm_id . '-del'); ?>">
+                                                    <label class="zw-dict-confirm tco-touch" for="<?php echo esc_attr($dict_confirm_id . '-del'); ?>">
                                                         <input type="checkbox" id="<?php echo esc_attr($dict_confirm_id . '-del'); ?>" name="zw_doc_confirm_default" value="1">
                                                         确认删除默认文种
                                                     </label>
@@ -1244,7 +1244,7 @@ if (!function_exists('zw_doc_page_dict')) {
                             </tbody>
                         </table>
                     </div>
-                    <p class="zw-doc-muted">
+                    <p class="tco-doc-muted">
                         保存口径：去空、去重、**保序**，单项 ≤ 20 字，最多 50 项；空值回落默认「函，字，通知」。
                         写入一律经唯一写入口 <code>zw_doc_dict_save('number', …)</code>，且词条以**逗号分隔串**入表
                         （落 option <code>zw_doc_number_settings</code> 的 <code>doc_types</code> 键，形态与既有消费方不变）。
@@ -1252,20 +1252,20 @@ if (!function_exists('zw_doc_page_dict')) {
                         「任」字文种是「任」字号新建文章的必要条件，删除与改名一律拒绝。
                     </p>
 
-                    <p class="zw-doc-muted">
+                    <p class="tco-doc-muted">
                         文号基本参数（机关前缀 / 默认年份 / 序号位数）已移到本页<strong>首行</strong>的
                         「文号基本参数」卡维护（同一唯一写入口）；本文种卡只负责文种的增删与就地改名。
                     </p>
                 </div>
 
-                <div class="zw-doc-card">
+                <div class="tco-doc-card">
                     <?php echo zw_doc_admin_card_head($groups['flow']['label'], '唯一写入口', true, 'ceoicon-book-2-line'); ?>
-                    <p class="zw-doc-muted">
+                    <p class="tco-doc-muted">
                         落 option <code><?php echo esc_html($groups['flow']['option']); ?></code>；
                         读取入口 <code><?php echo esc_html($groups['flow']['reader']); ?></code>；
                         保存经唯一写入口 <code>zw_doc_dict_save('flow', …)</code>。
                     </p>
-                    <p class="zw-doc-muted"><?php echo esc_html($groups['flow']['origin']); ?></p>
+                    <p class="tco-doc-muted"><?php echo esc_html($groups['flow']['origin']); ?></p>
                     <?php
                     // 候选来源部门按**当前组织架构部门字典**渲染（与流转配置页同源）。
                     $dict_dept_options = array();
@@ -1280,19 +1280,19 @@ if (!function_exists('zw_doc_page_dict')) {
                     <form method="post">
                         <?php wp_nonce_field('zw_doc_dict_save_flow'); ?>
                         <input type="hidden" name="zw_doc_dict_group" value="flow">
-                        <div class="zw-doc-field">
-                            <label class="zw-adm-touch"><input type="checkbox" name="require_review" value="1"<?php checked(!empty($flow['require_review'])); ?>> 需要审核</label>
+                        <div class="tco-doc-field">
+                            <label class="tco-touch"><input type="checkbox" name="require_review" value="1"<?php checked(!empty($flow['require_review'])); ?>> 需要审核</label>
                         </div>
-                        <div class="zw-doc-field">
+                        <div class="tco-doc-field">
                             <label>审核方式</label>
                             <input type="text" value="单人审核（MVP 固定）" readonly>
                         </div>
-                        <div class="zw-doc-field">
+                        <div class="tco-doc-field">
                             <label>审核人候选部门</label>
                             <?php
                             if (function_exists('zw_control_search_select')) {
                                 zw_control_search_select(array(
-                                    'id'          => 'zw-doc-dict-reviewer-depts',
+                                    'id'          => 'tco-doc-dict-reviewer-depts',
                                     'name'        => 'reviewer_dept_keys[]',
                                     'multiple'    => true,
                                     'value'       => $flow['reviewer_dept_keys'],
@@ -1310,18 +1310,18 @@ if (!function_exists('zw_doc_page_dict')) {
                             }
                             ?>
                         </div>
-                        <div class="zw-doc-field">
+                        <div class="tco-doc-field">
                             <?php
                             // TASK-1410：四项自动流转开关**统一渲染**（唯一实现；文案与显著标注同配置页）。
-                            echo zw_doc_auto_flow_render_switches($flow, 'zw-doc-dict-auto');
+                            echo zw_doc_auto_flow_render_switches($flow, 'tco-doc-dict-auto');
                             ?>
                         </div>
-                        <div class="zw-doc-field">
+                        <div class="tco-doc-field">
                             <label>抄送人候选部门</label>
                             <?php
                             if (function_exists('zw_control_search_select')) {
                                 zw_control_search_select(array(
-                                    'id'          => 'zw-doc-dict-cc-depts',
+                                    'id'          => 'tco-doc-dict-cc-depts',
                                     'name'        => 'cc_dept_keys[]',
                                     'multiple'    => true,
                                     'value'       => $flow['cc_dept_keys'],
@@ -1339,23 +1339,23 @@ if (!function_exists('zw_doc_page_dict')) {
                             }
                             ?>
                         </div>
-                        <div class="zw-doc-field">
+                        <div class="tco-doc-field">
                             <label>抄送人可见时点</label>
                             <select name="cc_visibility">
                                 <option value="approved"<?php selected($flow['cc_visibility'], 'approved'); ?>>审核通过后可见</option>
                                 <option value="submitted"<?php selected($flow['cc_visibility'], 'submitted'); ?>>提交后可见</option>
                             </select>
                         </div>
-                        <div class="zw-doc-field">
-                            <label class="zw-adm-touch"><input type="checkbox" name="allow_withdraw" value="1"<?php checked(!empty($flow['allow_withdraw'])); ?>> 待审核阶段允许发起人撤回</label>
+                        <div class="tco-doc-field">
+                            <label class="tco-touch"><input type="checkbox" name="allow_withdraw" value="1"<?php checked(!empty($flow['allow_withdraw'])); ?>> 待审核阶段允许发起人撤回</label>
                         </div>
-                        <div class="zw-doc-field">
-                            <label class="zw-adm-touch"><input type="checkbox" name="allow_resubmit" value="1"<?php checked(!empty($flow['allow_resubmit'])); ?>> 驳回后允许修改重提</label>
+                        <div class="tco-doc-field">
+                            <label class="tco-touch"><input type="checkbox" name="allow_resubmit" value="1"<?php checked(!empty($flow['allow_resubmit'])); ?>> 驳回后允许修改重提</label>
                         </div>
-                        <div class="zw-doc-field">
-                            <label class="zw-adm-touch"><input type="checkbox" name="download_log_enabled" value="1"<?php checked(!empty($flow['download_log_enabled'])); ?>> 记录附件下载日志</label>
+                        <div class="tco-doc-field">
+                            <label class="tco-touch"><input type="checkbox" name="download_log_enabled" value="1"<?php checked(!empty($flow['download_log_enabled'])); ?>> 记录附件下载日志</label>
                         </div>
-                        <div class="zw-adm-foot">
+                        <div class="tco-foot">
                             <button class="button button-primary" type="submit">保存公文流转字典</button>
                         </div>
                     </form>

@@ -1019,7 +1019,7 @@ if (!function_exists('zw_receipt_page_ledger')) {
             if (function_exists('zw_receipt_admin_ui_page_open')) {
                 zw_receipt_admin_ui_page_open('档案处置', '保管期限、清退与销毁清册。系统不会删除任何文件或记录，销毁只写状态与留痕。', 'zw-receipt-ledger');
             } else {
-                echo '<div class="wrap zw-receipt-ledger"><h1>档案处置</h1>';
+                echo '<div class="wrap tco-receipt-ledger"><h1>档案处置</h1>';
             }
             zw_receipt_disposal_render_page();
             if (function_exists('zw_receipt_admin_ui_page_close')) {
@@ -1039,7 +1039,7 @@ if (!function_exists('zw_receipt_page_ledger')) {
                     'zw-receipt-ledger'
                 );
             } else {
-                echo '<div class="wrap zw-receipt-ledger"><h1>收文统计</h1>';
+                echo '<div class="wrap tco-receipt-ledger"><h1>收文统计</h1>';
             }
             zw_receipt_stats_render();
             if (function_exists('zw_receipt_admin_ui_page_close')) {
@@ -1060,7 +1060,7 @@ if (!function_exists('zw_receipt_page_ledger')) {
                     'zw-receipt-ledger'
                 );
             } else {
-                echo '<div class="wrap zw-receipt-ledger"><h1>收文自动化</h1>';
+                echo '<div class="wrap tco-receipt-ledger"><h1>收文自动化</h1>';
             }
             zw_receipt_auto_render_settings();
             if (function_exists('zw_receipt_admin_ui_page_close')) {
@@ -1081,7 +1081,7 @@ if (!function_exists('zw_receipt_page_ledger')) {
                     'zw-receipt-ledger'
                 );
             } else {
-                echo '<div class="wrap zw-receipt-ledger"><h1>OCR 识别设置</h1>';
+                echo '<div class="wrap tco-receipt-ledger"><h1>OCR 识别设置</h1>';
             }
             zw_ocr_render_settings_body();
             if (function_exists('zw_receipt_admin_ui_page_close')) {
@@ -1107,10 +1107,10 @@ if (!function_exists('zw_receipt_page_ledger')) {
         }
         $issue_map = zw_receipt_ledger_issue_map($page_ids);
 
-        echo '<div class="wrap zw-receipt-ledger">';
+        echo '<div class="wrap tco-receipt-ledger">';
         // TASK-1633（TASK-1579 P1-6 第四批）：收文管理域不在会员域外壳作用域内
-        // （slug 前缀 `zw-receipt` 不命中 `zw_mc_adm_is_screen()`）⇒ 本页须自带 canonical 规则输出点；
-        // 唯一出处仍是 canonical `zw_adm_ui_table_wrap_css()`（经本域唯一出口透传，不复制第二套声明）。
+        // （slug 前缀 `zw-receipt` 不命中 `会员域后台壳判定()`）⇒ 本页须自带 canonical 规则输出点；
+        // 唯一出处仍是 canonical `tco_ui_table_wrap_css()`（经本域唯一出口透传，不复制第二套声明）。
         echo function_exists('zw_receipt_admin_ui_table_wrap_style') ? zw_receipt_admin_ui_table_wrap_style() : '';
         // OA-2462：共享卡片 / 字段 / 徽章 / 分页令牌（与发文管理同一套；唯一出处
         // `includes/oa/admin-ui.php`，本域不写第二套声明）。
@@ -1121,7 +1121,7 @@ if (!function_exists('zw_receipt_page_ledger')) {
         if (function_exists('zw_control_file_open_assets')) {
             zw_control_file_open_assets();
         }
-        echo '<p class="zw-doc-sub">只显示 <code>origin=incoming</code> 的来文；本会自产文件（章程/管理办法/保密协议/隐私政策）不出现在此视图（<a href="'
+        echo '<p class="tco-doc-sub">只显示 <code>origin=incoming</code> 的来文；本会自产文件（章程/管理办法/保密协议/隐私政策）不出现在此视图（<a href="'
             . esc_url(zw_receipt_ledger_page_url(array(), 1, 'zw-receipt-orgs')) . '">部委与年份目录</a>）。</p>';
 
         // 主操作（与发文列表页「新建发文」同位：标题下、筛选上）
@@ -1174,7 +1174,7 @@ if (!function_exists('zw_receipt_page_ledger')) {
 
         // 筛选表单（GET；只读视图，无需 nonce）
         echo '<form method="get" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin:0 0 14px">';
-        echo '<input type="hidden" name="page" value="zw-receipt-ledger">';
+        echo '<input type="hidden" name="page" value="tco-receipt-ledger">';
         echo '<label style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:#666">来文单位';
         echo '<select name="zw_receipt_org"><option value="">全部来文单位</option>';
         foreach ($orgs as $key => $label) {
@@ -1193,7 +1193,7 @@ if (!function_exists('zw_receipt_page_ledger')) {
         echo '</form>';
 
         $colspan = 11;
-        echo '<div class="zw-adm-table-wrap">';
+        echo '<div class="tco-table-wrap">';
         echo '<table class="widefat striped"><thead><tr>'
             . '<th style="width:150px">收文编号</th><th style="width:110px">来文单位</th>'
             . '<th style="width:140px">来文字号</th><th>标题</th>'
@@ -1333,7 +1333,7 @@ if (!function_exists('zw_receipt_ledger_detail_field')) {
         if ($value === '') {
             $value = '—';
         }
-        return '<div class="zw-adm-field"><label>' . zw_receipt_admin_ui_esc($label) . '</label>'
+        return '<div class="tco-field"><label>' . zw_receipt_admin_ui_esc($label) . '</label>'
             . '<div>' . zw_receipt_admin_ui_esc($value) . '</div></div>';
     }
 }
@@ -1364,7 +1364,7 @@ if (!function_exists('zw_receipt_page_ledger_detail')) {
         $id  = trim((string) $id);
         $row = $id !== '' ? zw_receipt_ledger_row_by_id($id) : array();
 
-        echo '<div class="wrap zw-receipt-detail">';
+        echo '<div class="wrap tco-receipt-detail">';
         echo function_exists('zw_receipt_admin_ui_table_wrap_style') ? zw_receipt_admin_ui_table_wrap_style() : '';
         echo function_exists('zw_receipt_admin_ui_style') ? zw_receipt_admin_ui_style() : '';
         if (function_exists('zw_control_file_open_assets')) {
@@ -1396,9 +1396,9 @@ if (!function_exists('zw_receipt_page_ledger_detail')) {
         $issue_sum = isset($issue_map[(string) $view['id']]) ? $issue_map[(string) $view['id']] : array();
 
         // —— 卡片 1：来文信息 ——
-        echo '<div class="zw-adm-card" style="margin:0 0 16px">';
+        echo '<div class="tco-card" style="margin:0 0 16px">';
         echo '<h2>来文信息</h2>';
-        echo '<div class="zw-adm-grid is-2">';
+        echo '<div class="tco-grid is-2">';
         echo zw_receipt_ledger_detail_field('收文编号', $view['number']);
         echo zw_receipt_ledger_detail_field('来文单位', $view['org_label']);
         echo zw_receipt_ledger_detail_field('来文字号', $view['doc_no']);
@@ -1410,11 +1410,11 @@ if (!function_exists('zw_receipt_page_ledger_detail')) {
         echo zw_receipt_ledger_detail_field('归档目录', $view['directory']);
         echo zw_receipt_ledger_detail_field('登记时间', $view['create_time']);
         echo '</div>';
-        echo '<div class="zw-adm-field"><label>标题</label><div>' . esc_html($view['title']) . '</div></div>';
+        echo '<div class="tco-field"><label>标题</label><div>' . esc_html($view['title']) . '</div></div>';
         echo '</div>';
 
         // —— 卡片 2：附件（文件名 = 默认打开；下载只走显式按钮 · SPEC-85 铁律）——
-        echo '<div class="zw-adm-card" style="margin:0 0 16px">';
+        echo '<div class="tco-card" style="margin:0 0 16px">';
         echo '<h2>附件</h2>';
         if ($view['has_attachment']) {
             $att_name = function_exists('zw_receipt_ledger_attachment_label')
@@ -1443,10 +1443,10 @@ if (!function_exists('zw_receipt_page_ledger_detail')) {
                     'icon'  => false,
                 )) . '</p>';
             }
-            echo '<p class="zw-doc-muted">点击文件名或图标即默认打开（PDF / docx 在线预览、图片灯箱）；'
+            echo '<p class="tco-doc-muted">点击文件名或图标即默认打开（PDF / docx 在线预览、图片灯箱）；'
                 . '下载只由上面的「下载原件」触发。附件走私有存储，不产生公开直链。</p>';
         } else {
-            echo '<p class="zw-doc-muted">该收文未上传附件。附件在「收文登记」时随件上传，'
+            echo '<p class="tco-doc-muted">该收文未上传附件。附件在「收文登记」时随件上传，'
                 . '落私有存储 <code>部委/年份/文件名</code>。</p>';
         }
         echo '</div>';
@@ -1454,7 +1454,7 @@ if (!function_exists('zw_receipt_page_ledger_detail')) {
         // —— 卡片 2.5：OCR 识别（OA-2463；结果只落 OCR 专用列，不改进正文）——
         if (function_exists('zw_ocr_record') && function_exists('zw_ocr_status_label')) {
             $ocr = zw_ocr_record((string) $view['id']);
-            echo '<div class="zw-adm-card" style="margin:0 0 16px">';
+            echo '<div class="tco-card" style="margin:0 0 16px">';
             echo '<h2>OCR 识别</h2>';
 
             $ocr_msg = isset($_GET['zw_msg']) ? sanitize_key((string) wp_unslash($_GET['zw_msg'])) : '';
@@ -1465,7 +1465,7 @@ if (!function_exists('zw_receipt_page_ledger_detail')) {
                     . '（或数据列尚未迁移）。</p></div>';
             }
 
-            echo '<div class="zw-adm-grid is-2">';
+            echo '<div class="tco-grid is-2">';
             echo zw_receipt_ledger_detail_field('识别状态', zw_ocr_status_label($ocr['ocr_status']));
             echo zw_receipt_ledger_detail_field('引擎', $ocr['extraction_method'] !== '' ? $ocr['extraction_method'] : '—');
             echo zw_receipt_ledger_detail_field('平均置信度', $ocr['ocr_confidence'] === null ? '' : (string) $ocr['ocr_confidence'] . '%');
@@ -1478,7 +1478,7 @@ if (!function_exists('zw_receipt_page_ledger_detail')) {
                     . esc_html($ocr['ocr_message']) . '</p><p>请先到「OCR 识别设置 → 测试连接」确认服务可达；'
                     . '修好后点下面的「重新识别」。</p></div>';
             } elseif ($ocr['ocr_status'] === '' || $ocr['ocr_status'] === 'pending') {
-                echo '<p class="zw-doc-muted">尚未识别或正在排队。启用 OCR 后，登记成功会自动排队；'
+                echo '<p class="tco-doc-muted">尚未识别或正在排队。启用 OCR 后，登记成功会自动排队；'
                     . '也可以点「重新识别」立即排一次。</p>';
             }
 
@@ -1499,7 +1499,7 @@ if (!function_exists('zw_receipt_page_ledger_detail')) {
                     wp_nonce_field(zw_ocr_retry_nonce((string) $view['id']), 'zw_ocr_nonce');
                 }
                 echo '<button type="submit" class="button">重新识别</button>';
-                echo '<span class="zw-doc-muted" style="margin-left:10px">识别在本机进行，文件不出服务器；'
+                echo '<span class="tco-doc-muted" style="margin-left:10px">识别在本机进行，文件不出服务器；'
                     . '识别文本只写 OCR 专用列，不修改来文正文。</span>';
                 echo '</form>';
             }
@@ -1507,7 +1507,7 @@ if (!function_exists('zw_receipt_page_ledger_detail')) {
         }
 
         // —— 卡片 3：办理单（只读列表；办理动作仍去「收文办理」页）——
-        echo '<div class="zw-adm-card" style="margin:0 0 16px">';
+        echo '<div class="tco-card" style="margin:0 0 16px">';
         echo '<h2>办理单</h2>';
         echo '<p style="margin:0 0 12px"><a class="button button-primary" href="'
             . esc_url(function_exists('zw_receipt_issue_page_url')
@@ -1520,7 +1520,7 @@ if (!function_exists('zw_receipt_page_ledger_detail')) {
             $issues = isset($issue_result['rows']) && is_array($issue_result['rows']) ? $issue_result['rows'] : array();
         }
 
-        echo '<div class="zw-adm-table-wrap"><table class="widefat striped"><thead><tr>'
+        echo '<div class="tco-table-wrap"><table class="widefat striped"><thead><tr>'
             . '<th style="width:90px">状态</th><th>办理事项</th><th style="width:130px">承办部门</th>'
             . '<th style="width:110px">承办人</th><th style="width:110px">办理时限</th>'
             . '<th style="width:150px">更新时间</th>'
@@ -1581,12 +1581,12 @@ if (!function_exists('zw_receipt_page_orgs')) {
 
         $tree = zw_receipt_ledger_directory_tree(zw_receipt_ledger_request_args(isset($_GET) ? $_GET : array()));
 
-        echo '<div class="wrap zw-receipt-orgs">';
+        echo '<div class="wrap tco-receipt-orgs">';
         // OA-2462：与台账/发文同一套卡片 / 徽章 / 字段令牌（唯一出处 `includes/oa/admin-ui.php`）。
         echo function_exists('zw_receipt_admin_ui_table_wrap_style') ? zw_receipt_admin_ui_table_wrap_style() : '';
         echo function_exists('zw_receipt_admin_ui_style') ? zw_receipt_admin_ui_style() : '';
         echo '<h1>部委与年份目录</h1>';
-        echo '<p class="zw-doc-sub">归档层级固定 <code>部委/年份/文件名</code>；「本会制度」为长期依据，<strong>不按年</strong>；收文日期缺失或非法落「未知年份」。数据源与台账同一查询（<code>origin=incoming</code>）。</p>';
+        echo '<p class="tco-doc-sub">归档层级固定 <code>部委/年份/文件名</code>；「本会制度」为长期依据，<strong>不按年</strong>；收文日期缺失或非法落「未知年份」。数据源与台账同一查询（<code>origin=incoming</code>）。</p>';
 
         if (!$tree['schema_ready']) {
             echo '<div class="notice notice-warning"><p>目录视图暂不可用：数据表尚未迁移（缺少列：'

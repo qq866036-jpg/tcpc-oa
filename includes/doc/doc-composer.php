@@ -1256,63 +1256,63 @@ if (!function_exists('zw_doc_render_composer_page')) {
             $preview_args = zw_doc_build_render_args(array(), $preview_args);
         }
         ?>
-        <div class="wrap zw-doc-composer">
+        <div class="wrap tco-doc-composer">
             <?php echo zw_doc_admin_ui_style(); // 唯一出处：SPEC-10 §1.9 卡片范式（TASK-778） ?>
             <style>
-            .zw-doc-composer .zwc-grid{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;width:100%}
+            .tco-doc-composer .zwc-grid{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;width:100%}
             /* 左栏限宽：页面虽为 100% 宽，但表单列过宽会让输入框难以阅读（100% 宽控件在 1500px 下可达 1400px） */
-            .zw-doc-composer .zwc-left{flex:1 1 640px;min-width:0;max-width:980px}
-            .zw-doc-composer .zwc-right{flex:1 1 400px;min-width:0;max-width:100%;overflow:auto;background:#f0f0f1;border:1px solid #e5e7eb;border-radius:12px;padding:10px}
-            .zw-doc-composer .zwc-step{display:inline-block;background:var(--primary-color,#d80505);color:#fff;border-radius:10px;padding:1px 9px;font-size:12px;margin-right:6px}
-            .zw-doc-composer .zwc-blocks{width:100%;border-collapse:collapse}
-            .zw-doc-composer .zwc-blocks td{border-bottom:1px solid #f0f1f3;padding:6px 4px;vertical-align:top}
-            .zw-doc-composer .zwc-blocks select{max-width:180px}
-            .zw-doc-composer .zwc-blocks textarea{width:100%}
+            .tco-doc-composer .zwc-left{flex:1 1 640px;min-width:0;max-width:980px}
+            .tco-doc-composer .zwc-right{flex:1 1 400px;min-width:0;max-width:100%;overflow:auto;background:#f0f0f1;border:1px solid #e5e7eb;border-radius:12px;padding:10px}
+            .tco-doc-composer .zwc-step{display:inline-block;background:var(--primary-color,#d80505);color:#fff;border-radius:10px;padding:1px 9px;font-size:12px;margin-right:6px}
+            .tco-doc-composer .zwc-blocks{width:100%;border-collapse:collapse}
+            .tco-doc-composer .zwc-blocks td{border-bottom:1px solid #f0f1f3;padding:6px 4px;vertical-align:top}
+            .tco-doc-composer .zwc-blocks select{max-width:180px}
+            .tco-doc-composer .zwc-blocks textarea{width:100%}
             /* 4 步标签向导（TASK-786；标签对齐与校验修复 TASK-1089）：步骤条 + 面板 + 两列字段 + 文号信息条 + 唯一底部操作条 */
-            .zw-doc-composer .zwc-stepbar{display:flex;flex-wrap:wrap;gap:8px;list-style:none;margin:0 0 10px;padding:0}
-            .zw-doc-composer .zwc-stepbar li{margin:0}
-            .zw-doc-composer .zwc-tab{border:1px solid #dcdfe6;background:#fff;border-radius:999px;padding:6px 14px;font-size:13px;cursor:pointer;color:#50575e}
-            .zw-doc-composer .zwc-tab b{color:var(--primary-color,#d80505);margin-right:4px}
-            .zw-doc-composer .zwc-tab.is-active{border-color:var(--primary-color,#d80505);background:#fef2f2;color:#1d2327;font-weight:600}
-            .zw-doc-composer .zwc-tab-note{color:#8c8f94;font-size:12px;margin-left:6px}
-            .zw-doc-composer .zwc-tab.is-active .zwc-tab-note{color:#b30404}
-            .zw-doc-composer .zwc-step-hint{font-size:12px;color:#666;margin:0 0 14px;background:#fafbfc;border-left:3px solid var(--primary-color,#d80505);padding:8px 10px}
+            .tco-doc-composer .zwc-stepbar{display:flex;flex-wrap:wrap;gap:8px;list-style:none;margin:0 0 10px;padding:0}
+            .tco-doc-composer .zwc-stepbar li{margin:0}
+            .tco-doc-composer .zwc-tab{border:1px solid #dcdfe6;background:#fff;border-radius:999px;padding:6px 14px;font-size:13px;cursor:pointer;color:#50575e}
+            .tco-doc-composer .zwc-tab b{color:var(--primary-color,#d80505);margin-right:4px}
+            .tco-doc-composer .zwc-tab.is-active{border-color:var(--primary-color,#d80505);background:#fef2f2;color:#1d2327;font-weight:600}
+            .tco-doc-composer .zwc-tab-note{color:#8c8f94;font-size:12px;margin-left:6px}
+            .tco-doc-composer .zwc-tab.is-active .zwc-tab-note{color:#b30404}
+            .tco-doc-composer .zwc-step-hint{font-size:12px;color:#666;margin:0 0 14px;background:#fafbfc;border-left:3px solid var(--primary-color,#d80505);padding:8px 10px}
             /* 唯一底部操作条（TASK-1089）：左「返回」，右「上一步 / 下一步 / 保存草稿 / 提交审核」同一行 */
-            .zw-doc-composer .zwc-actionbar{margin:16px 0 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;border-top:1px solid #f0f1f3;padding-top:12px}
-            .zw-doc-composer .zwc-actionbar .zwc-actionbar-spacer{margin-left:auto}
+            .tco-doc-composer .zwc-actionbar{margin:16px 0 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;border-top:1px solid #f0f1f3;padding-top:12px}
+            .tco-doc-composer .zwc-actionbar .zwc-actionbar-spacer{margin-left:auto}
             /* 无 JS 时上一步/下一步无意义（type=button 无处理器）→ 隐藏；保存与提交保持可见可提交 */
-            .zw-doc-composer .zwc-actionbar:not(.is-js) [data-zw-nav]{display:none}
-            .zw-doc-composer .zwc-actionbar [data-zw-nav][hidden],.zw-doc-composer .zwc-actionbar [data-zw-submit][hidden]{display:none}
-            .zw-doc-composer .zwc-fields{display:grid;gap:0 16px;grid-template-columns:minmax(0,1fr)}
-            .zw-doc-composer .zwc-fields.is-2{grid-template-columns:repeat(2,minmax(0,1fr))}
-            .zw-doc-composer .zwc-fields.is-2 > .zw-doc-field.is-half{grid-column:auto}
-            .zw-doc-composer .zwc-fields.is-2 > .zw-doc-field.is-wide{grid-column:1/-1}
+            .tco-doc-composer .zwc-actionbar:not(.is-js) [data-zw-nav]{display:none}
+            .tco-doc-composer .zwc-actionbar [data-zw-nav][hidden],.tco-doc-composer .zwc-actionbar [data-zw-submit][hidden]{display:none}
+            .tco-doc-composer .zwc-fields{display:grid;gap:0 16px;grid-template-columns:minmax(0,1fr)}
+            .tco-doc-composer .zwc-fields.is-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+            .tco-doc-composer .zwc-fields.is-2 > .tco-doc-field.is-half{grid-column:auto}
+            .tco-doc-composer .zwc-fields.is-2 > .tco-doc-field.is-wide{grid-column:1/-1}
             /* TASK-1271：第 1 步按用途分五段显示（方案 A，用户拍板） */
             /* TASK-1309（用户报「排版及其混乱」）：第 1 步每个分组升级为**独立卡片**（自包含区域边界）。
                旧结构病根：`.zwc-fields.is-2` 是**跨全步**两列网格，`.zwc-group` 只是 `grid-column:1/-1` 的
-               行内小标题 ⇒ 其后同级 `.zw-doc-field` 直接参与两列自动布局，相邻分组的字段互相交错。
+               行内小标题 ⇒ 其后同级 `.tco-doc-field` 直接参与两列自动布局，相邻分组的字段互相交错。
                新结构：`.zwc-fields.is-2.zwc-sections` 为 flex 纵向堆叠（分组**整块**排列，绝不交错）→
                直接子级 `.zwc-section`（卡片：边框 + 圆角 + 底色 + 标题条左侧主色标识条）>
-               `.zwc-section-head`（组名 + 既有 `.zw-adm-badge` 徽章）+ `.zwc-section-body`（**该组自己的**字段网格）。
-               仍复用既有类名 `.zwc-fields` / `.zwc-group` / `.zwc-group-t` / `.zw-doc-field` / `.is-half` / `.is-wide`。 */
-            .zw-doc-composer .zwc-fields.zwc-sections{display:flex;flex-direction:column;gap:18px}
-            .zw-doc-composer .zwc-section{background:#fff;border:1px solid #e3e6eb;border-radius:12px;border-left:3px solid var(--primary-color,#d80505)}
-            .zw-doc-composer .zwc-section-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0;padding:10px 14px;background:#fafbfc;border-bottom:1px solid #e9ecf1;border-radius:0 11px 0 0}
-            .zw-doc-composer .zwc-section-body{display:grid;gap:14px 16px;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;padding:14px}
-            .zw-doc-composer .zwc-section-body.is-flat{padding:0;gap:0 16px;align-items:stretch}
-            .zw-doc-composer .zwc-fields > .zwc-section-body{grid-column:1/-1}
-            .zw-doc-composer .zwc-section-body > .zw-doc-field.is-half{grid-column:auto}
-            .zw-doc-composer .zwc-section-body > .zw-doc-field.is-wide{grid-column:1/-1}
+               `.zwc-section-head`（组名 + 既有 `.tco-badge` 徽章）+ `.zwc-section-body`（**该组自己的**字段网格）。
+               仍复用既有类名 `.zwc-fields` / `.zwc-group` / `.zwc-group-t` / `.tco-doc-field` / `.is-half` / `.is-wide`。 */
+            .tco-doc-composer .zwc-fields.zwc-sections{display:flex;flex-direction:column;gap:18px}
+            .tco-doc-composer .zwc-section{background:#fff;border:1px solid #e3e6eb;border-radius:12px;border-left:3px solid var(--primary-color,#d80505)}
+            .tco-doc-composer .zwc-section-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0;padding:10px 14px;background:#fafbfc;border-bottom:1px solid #e9ecf1;border-radius:0 11px 0 0}
+            .tco-doc-composer .zwc-section-body{display:grid;gap:14px 16px;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;padding:14px}
+            .tco-doc-composer .zwc-section-body.is-flat{padding:0;gap:0 16px;align-items:stretch}
+            .tco-doc-composer .zwc-fields > .zwc-section-body{grid-column:1/-1}
+            .tco-doc-composer .zwc-section-body > .tco-doc-field.is-half{grid-column:auto}
+            .tco-doc-composer .zwc-section-body > .tco-doc-field.is-wide{grid-column:1/-1}
             /* 卡片体内的非字段块（人员表容器 / 按钮行 / 子区域标题 / 条件字段区）一律整行。
                另加 `min-width:0` 属**防御性加固**：栅格项默认 `min-width:auto` 在**固定 max 轨道**下会取内容
                最小宽度、存在击穿 `overflow-x:auto` 的风险。实测对照见 CHG-171 §二（本页 `minmax(0,1fr)` 弹性
                轨道下加与不加结果相同）⇒ 保留为结构防护，不宣称已复现缺陷。 */
-            .zw-doc-composer .zwc-section-body > :not(.zw-doc-field){grid-column:1/-1;min-width:0}
+            .tco-doc-composer .zwc-section-body > :not(.tco-doc-field){grid-column:1/-1;min-width:0}
             /* 组内子区域（TASK-1309）：同一张卡片里再分「版头要素」等子块，不新增分组 */
-            .zw-doc-composer .zwc-section-sub{display:flex;align-items:center;gap:6px;margin:0;padding:0 0 6px;border-bottom:1px dashed #e9ecf1;font-size:12px;font-weight:600;color:#50575e}
+            .tco-doc-composer .zwc-section-sub{display:flex;align-items:center;gap:6px;margin:0;padding:0 0 6px;border-bottom:1px dashed #e9ecf1;font-size:12px;font-weight:600;color:#50575e}
             /* TASK-1312：整块显隐的容器必须让 `hidden` 真正生效（`display:flex/grid` 会盖过 UA 的 [hidden]） */
-            .zw-doc-composer .zwc-section-sub[hidden]{display:none}
-            .zw-doc-composer .zw-doc-field[hidden]{display:none}
+            .tco-doc-composer .zwc-section-sub[hidden]{display:none}
+            .tco-doc-composer .tco-doc-field[hidden]{display:none}
             /* 人员任命配置逐行人员区（TASK-1309 引入；**TASK-1318 修裁剪**；TASK-1322 改堆叠分区布局）。
                TASK-1318 根因：canonical 控件 `zw_control_search_select()` 的面板是**内联绝对定位**
                （`.zw-ss{position:relative}` + `.zw-ss-list{position:absolute;z-index:60}`，无 portal/fixed 逃逸），
@@ -1320,81 +1320,81 @@ if (!function_exists('zw_doc_render_composer_page')) {
                输入区「拟任命部门 / 任命人员」搜索下拉一弹出即被容器边缘（视觉上即「下一行内容」）截断。
                TASK-1322 改法：容器仍 `overflow:visible`（不裁剪，红线不可退）；行内区不再是表格
                ⇒ 天然无 `table-layout` / 无横向溢出；每人一块、块内按行分组，宽度由内联百分比决定。 */
-            .zw-doc-composer .zwc-section-tablewrap{min-width:0;max-width:100%;overflow:visible}
-            .zw-doc-composer .zwc-section-tablewrap > .zwc-ap-rows{display:block;margin:0}
+            .tco-doc-composer .zwc-section-tablewrap{min-width:0;max-width:100%;overflow:visible}
+            .tco-doc-composer .zwc-section-tablewrap > .zwc-ap-rows{display:block;margin:0}
             /* 每人一块：块与块之间留间距，块内可辨识边界。TASK-1346：本块同时是行级「操作」
                （右上角删除按钮）的**定位基座**，故必须 `position:relative`。 */
-            .zw-doc-composer .zwc-ap-rows > .zwc-ap-row{display:block;position:relative;margin:0 0 12px;padding:10px 12px;border:1px solid #e9ecf1;border-radius:10px;background:#fcfdfe}
-            .zw-doc-composer .zwc-ap-rows > .zwc-ap-row:last-child{margin-bottom:0}
+            .tco-doc-composer .zwc-ap-rows > .zwc-ap-row{display:block;position:relative;margin:0 0 12px;padding:10px 12px;border:1px solid #e9ecf1;border-radius:10px;background:#fcfdfe}
+            .tco-doc-composer .zwc-ap-rows > .zwc-ap-row:last-child{margin-bottom:0}
             /* TASK-1346（用户口径）：行级「操作」移到本区块**右上角**，形态对齐 Windows 资源管理器
                右上角的关闭按钮 —— 因此不带可见文字标签，语义由 `title` + `aria-label` 承担。
                定位基座是上一条规则的 `position:relative`。主色只用规范变量/规范 hover 值。
                注：本注释**不写该类的字面规则串**，以免被本页静态断言误判为真正的规则。 */
-            .zw-doc-composer .zwc-ap-row-ops{position:absolute;top:6px;right:8px;width:auto;line-height:1}
-            .zw-doc-composer .zwc-ap-row-ops .zwc-ap-del{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;min-height:24px;padding:0;border-radius:6px;font-size:15px;line-height:1;color:#50575e}
-            @media(hover:hover){.zw-doc-composer .zwc-ap-row-ops .zwc-ap-del:hover{color:#b30404;background:#fdecec;border-color:#f0c9c9;box-shadow:none}}
+            .tco-doc-composer .zwc-ap-row-ops{position:absolute;top:6px;right:8px;width:auto;line-height:1}
+            .tco-doc-composer .zwc-ap-row-ops .zwc-ap-del{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;min-height:24px;padding:0;border-radius:6px;font-size:15px;line-height:1;color:#50575e}
+            @media(hover:hover){.tco-doc-composer .zwc-ap-row-ops .zwc-ap-del:hover{color:#b30404;background:#fdecec;border-color:#f0c9c9;box-shadow:none}}
             /* 第 1 行右侧让出右上角按钮的宽度，输入区不与按钮重叠 */
-            .zw-doc-composer .zwc-ap-line.is-person-line{padding-right:30px}
+            .tco-doc-composer .zwc-ap-line.is-person-line{padding-right:30px}
             /* 块内按行分组：flex 行 + 可换行（窄屏允许行内换行，不横向溢出） */
-            .zw-doc-composer .zwc-ap-line{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
-            .zw-doc-composer .zwc-ap-line + .zwc-ap-line{margin-top:10px}
-            .zw-doc-composer .zwc-ap-line[hidden]{display:none}
+            .tco-doc-composer .zwc-ap-line{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+            .tco-doc-composer .zwc-ap-line + .zwc-ap-line{margin-top:10px}
+            .tco-doc-composer .zwc-ap-line[hidden]{display:none}
             /* 单元格：宽度由内联百分比给出；`min-width:0` 允许内部 canonical 控件收缩不被截断 */
-            .zw-doc-composer .zwc-ap-cell{min-width:0;box-sizing:border-box;display:block}
-            .zw-doc-composer .zwc-ap-cell[hidden]{display:none}
+            .tco-doc-composer .zwc-ap-cell{min-width:0;box-sizing:border-box;display:block}
+            .tco-doc-composer .zwc-ap-cell[hidden]{display:none}
             /* 字段自带 label（改造后无表头，字段名必须落在字段自身） */
-            .zw-doc-composer .zwc-ap-label{display:block;font-size:12px;font-weight:600;color:#1d2327;margin:0 0 4px}
-            .zw-doc-composer .zwc-section-tablewrap > .zwc-ap-rows .zwc-ap-cell > input,
-            .zw-doc-composer .zwc-section-tablewrap > .zwc-ap-rows .zwc-ap-cell > select{width:100%;min-width:0;box-sizing:border-box}
+            .tco-doc-composer .zwc-ap-label{display:block;font-size:12px;font-weight:600;color:#1d2327;margin:0 0 4px}
+            .tco-doc-composer .zwc-section-tablewrap > .zwc-ap-rows .zwc-ap-cell > input,
+            .tco-doc-composer .zwc-section-tablewrap > .zwc-ap-rows .zwc-ap-cell > select{width:100%;min-width:0;box-sizing:border-box}
             /* TASK-1318：面板宽度跟随控件（`.zw-ss-list{left:0;right:0}`），故控件须可收缩不被单元格截断。 */
-            .zw-doc-composer .zwc-section-tablewrap > .zwc-ap-rows .zwc-ap-cell .zw-ss{min-width:0;max-width:100%}
+            .tco-doc-composer .zwc-section-tablewrap > .zwc-ap-rows .zwc-ap-cell .zw-ss{min-width:0;max-width:100%}
             /* 任期快捷（1/2/3 年）：与任期起止同处第 3 行，占 20% */
-            .zw-doc-composer .zwc-ap-quick{display:flex;gap:6px;flex-wrap:wrap}
+            .tco-doc-composer .zwc-ap-quick{display:flex;gap:6px;flex-wrap:wrap}
             /* 总会任命的行内模块级单值隐藏域：不显示、不参与布局，仍随表单提交 */
-            .zw-doc-composer .zwc-ap-hq-inline[hidden]{display:none}
+            .tco-doc-composer .zwc-ap-hq-inline[hidden]{display:none}
             /* TASK-1312：操作区**模块级单选**（总会任命 / 分支机构任命，默认分支机构任命）。
                控件零新增（原生 radio + 既有 .button 视觉口径）；主色只用规范变量，不新增全局 CSS 文件。
                TASK-1324（用户口径）：该**操作**移到**本区块头右上角** —— 用 `margin-left:auto` 把它推到最右，
                与左侧组名同处一行；窄屏由其自身 `flex-wrap` 与区块头既有折行能力自然换行（不横向滚动）。
                注：本注释**不写该类的字面规则串**（形如「类名 + 花括号」），以免被本页静态断言误判为真正的规则。 */
-            .zw-doc-composer .zwc-ap-mode-op{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-            .zw-doc-composer .zwc-ap-mode-op-label{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#1d2327;white-space:nowrap}
-            .zw-doc-composer .zwc-ap-mode-op .zwc-ap-mode-radios{gap:14px}
-            .zw-doc-composer .zwc-ap-mode-radios{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
-            .zw-doc-composer .zwc-ap-mode-radio{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#1d2327;cursor:pointer}
-            .zw-doc-composer .zwc-ap-mode-radio input[type=radio]{margin:0;accent-color:var(--primary-color,#d80505)}
+            .tco-doc-composer .zwc-ap-mode-op{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+            .tco-doc-composer .zwc-ap-mode-op-label{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#1d2327;white-space:nowrap}
+            .tco-doc-composer .zwc-ap-mode-op .zwc-ap-mode-radios{gap:14px}
+            .tco-doc-composer .zwc-ap-mode-radios{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+            .tco-doc-composer .zwc-ap-mode-radio{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#1d2327;cursor:pointer}
+            .tco-doc-composer .zwc-ap-mode-radio input[type=radio]{margin:0;accent-color:var(--primary-color,#d80505)}
             /* 总会任命的模块级单值（所属部门 / 组织架构职务 / 届次 / 任期）：两列网格，与卡片体内一致 */
-            .zw-doc-composer .zwc-ap-hq-grid{display:grid;gap:14px 16px;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;padding:0 0 4px}
-            .zw-doc-composer .zwc-ap-hq-grid[hidden]{display:none}
-            .zw-doc-composer .zwc-ap-hq-grid > .zw-doc-field{min-width:0}
-            @media(max-width:782px){.zw-doc-composer .zwc-ap-hq-grid{grid-template-columns:minmax(0,1fr)}}
-            .zw-doc-composer .zwc-group-t{font-weight:600;font-size:13px;color:#1d2327}
+            .tco-doc-composer .zwc-ap-hq-grid{display:grid;gap:14px 16px;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;padding:0 0 4px}
+            .tco-doc-composer .zwc-ap-hq-grid[hidden]{display:none}
+            .tco-doc-composer .zwc-ap-hq-grid > .tco-doc-field{min-width:0}
+            @media(max-width:782px){.tco-doc-composer .zwc-ap-hq-grid{grid-template-columns:minmax(0,1fr)}}
+            .tco-doc-composer .zwc-group-t{font-weight:600;font-size:13px;color:#1d2327}
             /* 隐藏面板：仅在 JS 就绪（.is-js）后生效 → 无 JS 时全部字段可见，仍可提交 */
-            .zw-doc-composer .zwc-steps.is-js > .zwc-panel[hidden]{display:none}
-            .zw-doc-composer .zwc-steps.is-js > .zwc-panel{display:block}
-            .zw-doc-composer .zwc-numbox{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;background:#fafbfc;border:1px dashed #dcdfe6;border-radius:8px;padding:10px 12px;margin:0 0 14px}
-            .zw-doc-composer .zwc-numbox-k{font-size:13px;color:#666}
-            .zw-doc-composer .zwc-numbox-v{font-size:16px;color:var(--primary-color,#d80505)}
-            .zw-doc-composer .zwc-numbox-n{font-size:12px;color:#8c8f94}
-            @media(max-width:782px){.zw-doc-composer .zwc-fields.is-2{grid-template-columns:minmax(0,1fr)}}
+            .tco-doc-composer .zwc-steps.is-js > .zwc-panel[hidden]{display:none}
+            .tco-doc-composer .zwc-steps.is-js > .zwc-panel{display:block}
+            .tco-doc-composer .zwc-numbox{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;background:#fafbfc;border:1px dashed #dcdfe6;border-radius:8px;padding:10px 12px;margin:0 0 14px}
+            .tco-doc-composer .zwc-numbox-k{font-size:13px;color:#666}
+            .tco-doc-composer .zwc-numbox-v{font-size:16px;color:var(--primary-color,#d80505)}
+            .tco-doc-composer .zwc-numbox-n{font-size:12px;color:#8c8f94}
+            @media(max-width:782px){.tco-doc-composer .zwc-fields.is-2{grid-template-columns:minmax(0,1fr)}}
             /* TASK-1309：窄屏下卡片体内的字段网格同样回落单列（与整页节奏一致） */
-            @media(max-width:782px){.zw-doc-composer .zwc-section-body{grid-template-columns:minmax(0,1fr)}.zw-doc-composer .zwc-section-body > .zw-doc-field.is-wide{grid-column:auto}}
+            @media(max-width:782px){.tco-doc-composer .zwc-section-body{grid-template-columns:minmax(0,1fr)}.tco-doc-composer .zwc-section-body > .tco-doc-field.is-wide{grid-column:auto}}
             /* TASK-1349（用户 2026-10-09 拍板）：第 2 步「导入正文」折叠块 —— 两个一次性导入动作
                （批量粘贴 / 上传 Word）收进**默认收起**的原生 `<details>`：零 JS、无 JS 也可用，
                且「正文段（在线编写）」编辑器**常驻不被藏**（表单主体始终可见可填）。
                折叠框自带虚线边框与底色，内层 `.zwc-paste` 退化为纯内边距（不再画第二层框）。 */
-            .zw-doc-composer .zwc-import{margin:0 0 14px;border:1px dashed #dcdfe6;border-radius:8px;background:#fafbfc}
-            .zw-doc-composer .zwc-import > summary{cursor:pointer;padding:10px 14px;font-size:13px;font-weight:600;color:#1d2327;list-style:none}
-            .zw-doc-composer .zwc-import > summary::-webkit-details-marker{display:none}
-            .zw-doc-composer .zwc-import > summary::before{content:'▸';display:inline-block;width:1em;color:#8c8f94;transition:transform .15s ease}
-            .zw-doc-composer .zwc-import[open] > summary::before{transform:rotate(90deg)}
-            @media(hover:hover){.zw-doc-composer .zwc-import > summary:hover{color:#b30404}}
-            .zw-doc-composer .zwc-import[open] > summary{border-bottom:1px dashed #dcdfe6}
-            @media(prefers-reduced-motion:reduce){.zw-doc-composer .zwc-import > summary::before{transition:none}}
-            .zw-doc-composer .zwc-paste{padding:12px 14px}
+            .tco-doc-composer .zwc-import{margin:0 0 14px;border:1px dashed #dcdfe6;border-radius:8px;background:#fafbfc}
+            .tco-doc-composer .zwc-import > summary{cursor:pointer;padding:10px 14px;font-size:13px;font-weight:600;color:#1d2327;list-style:none}
+            .tco-doc-composer .zwc-import > summary::-webkit-details-marker{display:none}
+            .tco-doc-composer .zwc-import > summary::before{content:'▸';display:inline-block;width:1em;color:#8c8f94;transition:transform .15s ease}
+            .tco-doc-composer .zwc-import[open] > summary::before{transform:rotate(90deg)}
+            @media(hover:hover){.tco-doc-composer .zwc-import > summary:hover{color:#b30404}}
+            .tco-doc-composer .zwc-import[open] > summary{border-bottom:1px dashed #dcdfe6}
+            @media(prefers-reduced-motion:reduce){.tco-doc-composer .zwc-import > summary::before{transition:none}}
+            .tco-doc-composer .zwc-paste{padding:12px 14px}
             /* 「正文段（在线编写）」编辑器小标题：让常驻编辑器有自己的身份（TASK-1349） */
-            .zw-doc-composer .zwc-blocks-title{margin:0 0 8px;font-size:13px;font-weight:600;color:#1d2327}
-            .zw-doc-composer .zwc-hint{background:#fafbfc;border-left:3px solid var(--primary-color,#d80505);padding:8px 10px;margin:0 0 12px;font-size:12px;color:#50575e}
+            .tco-doc-composer .zwc-blocks-title{margin:0 0 8px;font-size:13px;font-weight:600;color:#1d2327}
+            .tco-doc-composer .zwc-hint{background:#fafbfc;border-left:3px solid var(--primary-color,#d80505);padding:8px 10px;margin:0 0 12px;font-size:12px;color:#50575e}
             </style>
             <h1><?php echo $doc ? '编辑正文：' . esc_html((string) $doc['title']) : '新建发文（在线撰写）'; ?></h1>
             <?php if ($notice !== '') { zw_doc_admin_notice($notice, zw_doc_notice_level($notice)); } // TASK-1362：级别由唯一出处判定（原关键词嗅探会把驳回渲染成"成功"）?>
@@ -1439,8 +1439,8 @@ if (!function_exists('zw_doc_render_composer_page')) {
                         <p class="zwc-step-hint" id="zwc-step-hint" data-zw-prefix="<?php echo esc_attr($step_hint_prefix); ?>"><?php echo esc_html($step_hint_prefix); ?><strong>切换步骤不会丢失已填内容</strong>。</p>
                         <div class="zwc-steps" id="zwc-steps">
 
-                        <section class="zw-doc-card zwc-panel" data-zw-step="1">
-                            <h2><span class="zwc-step">第 1 步</span>公文要素<span class="zw-adm-badge is-on">影响版式</span></h2>
+                        <section class="tco-doc-card zwc-panel" data-zw-step="1">
+                            <h2><span class="zwc-step">第 1 步</span>公文要素<span class="tco-badge is-on">影响版式</span></h2>
                             <div class="zwc-numbox" id="zwc-numbox">
                                 <span class="zwc-numbox-k">发文字号</span>
                                 <strong class="zwc-numbox-v"><?php echo is_wp_error($preview) ? esc_html($preview->get_error_message()) : esc_html((string) $preview['full_number']); ?></strong>
@@ -1450,10 +1450,10 @@ if (!function_exists('zw_doc_render_composer_page')) {
                                 <?php // TASK-1271（用户拍板·方案 A）：第 1 步按「用途」分五段显示 ?>
                                 <?php // TASK-1309：每段升级为独立卡片（.zwc-section），本段字段只在本段的 .zwc-section-body 内排布 ?>
                                 <section class="zwc-section">
-                                <div class="zwc-section-head zwc-group" data-zwc-section-head="numtype"><span class="zwc-group-t">文种与文号</span><span class="zw-adm-badge is-on">上纸面</span><span class="zw-doc-muted">发文字号见上方信息条</span></div>
+                                <div class="zwc-section-head zwc-group" data-zwc-section-head="numtype"><span class="zwc-group-t">文种与文号</span><span class="tco-badge is-on">上纸面</span><span class="tco-doc-muted">发文字号见上方信息条</span></div>
                                 <div class="zwc-section-body">
                                 <?php if (!$doc) : // 文种与取号仅在新建时可选 ?>
-                                <div class="zw-doc-field">
+                                <div class="tco-doc-field">
                                     <label>文种</label>
                                     <select name="num_type" id="zwc-type" onchange="zwcReloadType()" style="max-width:200px">
                                         <?php foreach ($settings['doc_types'] as $type_option) : ?>
@@ -1484,7 +1484,7 @@ if (!function_exists('zw_doc_render_composer_page')) {
                             <?php // TASK-1867（CHG-362）：份号取号 —— 自动取号（默认，保存时占号）/ 手动指定（可下拉选空闲号）/ 不标注。
                                   // 无 JS 也能用：三态由 `zwc_copy_no_mode` 决定，输入框只是「手动指定」的载体；
                                   // 自动取号的**真实号**以服务端占号结果为准（本框仅作下一号预览）。 ?>
-                            <div class="zw-doc-field is-half">
+                            <div class="tco-doc-field is-half">
                                 <label>份号</label>
                                 <select name="zwc_copy_no_mode" id="zwc-copy-no-mode">
                                     <option value="auto"<?php selected($copy_mode, 'auto'); ?>>自动取号（保存时占用下一号）</option>
@@ -1500,7 +1500,7 @@ if (!function_exists('zw_doc_render_composer_page')) {
                                         <?php endforeach; ?>
                                     </select>
                                 <?php endif; ?>
-                                <div class="zw-doc-muted">6 位数字，不足自动左补 0（超长取后 6 位）；<strong>自动取号</strong>＝保存时占用「下一个可用份号」<?php echo $copy_next !== '' ? '（当前 <code>' . esc_html($copy_next) . '</code>）' : '（<strong>号段已用尽</strong>，请改手动指定）'; ?>；顶格编排在版心左上角第一行，选「不标注」则版面上不出现份号。</div>
+                                <div class="tco-doc-muted">6 位数字，不足自动左补 0（超长取后 6 位）；<strong>自动取号</strong>＝保存时占用「下一个可用份号」<?php echo $copy_next !== '' ? '（当前 <code>' . esc_html($copy_next) . '</code>）' : '（<strong>号段已用尽</strong>，请改手动指定）'; ?>；顶格编排在版心左上角第一行，选「不标注」则版面上不出现份号。</div>
                             </div>
                             <script>
                             (function () {
@@ -1529,7 +1529,7 @@ if (!function_exists('zw_doc_render_composer_page')) {
                                 sync();
                             })();
                             </script>
-                            <div class="zw-doc-field is-half">
+                            <div class="tco-doc-field is-half">
                                 <label>紧急程度</label>
                                 <select name="zwc_urgency" id="zwc-urgency">
                                     <option value="">不标注</option>
@@ -1537,15 +1537,15 @@ if (!function_exists('zw_doc_render_composer_page')) {
                                         <option value="<?php echo esc_attr($urgency_option); ?>"<?php selected($urgency_pick, $urgency_option); ?>><?php echo esc_html($urgency_option); ?></option>
                                     <?php endforeach; ?>
                                 </select>
-                                <div class="zw-doc-muted">3 号黑体、顶格第三行；版头标记的顺序固定为 份号 → 密级和保密期限 → 紧急程度。</div>
+                                <div class="tco-doc-muted">3 号黑体、顶格第三行；版头标记的顺序固定为 份号 → 密级和保密期限 → 紧急程度。</div>
                             </div>
-                            <div class="zw-doc-field is-half">
+                            <div class="tco-doc-field is-half">
                                 <label>密级</label>
                                 <?php if ($secret_legacy && $secret_unsafe) : ?>
                                     <?php // 历史值含会破坏标记的字符 → 回退为文本框原样保留（用原生 select 无法安全承载） ?>
                                     <input type="text" id="zwc-secret-level" maxlength="30" value="<?php echo esc_attr($secret_level); ?>" readonly>
                                     <input type="hidden" name="zwc_secret_level" value="<?php echo esc_attr($secret_level); ?>">
-                                    <div class="zw-doc-muted">该记录原有密级为「<?php echo esc_html($secret_level); ?>」（不在密级字典内），已原样保留；如需改为字典取值，请改选后保存。</div>
+                                    <div class="tco-doc-muted">该记录原有密级为「<?php echo esc_html($secret_level); ?>」（不在密级字典内），已原样保留；如需改为字典取值，请改选后保存。</div>
                                 <?php else : ?>
                                     <select name="zwc_secret_level" id="zwc-secret-level">
                                         <option value="">不标注</option>
@@ -1554,23 +1554,23 @@ if (!function_exists('zw_doc_render_composer_page')) {
                                         <?php endforeach; ?>
                                     </select>
                                     <?php if ($secret_legacy) : ?>
-                                        <div class="zw-doc-muted">原有密级「<?php echo esc_html($secret_level); ?>」不在密级字典内，已作为额外选项保留，不会被静默改写。</div>
+                                        <div class="tco-doc-muted">原有密级「<?php echo esc_html($secret_level); ?>」不在密级字典内，已作为额外选项保留，不会被静默改写。</div>
                                     <?php endif; ?>
                                 <?php endif; ?>
                             </div>
-                            <div class="zw-doc-field is-half">
+                            <div class="tco-doc-field is-half">
                                 <label>保密期限</label>
                                 <input type="text" name="zwc_secret_period" id="zwc-secret-period" maxlength="20" value="<?php echo esc_attr($secret_period); ?>" placeholder="1年">
-                                <div class="zw-doc-muted">与密级同行显示为「密级★期限」（分隔符取自版式常量）；留空则只标注密级。</div>
+                                <div class="tco-doc-muted">与密级同行显示为「密级★期限」（分隔符取自版式常量）；留空则只标注密级。</div>
                             </div>
 
                                 </div><!-- /.zwc-section-body -->
                                 </section>
                                 <section class="zwc-section">
-                                <div class="zwc-section-head zwc-group" data-zwc-section-head="org"><span class="zwc-group-t">发文机关</span><span class="zw-adm-badge is-on">一处选择 · 三处回显</span><span class="zw-doc-muted">红头 / 署名 / 发文部门由「发文机关」带出</span></div>
+                                <div class="zwc-section-head zwc-group" data-zwc-section-head="org"><span class="zwc-group-t">发文机关</span><span class="tco-badge is-on">一处选择 · 三处回显</span><span class="tco-doc-muted">红头 / 署名 / 发文部门由「发文机关」带出</span></div>
                                 <div class="zwc-section-body">
-                            <div class="zw-doc-field is-wide">
-                                <label>发文机关 <span class="zw-adm-badge is-on">唯一入口</span></label>
+                            <div class="tco-doc-field is-wide">
+                                <label>发文机关 <span class="tco-badge is-on">唯一入口</span></label>
                                 <?php // TASK-1272：换 SPEC-85 canonical 可搜索单选下拉 —— 其文本输入**仅作过滤**、
                                       // 真值由 hidden 字段承载，仍满足用户「红头与署名只能选择」的口径（非自由文本） ?>
                                 <?php zw_control_search_select(array(
@@ -1581,30 +1581,30 @@ if (!function_exists('zw_doc_render_composer_page')) {
                                     'empty_text'  => '没有匹配的发文机关',
                                     'options'     => $org_select_options,
                                 )); ?>
-                                <div class="zw-doc-muted">候选 = 协会本级 + <strong>正常状态</strong>分支机构（支持关键词过滤）；选定后自动带出红头、署名与发文部门（署名/部门为只读回显）。</div>
+                                <div class="tco-doc-muted">候选 = 协会本级 + <strong>正常状态</strong>分支机构（支持关键词过滤）；选定后自动带出红头、署名与发文部门（署名/部门为只读回显）。</div>
                             </div>
-                            <div class="zw-doc-field">
-                                <label>发文机关标志（红头文字） <span class="zw-adm-badge is-on">上纸面</span></label>
+                            <div class="tco-doc-field">
+                                <label>发文机关标志（红头文字） <span class="tco-badge is-on">上纸面</span></label>
                                 <select name="zwc_org_name" id="zwc-org">
                                     <?php foreach ($org_head_options as $head_option) : ?>
                                         <option value="<?php echo esc_attr($head_option); ?>"<?php selected($org_head_current, $head_option); ?>><?php echo esc_html($head_option); ?></option>
                                     <?php endforeach; ?>
                                 </select>
-                                <div class="zw-doc-muted">默认「机关 + 文件」；<strong>分支机构红头带协会全称前缀</strong>，长名自动缩小字号与字距、<strong>绝不折行</strong>；版头红线由程序生成（双线），使用红头图片时以图片为准。</div>
+                                <div class="tco-doc-muted">默认「机关 + 文件」；<strong>分支机构红头带协会全称前缀</strong>，长名自动缩小字号与字距、<strong>绝不折行</strong>；版头红线由程序生成（双线），使用红头图片时以图片为准。</div>
                             </div>
-                            <div class="zw-doc-field">
-                                <label>发文机关署名 <span class="zw-adm-badge is-on">上纸面</span> <span class="zw-adm-badge">只读回显</span></label>
+                            <div class="tco-doc-field">
+                                <label>发文机关署名 <span class="tco-badge is-on">上纸面</span> <span class="tco-badge">只读回显</span></label>
                                 <input type="text" name="zwc_sign_org" id="zwc-sign" maxlength="60" readonly value="<?php echo esc_attr($org_sign_display); ?>">
-                                <div class="zw-doc-muted">随机关回显；<strong>分支机构署名带协会全称前缀</strong>（如「中国传统文化促进会孔子文化传承工作委员会」），落款须与印章一致，<strong>不含「文件」二字</strong>。</div>
+                                <div class="tco-doc-muted">随机关回显；<strong>分支机构署名带协会全称前缀</strong>（如「中国传统文化促进会孔子文化传承工作委员会」），落款须与印章一致，<strong>不含「文件」二字</strong>。</div>
                             </div>
-                            <div class="zw-doc-field">
-                                <label>发文部门 <span class="zw-adm-badge is-on">台账 + 版记</span> <span class="zw-adm-badge">只读回显</span></label>
+                            <div class="tco-doc-field">
+                                <label>发文部门 <span class="tco-badge is-on">台账 + 版记</span> <span class="tco-badge">只读回显</span></label>
                                 <?php if ($doc) : ?>
                                     <input type="text" maxlength="120" readonly value="<?php echo esc_attr((string) $doc['department']); ?>">
-                                    <div class="zw-doc-muted">台账字段，且作为版记「<strong>印发机关</strong>」的真值源；编辑正文时不修改，如需变更请在「我的发文」处理。</div>
+                                    <div class="tco-doc-muted">台账字段，且作为版记「<strong>印发机关</strong>」的真值源；编辑正文时不修改，如需变更请在「我的发文」处理。</div>
                                 <?php else : ?>
                                     <input type="text" name="doc_department" id="zwc-dept" maxlength="120" readonly value="<?php echo esc_attr($org_current); ?>">
-                                    <div class="zw-doc-muted">随机关回显；台账 / 流转用，并作为版记「<strong>印发机关</strong>」的真值源（保存时服务端按同一名录二次校验）。</div>
+                                    <div class="tco-doc-muted">随机关回显；台账 / 流转用，并作为版记「<strong>印发机关</strong>」的真值源（保存时服务端按同一名录二次校验）。</div>
                                 <?php endif; ?>
                             </div>
 
@@ -1622,21 +1622,21 @@ if (!function_exists('zw_doc_render_composer_page')) {
                                 <?php // TASK-1324（用户口径）：把「任命模式」单选（本区块的**操作**）移到**区块头右上角**，
                                       // 与组名同处一行、靠右对齐；说明性文案移到正文区，避免长句把操作挤到第二行。
                                       // 保留 `#zwc-ap-mode-op` 与 `input[name="zwc_ap_mode"]`（页尾 JS 依此绑定 `zwcApSetMode`）。 ?>
-                                <div class="zwc-section-head zwc-group" data-zwc-section-head="appoint"><span class="zwc-group-t">人员任命配置</span><span class="zw-adm-badge is-on">上纸面</span><span class="zw-adm-badge">仅「任」字文种</span>
+                                <div class="zwc-section-head zwc-group" data-zwc-section-head="appoint"><span class="zwc-group-t">人员任命配置</span><span class="tco-badge is-on">上纸面</span><span class="tco-badge">仅「任」字文种</span>
                                     <div class="zwc-ap-mode-op" id="zwc-ap-mode-op">
-                                        <span class="zwc-ap-mode-op-label">任命模式 <span class="zw-adm-badge">必选</span></span>
+                                        <span class="zwc-ap-mode-op-label">任命模式 <span class="tco-badge">必选</span></span>
                                         <div class="zwc-ap-mode-radios" role="radiogroup" aria-label="任命模式">
-                                            <label class="zwc-ap-mode-radio zw-adm-touch"><input type="radio" name="zwc_ap_mode" value="branch" data-zw-ap-mode="branch"<?php checked($ap_mode, 'branch'); ?>> 分支机构任命</label>
-                                            <label class="zwc-ap-mode-radio zw-adm-touch"><input type="radio" name="zwc_ap_mode" value="hq" data-zw-ap-mode="hq"<?php checked($ap_mode, 'hq'); ?>> 总会任命</label>
+                                            <label class="zwc-ap-mode-radio tco-touch"><input type="radio" name="zwc_ap_mode" value="branch" data-zw-ap-mode="branch"<?php checked($ap_mode, 'branch'); ?>> 分支机构任命</label>
+                                            <label class="zwc-ap-mode-radio tco-touch"><input type="radio" name="zwc_ap_mode" value="hq" data-zw-ap-mode="hq"<?php checked($ap_mode, 'hq'); ?>> 总会任命</label>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="zwc-section-body">
-                                <div class="zw-doc-field is-wide">
-                                    <div class="zw-doc-muted" id="zwc-ap-mode-hint"><?php echo $ap_is_hq
+                                <div class="tco-doc-field is-wide">
+                                    <div class="tco-doc-muted" id="zwc-ap-mode-hint"><?php echo $ap_is_hq
                                         ? '总会任命：填「' . esc_html(zw_doc_appoint_org_head_name()) . '」所属部门 / 组织架构职务 / 届次与任期（只读，模块级单值），人员同步进「组织架构 → 人员」。'
                                         : '分支机构任命：逐行选具体分支机构 + 会内职务 + 任期，工作范围写入正文首句；人员同步进「分支机构 → 机构列表 → 负责人管理」。'; ?></div>
-                                    <div class="zw-doc-muted">默认「分支机构任命」。切换模式会切换下方字段集与同步去向，<strong>同一篇公文不再混选</strong>。</div>
+                                    <div class="tco-doc-muted">默认「分支机构任命」。切换模式会切换下方字段集与同步去向，<strong>同一篇公文不再混选</strong>。</div>
                                 </div>
                                 <?php // TASK-1309 引入本包裹层；TASK-1318 已把其 `overflow-x:auto` 改为 `overflow:visible`（否则会裁掉控件下拉面板）。
                                       // TASK-1322：逐行人员区由「表格 + 表头列」改为**堆叠分区布局**（每人一块、块内按行分组、字段自带 label），
@@ -1650,10 +1650,10 @@ if (!function_exists('zw_doc_render_composer_page')) {
                                 </div><!-- /.zwc-section-tablewrap -->
                                 <?php // 分支模式：工作范围**紧跟该分支区域**（会内职务 → 任期 → 工作范围，用户口径顺序）。
                                       // 非当前模式的控件一律 `disabled`（disabled 不随表单提交）⇒ 同名域永远只提交一份、无歧义。 ?>
-                                <div class="zw-doc-field is-wide" id="zwc-ap-branch-extra"<?php echo $ap_is_hq ? ' hidden' : ''; ?>>
+                                <div class="tco-doc-field is-wide" id="zwc-ap-branch-extra"<?php echo $ap_is_hq ? ' hidden' : ''; ?>>
                                     <label>工作范围（最多 <?php echo (int) zw_doc_appoint_scope_limit(); ?> 个汉字）<?php echo $ap_has_content ? '*' : ''; ?></label>
                                     <input type="text" name="zwc_ap_scope" id="zwc-ap-scope" maxlength="<?php echo (int) zw_doc_appoint_scope_limit(); ?>" value="<?php echo esc_attr($ap_scope); ?>" placeholder="如：传统文化教育"<?php echo ($ap_has_content && !$ap_is_hq) ? ' required' : ''; ?><?php echo $ap_is_hq ? ' disabled' : ''; ?>>
-                                    <div class="zw-doc-muted">写入正文首句「……我会“工作范围”工作的开展……」；<strong>文档级单值，不随人走</strong>；任命人员不强制实名（未实名只提示，不阻断）。填了工作范围就必须至少指定一位任命人员（服务端校验）。</div>
+                                    <div class="tco-doc-muted">写入正文首句「……我会“工作范围”工作的开展……」；<strong>文档级单值，不随人走</strong>；任命人员不强制实名（未实名只提示，不阻断）。填了工作范围就必须至少指定一位任命人员（服务端校验）。</div>
                                 </div>
                                 <?php // 总会模式：**无「工作范围」字段**；存量值以隐藏域原样保留（不清空历史数据）。 ?>
                                 <input type="hidden" name="zwc_ap_scope" id="zwc-ap-scope-hidden" value="<?php echo esc_attr($ap_scope); ?>"<?php echo $ap_is_hq ? '' : ' disabled'; ?>>
@@ -1661,7 +1661,7 @@ if (!function_exists('zw_doc_render_composer_page')) {
                                       // 行内隐藏域承接同一份值（服务端按行归一，两条同步通道各自唯一写入口不变）。 ?>
                                 <div class="zwc-section-sub" id="zwc-ap-hq-extra"<?php echo $ap_is_hq ? '' : ' hidden'; ?>>总会任命（模块级单值，作用于本篇全部任命人员）：所属部门 → 组织架构职务 → 届次 → 任期</div>
                                 <div class="zwc-ap-hq-grid" id="zwc-ap-hq-grid"<?php echo $ap_is_hq ? '' : ' hidden'; ?>>
-                                    <div class="zw-doc-field">
+                                    <div class="tco-doc-field">
                                         <label>所属部门 *</label>
                                         <select name="zwc_ap_org_dept" id="zwc-ap-org-dept" class="zwc-ap-hq-field" data-zw-ap-hq="org_dept">
                                             <?php foreach ($ap_org_dept_options as $ap_dept_key => $ap_dept_label) : ?>
@@ -1669,7 +1669,7 @@ if (!function_exists('zw_doc_render_composer_page')) {
                                             <?php endforeach; ?>
                                         </select>
                                     </div>
-                                    <div class="zw-doc-field">
+                                    <div class="tco-doc-field">
                                         <label>组织架构职务 *</label>
                                         <select name="zwc_ap_org_duty" id="zwc-ap-org-duty" class="zwc-ap-hq-field" data-zw-ap-hq="org_duty">
                                             <?php foreach ($ap_org_duty_options as $ap_duty_key => $ap_duty_label) : ?>
@@ -1677,13 +1677,13 @@ if (!function_exists('zw_doc_render_composer_page')) {
                                             <?php endforeach; ?>
                                         </select>
                                     </div>
-                                    <div class="zw-doc-field">
-                                        <label>届次 <span class="zw-adm-badge">只读</span></label>
+                                    <div class="tco-doc-field">
+                                        <label>届次 <span class="tco-badge">只读</span></label>
                                         <input type="text" id="zwc-ap-org-term" class="zwc-ap-hq-term-field" readonly tabindex="-1"
                                                value="<?php echo esc_attr($ap_org_term); ?>" title="届次只读：唯一出处 inc/term-cycles.php 的当前届次">
                                     </div>
-                                    <div class="zw-doc-field">
-                                        <label>任期 <span class="zw-adm-badge">只读</span></label>
+                                    <div class="tco-doc-field">
+                                        <label>任期 <span class="tco-badge">只读</span></label>
                                         <input type="date" id="zwc-ap-org-term-start" class="zwc-ap-hq-term-field" readonly tabindex="-1"
                                                value="<?php echo esc_attr($ap_org_start); ?>" title="任期只读：取当前届次起止">
                                         <input type="date" id="zwc-ap-org-term-end" class="zwc-ap-hq-term-field" readonly tabindex="-1"
@@ -1695,11 +1695,11 @@ if (!function_exists('zw_doc_render_composer_page')) {
                                 </div>
                             <p>
                                 <button type="button" class="button" id="zwc-ap-add">+ 添加任命人员</button>
-                                <span class="zw-doc-muted">单选控件不支持多选 ⇒ 多人 = 多行（SPEC-85 边界）；<strong>同一篇不再混选</strong>（模式由上方单选唯一决定）。点「下一步：撰写正文」按上述要素生成正文（末几段全等则不重复追加）。</span>
-                                <span class="zw-doc-muted" id="zwc-ap-tip"></span>
+                                <span class="tco-doc-muted">单选控件不支持多选 ⇒ 多人 = 多行（SPEC-85 边界）；<strong>同一篇不再混选</strong>（模式由上方单选唯一决定）。点「下一步：撰写正文」按上述要素生成正文（末几段全等则不重复追加）。</span>
+                                <span class="tco-doc-muted" id="zwc-ap-tip"></span>
                             </p>
-                            <div class="zw-doc-field is-wide">
-                                <div class="zw-doc-muted">
+                            <div class="tco-doc-field is-wide">
+                                <div class="tco-doc-muted">
                                     <strong>流转</strong>：<strong>分支机构任命</strong> ⇒ 同步进<strong>分支机构 → 机构列表 → 负责人管理</strong>（`zw_branch_leaders_save()`）；<strong>总会任命</strong> ⇒ 同步进<strong>组织架构 → 人员</strong>（`zw_org_insert_person()`）。两条通道各写各的、互不串道（服务端以单选为权威）。分支「任期开始」默认当前日期，1/2/3 年快捷按闰年口径推算结束日期；总会「届次 / 任期」<strong>只读</strong>（唯一出处 <code>inc/term-cycles.php</code> 的当前届次）。
                                 </div>
                             </div>
@@ -1720,10 +1720,10 @@ if (!function_exists('zw_doc_render_composer_page')) {
                                 // **服务端按文种条件渲染**（不渲染即不提交、也不参与必填统计），其他文种零变化。
                                 $receiver_applies = zw_doc_composer_receiver_applies($ap_doc_type);
                                 ?>
-                                <div class="zwc-section-head zwc-group" data-zwc-section-head="title-receiver"><span class="zwc-group-t"><?php echo $receiver_applies ? '标题与主送' : '标题'; ?></span><span class="zw-adm-badge is-on">上纸面</span></div>
+                                <div class="zwc-section-head zwc-group" data-zwc-section-head="title-receiver"><span class="zwc-group-t"><?php echo $receiver_applies ? '标题与主送' : '标题'; ?></span><span class="tco-badge is-on">上纸面</span></div>
                                 <div class="zwc-section-body">
-                            <div class="zw-doc-field is-wide">
-                                <label>公文标题 * <span class="zw-doc-muted" style="font-weight:400">（可手动换行决定断行，最多 3 行；不换行则由系统自动回行）</span></label>
+                            <div class="tco-doc-field is-wide">
+                                <label>公文标题 * <span class="tco-doc-muted" style="font-weight:400">（可手动换行决定断行，最多 3 行；不换行则由系统自动回行）</span></label>
                                 <?php
                                 // TASK-2014（用户「输入框改造成可折行 最多显示3行 由我自己控制折行」）：
                                 // 改为 3 行文本域；回车即断行。`title` 仍存单行（列表/文件名不受影响），
@@ -1735,12 +1735,12 @@ if (!function_exists('zw_doc_render_composer_page')) {
                                 <textarea name="doc_title" id="zwc-title" rows="3" maxlength="240" required
                                     placeholder="例：关于同意成立中国传统文化促进会&#10;孔子文化传承工作委员会的批复"
                                     style="width:100%;resize:vertical;line-height:1.6;font-size:14px"><?php echo esc_textarea($zw_title_value); ?></textarea>
-                                <div class="zw-doc-muted" style="font-size:12px">
+                                <div class="tco-doc-muted" style="font-size:12px">
                                     当前 <span id="zwc-title-lines"><?php echo (int) max(1, count(array_filter(preg_split('/\r\n|\r|\n/', $zw_title_value)))); ?></span> 行（最多 3 行）· 第 4 行起会被自动截断
                                 </div>
                             </div>
                             <?php if ($receiver_applies) : ?>
-                            <div class="zw-doc-field">
+                            <div class="tco-doc-field">
                                 <label>主送机关（下拉单选；选「其他」可自行输入，最多 <?php echo (int) zw_doc_composer_receiver_limit(); ?> 个汉字）</label>
                                 <select id="zwc-receiver-pick" aria-controls="zwc-receiver">
                                     <option value="">请选择</option>
@@ -1751,34 +1751,34 @@ if (!function_exists('zw_doc_render_composer_page')) {
                                 </select>
                                 <?php // 真值字段仍叫 zwc_receiver（零契约变化）：选字典项时由脚本填入并隐藏；无 JS 时保持可输入（渐进增强） ?>
                                 <input type="text" name="zwc_receiver" id="zwc-receiver" maxlength="<?php echo (int) zw_doc_composer_receiver_limit(); ?>" value="<?php echo esc_attr($receiver_text); ?>" placeholder="如：各会员单位" style="margin-top:6px">
-                                <div class="zw-doc-muted">打印时自动补末尾全角冒号（SPEC-87 §6）。留空表示不写主送机关。</div>
+                                <div class="tco-doc-muted">打印时自动补末尾全角冒号（SPEC-87 §6）。留空表示不写主送机关。</div>
                             </div>
                             <?php endif; ?>
                                 </div><!-- /.zwc-section-body -->
                                 </section>
                                 <section class="zwc-section">
-                                <div class="zwc-section-head zwc-group" data-zwc-section-head="signdate"><span class="zwc-group-t">落款与日期</span><span class="zw-adm-badge is-on">成文日期上纸面</span><span class="zw-adm-badge is-on">发文日期上版记</span></div>
+                                <div class="zwc-section-head zwc-group" data-zwc-section-head="signdate"><span class="zwc-group-t">落款与日期</span><span class="tco-badge is-on">成文日期上纸面</span><span class="tco-badge is-on">发文日期上版记</span></div>
                                 <div class="zwc-section-body">
-                            <div class="zw-doc-field is-half">
+                            <div class="tco-doc-field is-half">
                                 <label>成文日期（月、日不补零）</label>
                                 <?php if ($date_legacy) : ?>
                                     <?php // 旧记录里的非标准日期（如「二〇二六年十月四日」）用文本框原样保留，日期控件会丢数据 ?>
                                     <input type="text" name="zwc_date" id="zwc-date" maxlength="30" value="<?php echo esc_attr($date_raw); ?>">
-                                    <div class="zw-doc-muted">该记录原有成文日期为自由文本「<?php echo esc_html($date_raw); ?>」，无法用日期控件表示，已原样保留。</div>
+                                    <div class="tco-doc-muted">该记录原有成文日期为自由文本「<?php echo esc_html($date_raw); ?>」，无法用日期控件表示，已原样保留。</div>
                                 <?php else : ?>
                                     <input type="date" name="zwc_date" id="zwc-date" value="<?php echo esc_attr($date_iso); ?>">
-                                    <div class="zw-doc-muted">年月日标准控件，新建默认当天；打印为「月、日不补零」。</div>
+                                    <div class="tco-doc-muted">年月日标准控件，新建默认当天；打印为「月、日不补零」。</div>
                                 <?php endif; ?>
-                                <div class="zw-doc-muted">会打印在落款处。留空则沿用「发文日期」（台账回退）。</div>
+                                <div class="tco-doc-muted">会打印在落款处。留空则沿用「发文日期」（台账回退）。</div>
                             </div>
-                            <div class="zw-doc-field is-half">
-                                <label>发文日期 <span class="zw-adm-badge is-on">台账 + 版记</span></label>
+                            <div class="tco-doc-field is-half">
+                                <label>发文日期 <span class="tco-badge is-on">台账 + 版记</span></label>
                                 <?php if ($doc) : ?>
                                     <input type="date" readonly value="<?php echo esc_attr((string) $doc['issue_date']); ?>">
-                                    <div class="zw-doc-muted">台账字段，且作为版记「<strong>印发日期</strong>」的真值源；编辑正文时不修改，如需变更请在「我的发文」处理。</div>
+                                    <div class="tco-doc-muted">台账字段，且作为版记「<strong>印发日期</strong>」的真值源；编辑正文时不修改，如需变更请在「我的发文」处理。</div>
                                 <?php else : ?>
                                     <input type="date" name="doc_issue_date" id="zwc-issue-date" value="">
-                                    <div class="zw-doc-muted">
+                                    <div class="tco-doc-muted">
                                         台账 / 流转用，并作为版记「<strong>印发日期</strong>」的真值源，<strong>不影响列表排序</strong>；
                                         <span id="zwc-copy-date-tip">成文日期变化会<b>自动同步</b>到本栏；也可用下方按钮把本栏带入成文日期（覆盖）。</span><br>
                                         <button type="button" class="button button-small" id="zwc-copy-date">同发文日期带入成文日期</button>
@@ -1791,8 +1791,8 @@ if (!function_exists('zw_doc_render_composer_page')) {
                             </div><!-- /.zwc-fields -->
                         </section>
 
-                        <section class="zw-doc-card zwc-panel" data-zw-step="2">
-                            <h2><span class="zwc-step">第 2 步</span>正文（分块撰写）<span class="zw-adm-badge is-on">影响版式</span></h2>
+                        <section class="tco-doc-card zwc-panel" data-zw-step="2">
+                            <h2><span class="zwc-step">第 2 步</span>正文（分块撰写）<span class="tco-badge is-on">影响版式</span></h2>
                             <div class="zwc-hint">
                                 只写纯文本，<strong>不要贴 HTML</strong>；层次序数<strong>不用手写</strong> —— 选「一级标题」后系统按「一、」「（一）」「1.」「（1）」<strong>自动生成并跨页连续编号</strong>。
                             </div>
@@ -1810,7 +1810,7 @@ if (!function_exists('zw_doc_render_composer_page')) {
                                 <summary>导入正文（批量粘贴 / 上传 Word）</summary>
                                 <div class="zwc-paste">
                                     <label for="zwc-paste"><strong>批量粘贴（整篇正文）</strong></label>
-                                    <p class="zw-doc-muted" style="margin:4px 0 8px">
+                                    <p class="tco-doc-muted" style="margin:4px 0 8px">
                                         本地已排好版？把<strong>正文整篇</strong>粘到这里，点「智能拆分」：按段落自动分块，
                                         并识别「一、/（一）/1./（1）」映射为对应层级；<strong>你手写的序数会被剥掉，由系统重新编号</strong>
                                         （保证跨页连续、增删段落不乱号）。标题、主送机关、落款请在<strong>第 1 步</strong>填写。
@@ -1819,11 +1819,11 @@ if (!function_exists('zw_doc_render_composer_page')) {
                                     <p style="margin:8px 0 0">
                                         <button type="button" class="button button-primary" onclick="zwcSplitPaste('replace')">智能拆分并替换正文</button>
                                         <button type="button" class="button" onclick="zwcSplitPaste('append')">追加到现有正文</button>
-                                        <span id="zwc-paste-msg" class="zw-doc-muted"></span>
+                                        <span id="zwc-paste-msg" class="tco-doc-muted"></span>
                                     </p>
                                     <hr style="margin:14px 0">
                                     <label for="zwc-docx"><strong>或上传 Word 文档（.docx）导入</strong></label>
-                                    <p class="zw-doc-muted" style="margin:4px 0 8px">
+                                    <p class="tco-doc-muted" style="margin:4px 0 8px">
                                         本地已有 Word 版公文？直接上传 <code>.docx</code>：系统按 <strong>Word 标题样式 / 大纲级别 /
                                         文本层次序数 / 编号列表</strong> 判定层级，并剥离手写序数由系统重新编号。
                                         <strong>表格与图片不会导入</strong>（会如实告知数量；请作为附件单独上传）。
@@ -1832,7 +1832,7 @@ if (!function_exists('zw_doc_render_composer_page')) {
                                     <p style="margin:8px 0 0">
                                         <button type="button" class="button button-primary" onclick="zwcImportDocx('replace')">导入并替换正文</button>
                                         <button type="button" class="button" onclick="zwcImportDocx('append')">追加到现有正文</button>
-                                        <span id="zwc-docx-msg" class="zw-doc-muted"></span>
+                                        <span id="zwc-docx-msg" class="tco-doc-muted"></span>
                                     </p>
                                 </div>
                             </details>
@@ -1841,7 +1841,7 @@ if (!function_exists('zw_doc_render_composer_page')) {
                             <!-- TASK-1633（TASK-1579 P1-6 第四批）：本表为表单版式表（正文段编辑器），
                                  落 canonical 横滑包裹不改任何字段名 / 提交形状；规则由本页 :1189 的
                                  zw_doc_admin_ui_style()（本模块唯一出处）提供 ⇒ 本页不新增 <style>。 -->
-                            <div class="zw-adm-table-wrap">
+                            <div class="tco-table-wrap">
                             <table class="zwc-blocks" id="zwc-blocks">
                                 <tbody>
                                 <?php foreach ($blocks as $index => $block) : ?>
@@ -1869,12 +1869,12 @@ if (!function_exists('zw_doc_render_composer_page')) {
                                     <button type="button" class="button" onclick="zwcAdd('<?php echo esc_js($key); ?>')">+ <?php echo esc_html($label); ?></button>
                                 <?php endforeach; ?>
                             </p>
-                            <p class="zw-doc-muted">
+                            <p class="tco-doc-muted">
                                 上限：单段 5000 字、全文 30000 字、最多 500 段（超出会拒绝保存并给出原因）。
                             </p>
                             <?php
                             // TASK-1363（用户指令）：「公文附件」从第 4 步移到**正文撰写下方**，与「附件说明」（从第 1 步移入）
-                            // 合并为**独立区块**；区块标题与徽标沿用「公文要素」的分组卡范式（`.zwc-section-head` + `.zwc-group-t` + `.zw-adm-badge`）。
+                            // 合并为**独立区块**；区块标题与徽标沿用「公文要素」的分组卡范式（`.zwc-section-head` + `.zwc-group-t` + `.tco-badge`）。
                             // ① 字段名**一律不变**（`zwc_attach_note` / `zw_doc_attachments`）⇒ POST 契约、渲染与导出两通道零变化；
                             // ② 附件上传统一走 SPEC-85 canonical `zw_control_file_upload()`（点击选择 + 拖拽），**不新增上传通路**；
                             // ③ 编辑态附件仍按 TASK-1350 口径**只读报数**（不放出输入框）。
@@ -1884,18 +1884,18 @@ if (!function_exists('zw_doc_render_composer_page')) {
                             }
                             ?>
                             <section class="zwc-section">
-                                <div class="zwc-section-head zwc-group" data-zwc-section-head="attach"><span class="zwc-group-t">附件</span><span class="zw-adm-badge is-on">附件说明·上纸面</span><span class="zw-adm-badge">附件文件·仅台账</span></div>
+                                <div class="zwc-section-head zwc-group" data-zwc-section-head="attach"><span class="zwc-group-t">附件</span><span class="tco-badge is-on">附件说明·上纸面</span><span class="tco-badge">附件文件·仅台账</span></div>
                                 <div class="zwc-section-body">
-                                    <div class="zw-doc-field is-wide">
+                                    <div class="tco-doc-field is-wide">
                                         <label>附件说明（每行一条，名称后不加标点）</label>
                                         <textarea name="zwc_attach_note" rows="2"><?php echo esc_textarea(implode("\n", (array) $body['meta']['attach_note'])); ?></textarea>
-                                        <div class="zw-doc-muted">出现在<strong>正文下空一行、左空二字「附件：」</strong>，且<strong>必须排在落款之前</strong>（国标口径）。</div>
+                                        <div class="tco-doc-muted">出现在<strong>正文下空一行、左空二字「附件：」</strong>，且<strong>必须排在落款之前</strong>（国标口径）。</div>
                                     </div>
-                                    <div class="zw-doc-field is-wide">
+                                    <div class="tco-doc-field is-wide">
                                         <label>公文附件</label>
                                         <?php
                                         echo zw_control_file_upload(array(
-                                            'id'         => 'zw-doc-attach',
+                                            'id'         => 'tco-doc-attach',
                                             'name'       => 'zw_doc_attachments',
                                             'accept'     => '.doc,.docx,.pdf,.xls,.xlsx,.zip,.jpg,.jpeg,.png',
                                             'multiple'   => true,
@@ -1909,7 +1909,7 @@ if (!function_exists('zw_doc_render_composer_page')) {
                                         ));
                                         ?>
                                         <?php if (!$doc) : ?>
-                                            <div class="zw-doc-muted">附件<strong>仅存档、不出现在公文纸面</strong>；表单提交时统一上传，请与「附件说明」中的条目名称保持一致。</div>
+                                            <div class="tco-doc-muted">附件<strong>仅存档、不出现在公文纸面</strong>；表单提交时统一上传，请与「附件说明」中的条目名称保持一致。</div>
                                         <?php endif; ?>
                                     </div>
                                 </div><!-- /.zwc-section-body -->
@@ -1917,45 +1917,45 @@ if (!function_exists('zw_doc_render_composer_page')) {
                             <?php
                             // TASK-1365（用户指令）：「页码」从**第 3 步「版记与页码」**移到**第 2 步「正文撰写」下方**、
                             // 且位于上一条「附件」区块**之下**，成为独立区块；区块标记沿用公文要素分组卡范式
-                            // （`.zwc-section-head.zwc-group` + `.zwc-group-t` + `.zw-adm-badge`）。
+                            // （`.zwc-section-head.zwc-group` + `.zwc-group-t` + `.tco-badge`）。
                             // **业务逻辑一律不变**：字段名 `zwc_page_mode`、取值集合（standard/center/none）、默认值
                             // （`$page_mode` 解析自 `zwc_page_mode`，默认 standard）、服务端处理与页码渲染**零改动**。
                             ?>
                             <section class="zwc-section">
-                                <div class="zwc-section-head zwc-group" data-zwc-section-head="pageno"><span class="zwc-group-t">页码</span><span class="zw-adm-badge is-on">出现在文末</span></div>
+                                <div class="zwc-section-head zwc-group" data-zwc-section-head="pageno"><span class="zwc-group-t">页码</span><span class="tco-badge is-on">出现在文末</span></div>
                                 <div class="zwc-section-body">
-                                    <div class="zw-doc-field is-half">
+                                    <div class="tco-doc-field is-half">
                                         <label>页码</label>
                                         <select name="zwc_page_mode" style="max-width:240px">
                                             <option value="standard"<?php selected($page_mode, 'standard'); ?>>标准（单页居右、双页居左）</option>
                                             <option value="center"<?php selected($page_mode, 'center'); ?>>居中（— 1 —）</option>
                                             <option value="none"<?php selected($page_mode, 'none'); ?>>不显示</option>
                                         </select>
-                                        <div class="zw-doc-muted">标准：<strong>单页页码居右、双页居左</strong>；居中为「— 1 —」；「不显示」则不编页码。</div>
+                                        <div class="tco-doc-muted">标准：<strong>单页页码居右、双页居左</strong>；居中为「— 1 —」；「不显示」则不编页码。</div>
                                     </div>
                                 </div><!-- /.zwc-section-body -->
                             </section>
                         </section>
 
-                        <section class="zw-doc-card zwc-panel" data-zw-step="3">
-                            <h2><span class="zwc-step">第 3 步</span>公文流转<span class="zw-adm-badge is-on">版记·出现在文末</span><span class="zw-adm-badge">流转·仅存档</span></h2>
+                        <section class="tco-doc-card zwc-panel" data-zw-step="3">
+                            <h2><span class="zwc-step">第 3 步</span>公文流转<span class="tco-badge is-on">版记·出现在文末</span><span class="tco-badge">流转·仅存档</span></h2>
                             <div class="zwc-fields is-2">
                             <?php // TASK-1309：本步无分组标题，字段统一进 .zwc-section-body.is-flat（零内边距/零行距变化 ⇒ 版面与改造前一致），
                                   // 只为满足「字段一律有自包含容器、不直接挂在 .zwc-fields 下」的同一条结构口径 ?>
                             <div class="zwc-section-body is-flat">
-                            <div class="zw-doc-field">
+                            <div class="tco-doc-field">
                                 <label>抄送机关（版记）</label>
                                 <input type="text" name="zwc_cc" maxlength="200" value="<?php echo esc_attr((string) $body['meta']['cc']); ?>">
                             </div>
-                            <div class="zw-doc-field">
-                                <label>印发机关 <span class="zw-adm-badge is-on">版记·随发文部门</span> <span class="zw-adm-badge">只读回显</span></label>
+                            <div class="tco-doc-field">
+                                <label>印发机关 <span class="tco-badge is-on">版记·随发文部门</span> <span class="tco-badge">只读回显</span></label>
                                 <input type="text" name="zwc_print_org" id="zwc-print-org" maxlength="60" readonly value="<?php echo esc_attr((string) $record_print['print_org']); ?>">
-                                <div class="zw-doc-muted">以公文要素为唯一真值源，自动取「<strong>发文部门</strong>」；存量已保存的印发机关保持不变。</div>
+                                <div class="tco-doc-muted">以公文要素为唯一真值源，自动取「<strong>发文部门</strong>」；存量已保存的印发机关保持不变。</div>
                             </div>
-                            <div class="zw-doc-field">
-                                <label>印发日期 <span class="zw-adm-badge is-on">版记·随发文日期</span> <span class="zw-adm-badge">只读回显</span></label>
+                            <div class="tco-doc-field">
+                                <label>印发日期 <span class="tco-badge is-on">版记·随发文日期</span> <span class="tco-badge">只读回显</span></label>
                                 <input type="text" name="zwc_print_date" id="zwc-print-date" maxlength="30" readonly value="<?php echo esc_attr((string) $record_print['print_date']); ?>">
-                                <div class="zw-doc-muted">以公文要素为唯一真值源，自动取「<strong>发文日期</strong>」（月、日不补零）。</div>
+                                <div class="tco-doc-muted">以公文要素为唯一真值源，自动取「<strong>发文日期</strong>」（月、日不补零）。</div>
                             </div>
                             <?php // TASK-1365（用户指令）：「页码」已移到**第 2 步「正文撰写」下方**（「附件」区块之下）的独立区块；本步只保留版记字段。 ?>
                             <?php
@@ -1987,7 +1987,7 @@ if (!function_exists('zw_doc_render_composer_page')) {
                             }
                             ?>
                             <?php if (!$doc || $flow_editable) : ?>
-                            <div class="zw-doc-field is-half">
+                            <div class="tco-doc-field is-half">
                                 <label>审核人<?php echo $flow_editable ? ' *' : ''; ?></label>
                                 <select name="doc_reviewer_id" id="zwc-doc-reviewer"<?php echo $flow_editable ? ' required' : ''; ?>>
                                     <option value="">请选择</option>
@@ -2002,12 +2002,12 @@ if (!function_exists('zw_doc_render_composer_page')) {
                                     <?php endforeach; ?>
                                 </select>
                                 <?php if ($doc) : ?>
-                                    <div class="zw-doc-muted"><?php echo esc_html(zw_doc_reviewer_pool_note($flow)); ?>改派后由<strong>新审核人</strong>放行；被换下的原审核人保留查看权限（只读）。不能选择自己，也不能与分管领导为同一人。</div>
+                                    <div class="tco-doc-muted"><?php echo esc_html(zw_doc_reviewer_pool_note($flow)); ?>改派后由<strong>新审核人</strong>放行；被换下的原审核人保留查看权限（只读）。不能选择自己，也不能与分管领导为同一人。</div>
                                 <?php else : ?>
-                                    <div class="zw-doc-muted"><?php echo esc_html(zw_doc_reviewer_pool_note($flow)); ?>必填；不能选择自己，也不能与分管领导为同一人。「保存草稿」与「提交审核」都会校验。</div>
+                                    <div class="tco-doc-muted"><?php echo esc_html(zw_doc_reviewer_pool_note($flow)); ?>必填；不能选择自己，也不能与分管领导为同一人。「保存草稿」与「提交审核」都会校验。</div>
                                 <?php endif; ?>
                             </div>
-                            <div class="zw-doc-field is-half">
+                            <div class="tco-doc-field is-half">
                                 <label>抄送人员（仅流转，不出现在公文上）</label>
                                 <?php if (function_exists('zw_control_search_select')) : ?>
                                     <?php zw_control_search_select(array(
@@ -2027,9 +2027,9 @@ if (!function_exists('zw_doc_render_composer_page')) {
                                         <?php endforeach; ?>
                                     </select>
                                 <?php endif; ?>
-                                <div class="zw-doc-muted">可多选；不能与审核人重复（重复项会被自动忽略）。</div>
+                                <div class="tco-doc-muted">可多选；不能与审核人重复（重复项会被自动忽略）。</div>
                             </div>
-                            <div class="zw-doc-field is-half">
+                            <div class="tco-doc-field is-half">
                                 <label>分管领导</label>
                                 <select name="doc_leader_name" id="zwc-doc-leader">
                                     <option value="">请选择</option>
@@ -2042,19 +2042,19 @@ if (!function_exists('zw_doc_render_composer_page')) {
                                 </select>
                             </div>
                             <?php if ($doc && $flow_editable) : ?>
-                            <div class="zw-doc-field is-wide">
+                            <div class="tco-doc-field is-wide">
                                 <label>流转变更说明（可选，随流转记录留痕）</label>
                                 <input type="text" name="zw_doc_flow_reason" maxlength="200" placeholder="如：原审核人已调岗，改派给现任负责人">
                             </div>
-                            <div class="zw-doc-field is-wide">
+                            <div class="tco-doc-field is-wide">
                                 <?php // 独立提交键 `zw_doc_flow_action`：只保存本步流转字段（正文由「保存正文」负责），服务端分发见 doc-bootstrap.php ?>
                                 <button type="submit" class="button button-primary" name="zw_doc_flow_action" value="save">保存流转字段</button>
-                                <span class="zw-doc-muted">只保存本步的<strong>审核人 / 抄送人 / 分管领导 / 备注</strong>，不保存正文；每次变更逐字段写入流转记录（谁、何时、从谁改成谁）。</span>
+                                <span class="tco-doc-muted">只保存本步的<strong>审核人 / 抄送人 / 分管领导 / 备注</strong>，不保存正文；每次变更逐字段写入流转记录（谁、何时、从谁改成谁）。</span>
                             </div>
                             <?php endif; ?>
                             <?php zw_doc_leader_reviewer_sync_script('zwc-doc-leader', 'zwc-doc-reviewer'); ?>
                             <?php endif; // /流转区门控 ?>
-                            <div class="zw-doc-field is-wide">
+                            <div class="tco-doc-field is-wide">
                                 <label>备注（历史发文类型）</label>
                                 <textarea name="doc_remark" rows="2" maxlength="255"><?php echo esc_textarea($doc ? (string) $doc['remark'] : ''); ?></textarea>
                             </div>
@@ -2077,7 +2077,7 @@ if (!function_exists('zw_doc_render_composer_page')) {
                             <?php endif; ?>
                         </div>
                         <?php if ($doc) : ?>
-                            <p class="zw-doc-muted">正文与流转字段<strong>分开保存</strong>：本行「保存正文」只写正文；<strong>审核人 / 抄送人 / 分管领导 / 备注</strong>在第 4 步用「保存流转字段」提交。审核与用印流程按原有入口进行。</p>
+                            <p class="tco-doc-muted">正文与流转字段<strong>分开保存</strong>：本行「保存正文」只写正文；<strong>审核人 / 抄送人 / 分管领导 / 备注</strong>在第 4 步用「保存流转字段」提交。审核与用印流程按原有入口进行。</p>
                         <?php endif; ?>
                     </div>
 
@@ -2092,13 +2092,13 @@ if (!function_exists('zw_doc_render_composer_page')) {
                             ?>
                             <button type="submit" class="button" name="zw_doc_preview" value="1" formaction="<?php echo esc_url(zw_doc_composer_preview_url()); ?>" formtarget="_blank" formmethod="post">预览当前内容</button>
                         </p>
-                        <p class="zw-doc-muted" style="max-width:420px">
+                        <p class="tco-doc-muted" style="max-width:420px">
                             预览使用与打印/DOCX <strong>同一个渲染器</strong>，按当前输入内容渲染，<strong>不保存、不占号</strong>。
                             下方预览会**随输入自动更新**（停手 0.9 秒后），也可手动刷新。
                         </p>
                         <p>
                             <button type="button" class="button button-small" id="zwc-preview-refresh">刷新预览</button>
-                            <span class="zw-doc-muted" id="zwc-preview-state" style="font-size:12px;margin-left:8px"></span>
+                            <span class="tco-doc-muted" id="zwc-preview-state" style="font-size:12px;margin-left:8px"></span>
                         </p>
                         <?php
                         // TASK-2014：与「公文版式」同源的**内嵌等比预览**（整页缩放、不裁切、固定面板）。
@@ -2877,7 +2877,7 @@ if (!function_exists('zw_doc_render_composer_page')) {
                         var allMiss = Array.prototype.slice.call(document.querySelectorAll('#zwc-form [required]')).filter(function (f) { return !String(f.value || '').trim(); });
                         var prefix = hint.getAttribute('data-zw-prefix') || '';
                         hint.textContent = allMiss.length
-                            ? (prefix + '当前还有 ' + allMiss.length + ' 项必填（' + allMiss.map(function (f) { var l = f.closest('.zw-doc-field'); var s = l ? l.querySelector('label') : null; return s ? s.textContent.replace(/\s*\*\s*$/, '') : '必填项'; }).join('、') + '），保存时会自动跳到对应步骤。')
+                            ? (prefix + '当前还有 ' + allMiss.length + ' 项必填（' + allMiss.map(function (f) { var l = f.closest('.tco-doc-field'); var s = l ? l.querySelector('label') : null; return s ? s.textContent.replace(/\s*\*\s*$/, '') : '必填项'; }).join('、') + '），保存时会自动跳到对应步骤。')
                             : (prefix + '必填项已全部填写。');
                     }
                 }
@@ -2966,7 +2966,7 @@ body{overflow-y:auto;overflow-x:hidden;}
 #zw-pdf-view .zw-pdf-page{position:relative;margin:0 auto 14px;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.18);}
 #zw-pdf-view .zw-pdf-page > *{transform-origin:top left;position:absolute;top:0;left:0;}
 /* 渲染器的「排版预览说明」块属出件免责说明，内嵌预览只看版式（出件仍完整保留）。 */
-#zw-pdf-view .zw-doc-notice{display:none;}
+#zw-pdf-view .tco-doc-notice{display:none;}
 </style>
 <script>
 (function(){
@@ -2978,7 +2978,7 @@ body{overflow-y:auto;overflow-x:hidden;}
     if (view) { return view; }
     view = document.createElement('div');
     view.id = 'zw-pdf-view';
-    var sheets = Array.prototype.slice.call(document.querySelectorAll('.zw-doc-sheet'));
+    var sheets = Array.prototype.slice.call(document.querySelectorAll('.tco-doc-sheet'));
     document.body.insertBefore(view, document.body.firstChild);
     if (!sheets.length) {
       var only = document.createElement('div');

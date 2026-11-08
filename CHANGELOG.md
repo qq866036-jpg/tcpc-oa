@@ -191,6 +191,24 @@
   - 统计页横条表套 canonical 容器（规则仍由收文台账页 `zw_receipt_admin_ui_page_open()` 透传）；
   - 零功能变更：不改列/列宽/取数/权限/路由/字段名与提交形状。
 
+## [0.1.26] - 2026-11-09
+
+### Changed
+
+- **卫星仓后台 UI 全量独立（OA-2491 / 主题铁律 32 · CHG-466）**：用户 2026-11-09 拍板「独立仓用完全独立的
+  样式 ui js」，本次把后台 UI 从主题命名空间整体迁到本仓 `tco-*`：
+  - 类名/选择器/ID/CSS 变量全量改名（`zw-adm-*`→`tco-*`、`zw-doc-*`→`tco-doc-*`、`zw-org-*`→`tco-org-*`、
+    `zw-sec-*`→`tco-sec-*`、`zw-fc-*`→`tco-fc-*`、`zw-receipt-*`→`tco-receipt-*`、`zw-policy-*`→`tco-policy-*`、
+    `zw-secretariat-*`→`tco-secretariat-*`），双写别名一并去重；
+  - 新增 `assets/css/oa-admin.css`（令牌来源注记 + `var(--tco-*, <令牌兜底>)`，零裸色值）与
+    `assets/js/oa-admin.js`（宽表兜底包裹/ready 标记），本仓注册 enqueue（仅本仓后台页）；
+  - 新增 `includes/ui/ui-tokens.php` + `includes/ui/ui-bootstrap.php`：本仓自有后台壳 body class、
+    宽表横滑、触屏热区、徽章、三态令牌的唯一出处；**不再调用**主题 `zw_adm_ui_*` / `zw_mc_adm_*` /
+    `zw_mc_adm_is_screen`；
+  - **菜单 slug 保持稳定**（主题 RBAC 功能 ID 与书签依赖），页面类名经 `*_page_classes()` /
+    `*_page_slug_map()` 映射到 `tco-*`；契约新增 §UI-1，差异登记在主题 `docs/ops/satellite-ui-registry.yml`。
+  - 零功能面改动：不改取数/权限/路由/字段名/提交形状。
+
 ## [Unreleased]
 
 ### Added

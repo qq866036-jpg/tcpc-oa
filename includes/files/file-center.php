@@ -11,6 +11,11 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// OA-2491：本页输出自有宽表横滑/触屏块；单测直接 require 本文件时也要保证助手在场。
+if (!function_exists('tco_ui_table_wrap_css')) {
+    require_once dirname(__DIR__) . '/ui/ui-tokens.php';
+}
+
 if (!function_exists('zw_file_center_can_manage')) {
     function zw_file_center_can_manage() {
         return function_exists('current_user_can') && current_user_can('manage_options');
@@ -332,7 +337,7 @@ if (!function_exists('zw_file_center_query_files')) {
 
 if (!function_exists('zw_file_center_render_empty')) {
     function zw_file_center_render_empty($text = '暂无文件') {
-        return '<div class="zw-fc-empty"><span class="ceofont ceoicon-folder-open-line" aria-hidden="true"></span><p>' . esc_html($text) . '</p></div>';
+        return '<div class="tco-fc-empty"><span class="ceofont ceoicon-folder-open-line" aria-hidden="true"></span><p>' . esc_html($text) . '</p></div>';
     }
 }
 
@@ -352,12 +357,12 @@ if (!function_exists('zw_file_center_render_view_toggle')) {
         if (!isset($modes[$current])) {
             $current = 'grid';
         }
-        $html = '<div class="zw-fc-view" role="group" aria-label="浏览方式">';
+        $html = '<div class="tco-fc-view" role="group" aria-label="浏览方式">';
         foreach ($modes as $key => $mode) {
             $args = zw_file_center_state_args($state);
             $args['fc_view'] = $key;
             $active = ($current === $key);
-            $html .= '<a class="zw-fc-view-btn' . ($active ? ' is-active' : '') . '"'
+            $html .= '<a class="tco-fc-view-btn' . ($active ? ' is-active' : '') . '"'
                 . ' href="' . esc_url(zw_file_center_url($args)) . '"'
                 . ' aria-pressed="' . ($active ? 'true' : 'false') . '"'
                 . ' aria-label="' . esc_attr($active ? ('当前：' . $mode['label'] . '视图') : ('切换为' . $mode['label'] . '视图')) . '"'
@@ -450,14 +455,14 @@ if (!function_exists('zw_file_center_file_card')) {
         $preview_link = function_exists('zw_control_file_open_link')
             ? zw_control_file_open_link(array_merge($open_args, array(
                 'content'    => $thumb,
-                'class'      => 'zw-fc-card-preview',
+                'class'      => 'tco-fc-card-preview',
                 'aria_label' => '在线浏览：' . $title,
             )))
-            : '<span class="zw-fc-card-preview">' . $thumb . '</span>';
+            : '<span class="tco-fc-card-preview">' . $thumb . '</span>';
         $title_link = function_exists('zw_control_file_open_link')
             ? zw_control_file_open_link(array_merge($open_args, array(
                 'icon_size' => '',
-                'class'     => 'zw-fc-card-title-link',
+                'class'     => 'tco-fc-card-title-link',
             )))
             : esc_html($title);
         // TASK-2008：下载按钮只走 canonical（无兜底第二套；`bootstrap.php` 恒被 require）。
@@ -470,20 +475,20 @@ if (!function_exists('zw_file_center_file_card')) {
         ));
         ob_start();
         ?>
-        <div class="zw-fc-card">
+        <div class="tco-fc-card">
             <?php echo $preview_link; // phpcs:ignore WordPress.Security.EscapeOutput -- canonical 控件自带转义 ?>
-            <div class="zw-fc-card-body">
-                <div class="zw-fc-card-title" title="<?php echo esc_attr($title); ?>"><?php echo $title_link; // phpcs:ignore WordPress.Security.EscapeOutput -- canonical 控件自带转义 ?></div>
-                <div class="zw-fc-card-meta">
+            <div class="tco-fc-card-body">
+                <div class="tco-fc-card-title" title="<?php echo esc_attr($title); ?>"><?php echo $title_link; // phpcs:ignore WordPress.Security.EscapeOutput -- canonical 控件自带转义 ?></div>
+                <div class="tco-fc-card-meta">
                     <span><?php echo esc_html(zw_file_center_kind_label($kind)); ?></span>
                     <span><?php echo esc_html($size); ?></span>
                 </div>
                 <?php if ($branchId > 0) : ?>
-                    <div class="zw-fc-card-meta"><span><?php echo esc_html(zw_file_center_branch_title($branchId)); ?></span></div>
+                    <div class="tco-fc-card-meta"><span><?php echo esc_html(zw_file_center_branch_title($branchId)); ?></span></div>
                 <?php endif; ?>
             </div>
-            <div class="zw-fc-card-actions">
-                <span class="zw-fc-actions-main">
+            <div class="tco-fc-card-actions">
+                <span class="tco-fc-actions-main">
                     <?php echo $download_button; // phpcs:ignore WordPress.Security.EscapeOutput -- canonical 控件自带转义 ?>
                 </span>
                 <?php if (in_array(get_post_meta($file_id, 'zw_file_scope', true), array('branch', 'branch_import_source'), true)) : ?>
@@ -523,8 +528,8 @@ if (!function_exists('zw_file_center_file_list_row')) {
             : '<span class="ceofont ceoicon-file-2-line" aria-hidden="true"></span>';
         $name_link = function_exists('zw_control_file_open_link')
             ? zw_control_file_open_link(array_merge($open_args, array(
-                'content'    => $icon . '<span class="zw-fc-list-name-t">' . esc_html($title) . '</span>',
-                'class'      => 'zw-fc-list-open',
+                'content'    => $icon . '<span class="tco-fc-list-name-t">' . esc_html($title) . '</span>',
+                'class'      => 'tco-fc-list-open',
                 'aria_label' => '在线浏览：' . $title,
             )))
             : esc_html($title);
@@ -540,12 +545,12 @@ if (!function_exists('zw_file_center_file_list_row')) {
         $uploaded = (string) $ctx['uploaded_at'] !== '' ? (string) $ctx['uploaded_at'] : '—';
         ob_start();
         ?>
-        <tr class="zw-fc-list-row">
-            <td class="zw-fc-list-name"><?php echo $name_link; // phpcs:ignore WordPress.Security.EscapeOutput -- canonical 控件自带转义 ?></td>
+        <tr class="tco-fc-list-row">
+            <td class="tco-fc-list-name"><?php echo $name_link; // phpcs:ignore WordPress.Security.EscapeOutput -- canonical 控件自带转义 ?></td>
             <td><?php echo esc_html(zw_file_center_kind_label((string) $ctx['kind'])); ?></td>
-            <td class="zw-fc-list-size"><?php echo esc_html((string) $ctx['size']); ?></td>
-            <td class="zw-fc-list-time"><?php echo esc_html($uploaded); ?></td>
-            <td class="zw-fc-list-actions"><?php echo $download; // phpcs:ignore WordPress.Security.EscapeOutput -- canonical 控件自带转义 ?></td>
+            <td class="tco-fc-list-size"><?php echo esc_html((string) $ctx['size']); ?></td>
+            <td class="tco-fc-list-time"><?php echo esc_html($uploaded); ?></td>
+            <td class="tco-fc-list-actions"><?php echo $download; // phpcs:ignore WordPress.Security.EscapeOutput -- canonical 控件自带转义 ?></td>
         </tr>
         <?php
         return (string) ob_get_clean();
@@ -567,8 +572,8 @@ if (!function_exists('zw_file_center_render_file_list')) {
             $rows .= zw_file_center_file_list_row(get_the_ID());
         }
         wp_reset_postdata();
-        return '<div class="zw-adm-table-wrap">'
-            . '<table class="widefat striped zw-fc-table zw-fc-list">'
+        return '<div class="tco-table-wrap">'
+            . '<table class="widefat striped tco-fc-table tco-fc-list">'
             . '<thead><tr><th scope="col">名称</th><th scope="col">类型</th><th scope="col">大小</th>'
             . '<th scope="col">上传时间</th><th scope="col">操作</th></tr></thead>'
             . '<tbody>' . $rows . '</tbody></table></div>';
@@ -585,14 +590,14 @@ if (!function_exists('zw_file_center_render_file_section')) {
         if (isset($levels[$cat])) { $label = (string) $levels[$cat]['label']; }
         if ($label === '') { $label = '全部文件'; }
         ?>
-        <div class="zw-fc-section-head">
+        <div class="tco-fc-section-head">
             <div>
-                <div class="zw-fc-breadcrumb">网盘文件 / <?php echo esc_html(zw_file_center_first_levels()[$space]['label'] ?? '全部文件'); ?> / <?php echo esc_html($label); ?></div>
+                <div class="tco-fc-breadcrumb">网盘文件 / <?php echo esc_html(zw_file_center_first_levels()[$space]['label'] ?? '全部文件'); ?> / <?php echo esc_html($label); ?></div>
                 <h2><?php echo esc_html($label); ?></h2>
             </div>
-            <div class="zw-fc-section-tools">
+            <div class="tco-fc-section-tools">
                 <?php echo zw_file_center_render_view_toggle($state); // phpcs:ignore WordPress.Security.EscapeOutput -- 控件自带转义 ?>
-                <form method="get" class="zw-fc-search">
+                <form method="get" class="tco-fc-search">
                     <input type="hidden" name="page" value="zw-org-files">
                     <input type="hidden" name="fc_space" value="<?php echo esc_attr($space); ?>">
                     <input type="hidden" name="fc_cat" value="<?php echo esc_attr($cat); ?>">
@@ -613,7 +618,7 @@ if (!function_exists('zw_file_center_render_file_section')) {
             echo zw_file_center_render_file_list($query, $state);
             echo zw_file_center_render_pagination($query, $state);
         } else {
-            echo '<div class="zw-fc-grid">';
+            echo '<div class="tco-fc-grid">';
             while ($query->have_posts()) {
                 $query->the_post();
                 echo zw_file_center_file_card(get_the_ID());
@@ -629,7 +634,7 @@ if (!function_exists('zw_file_center_render_pagination')) {
     function zw_file_center_render_pagination($query, $state) {
         $total = (int) $query->max_num_pages;
         if ($total <= 1) { return ''; }
-        $html = '<div class="zw-fc-pagination">';
+        $html = '<div class="tco-fc-pagination">';
         for ($i = 1; $i <= $total; $i++) {
             // TASK-2140：状态键必须映射成 `fc_*`（此前直接传 $state ⇒ 翻页丢失空间/分类/视图）。
             $args = zw_file_center_state_args($state);
@@ -647,7 +652,7 @@ if (!function_exists('zw_file_center_render_branch_upload_form')) {
         if (empty($branches)) { return; }
         $kindMap = array('dispatch' => '发文', 'receipt' => '收文', 'activity' => '活动报送');
         ?>
-        <div class="zw-fc-upload">
+        <div class="tco-fc-upload">
             <form method="post" enctype="multipart/form-data" action="<?php echo esc_url(admin_url('admin.php?page=zw-org-files')); ?>">
                 <?php wp_nonce_field('zw_fc_upload_branch'); ?>
                 <input type="hidden" name="zw_fc_action" value="upload_branch_file">
@@ -677,7 +682,7 @@ if (!function_exists('zw_file_center_render_branch_filter')) {
         $branches = zw_file_center_branches();
         if (empty($branches)) { return; }
         ?>
-        <form method="get" class="zw-fc-filter">
+        <form method="get" class="tco-fc-filter">
             <input type="hidden" name="page" value="zw-org-files">
             <input type="hidden" name="fc_space" value="<?php echo esc_attr($state['space']); ?>">
             <input type="hidden" name="fc_cat" value="<?php echo esc_attr($state['cat']); ?>">
@@ -702,9 +707,9 @@ if (!function_exists('zw_file_center_render_branch_member')) {
         if (!empty($state['branch'])) { $args['branch_id'] = (int) $state['branch']; }
         $batches = function_exists('zw_branch_member_import_get_batches') ? zw_branch_member_import_get_batches($args) : array();
         ?>
-        <div class="zw-fc-section-head">
+        <div class="tco-fc-section-head">
             <div>
-                <div class="zw-fc-breadcrumb">网盘文件 / 分支机构 / 会员资料 / 批量导入批次</div>
+                <div class="tco-fc-breadcrumb">网盘文件 / 分支机构 / 会员资料 / 批量导入批次</div>
                 <h2>批量导入批次</h2>
             </div>
         </div>
@@ -712,8 +717,8 @@ if (!function_exists('zw_file_center_render_branch_member')) {
         <?php if (empty($batches)) : ?>
             <?php echo zw_file_center_render_empty('暂无批量导入批次'); ?>
         <?php else : ?>
-            <div class="zw-adm-table-wrap">
-            <table class="widefat striped zw-fc-table">
+            <div class="tco-table-wrap">
+            <table class="widefat striped tco-fc-table">
                 <thead><tr><th>批次号</th><th>分支机构</th><th>会员级别</th><th>提交人</th><th>总人数</th><th>成功</th><th>失败</th><th>导入时间</th><th>状态</th><th>操作</th></tr></thead>
                 <tbody>
                 <?php foreach ($batches as $batch) :
@@ -767,21 +772,21 @@ if (!function_exists('zw_file_center_render_branch_member_batch')) {
         $apps = function_exists('zw_branch_member_import_get_batch_apps') ? zw_branch_member_import_get_batch_apps($batchId) : array();
         $backUrl = zw_file_center_url(array('fc_space' => 'branch', 'fc_cat' => 'member', 'fc_branch' => $branchId));
         ?>
-        <div class="zw-fc-section-head">
+        <div class="tco-fc-section-head">
             <div>
-                <div class="zw-fc-breadcrumb"><a href="<?php echo esc_url($backUrl); ?>">批量导入批次</a> / #<?php echo $batchId; ?></div>
+                <div class="tco-fc-breadcrumb"><a href="<?php echo esc_url($backUrl); ?>">批量导入批次</a> / #<?php echo $batchId; ?></div>
                 <h2><?php echo esc_html(zw_file_center_branch_title($branchId)); ?></h2>
-                <p class="zw-fc-muted"><?php echo esc_html(function_exists('zw_mc_level_display') ? zw_mc_level_display($level) : $level); ?> · 总 <?php echo $total; ?> 人 · 成功 <?php echo $success; ?> · 失败 <?php echo $failed; ?> · <?php echo esc_html(zw_file_center_status_label($status)); ?></p>
+                <p class="tco-fc-muted"><?php echo esc_html(function_exists('zw_mc_level_display') ? zw_mc_level_display($level) : $level); ?> · 总 <?php echo $total; ?> 人 · 成功 <?php echo $success; ?> · 失败 <?php echo $failed; ?> · <?php echo esc_html(zw_file_center_status_label($status)); ?></p>
             </div>
             <a class="button" href="<?php echo esc_url($backUrl); ?>">返回批次列表</a>
         </div>
         <?php zw_file_center_render_source_package($batchId, $state); ?>
-        <h3 class="zw-fc-subtitle">会员信息</h3>
+        <h3 class="tco-fc-subtitle">会员信息</h3>
         <?php if (empty($apps)) : ?>
             <?php echo zw_file_center_render_empty('该批次暂无会员信息'); ?>
         <?php else : ?>
-            <div class="zw-adm-table-wrap">
-            <table class="widefat striped zw-fc-table">
+            <div class="tco-table-wrap">
+            <table class="widefat striped tco-fc-table">
                 <thead><tr><th>姓名</th><th>身份证</th><th>手机号</th><th>会员类别</th><th>证件照</th><th>审核状态</th><th>制证 / 发货</th></tr></thead>
                 <tbody>
                 <?php foreach ($apps as $app) :
@@ -838,9 +843,9 @@ if (!function_exists('zw_file_center_render_source_package')) {
         $file = $fileId > 0 && function_exists('zw_org_files_file') ? zw_org_files_file($fileId) : array();
         $url = !empty($file['url']) ? (string) $file['url'] : '';
         ?>
-        <details class="zw-fc-source" open>
+        <details class="tco-fc-source" open>
             <summary>原始导入包（仅审计，保留 15 天）</summary>
-            <div class="zw-fc-source-body">
+            <div class="tco-fc-source-body">
                 <p>
                     <strong><?php echo esc_html($fileName !== '' ? $fileName : '原始导入包'); ?></strong><br>
                     大小：<?php echo esc_html(function_exists('zw_org_files_format_size') && $fileSize > 0 ? zw_org_files_format_size($fileSize) : '—'); ?> ·
@@ -885,8 +890,8 @@ if (!function_exists('zw_file_center_render')) {
             $state['cat'] = (string) array_key_first($second);
         }
         ?>
-        <div class="wrap zw-adm-org-wrap zw-org-wrap zw-fc-wrap">
-            <div class="zw-adm-org-head zw-org-head">
+        <div class="wrap tco-org-wrap tco-org-wrap tco-fc-wrap">
+            <div class="tco-org-head tco-org-head">
                 <h1>网盘文件</h1>
                 <p>统一文件中心：内部办公、分支机构、会员材料与制证归档；分支机构批量导入以会员信息和批次为主，原始导入包仅审计保留 15 天。</p>
             </div>
@@ -896,30 +901,30 @@ if (!function_exists('zw_file_center_render')) {
             <?php if (!empty($_GET['fc_err'])) : ?>
                 <div class="notice notice-error is-dismissible"><p><?php echo esc_html(sanitize_text_field(wp_unslash((string) $_GET['fc_err']))); ?></p></div>
             <?php endif; ?>
-            <div class="zw-fc-layout">
-                <aside class="zw-fc-nav">
-                    <div class="zw-fc-nav-title">文件空间</div>
+            <div class="tco-fc-layout">
+                <aside class="tco-fc-nav">
+                    <div class="tco-fc-nav-title">文件空间</div>
                     <?php foreach ($levels as $key => $level) :
                         $active = ($state['space'] === $key) ? ' is-active' : '';
                         ?>
-                        <a class="zw-fc-nav-item<?php echo esc_attr($active); ?>" href="<?php echo esc_url(zw_file_center_url(array('fc_space' => $key))); ?>">
+                        <a class="tco-fc-nav-item<?php echo esc_attr($active); ?>" href="<?php echo esc_url(zw_file_center_url(array('fc_space' => $key))); ?>">
                             <span class="ceofont <?php echo esc_attr($level['icon']); ?>" aria-hidden="true"></span>
                             <span><?php echo esc_html($level['label']); ?></span>
                         </a>
                     <?php endforeach; ?>
                 </aside>
-                <section class="zw-fc-mid">
-                    <div class="zw-fc-mid-title"><?php echo esc_html($levels[$state['space']]['label']); ?></div>
+                <section class="tco-fc-mid">
+                    <div class="tco-fc-mid-title"><?php echo esc_html($levels[$state['space']]['label']); ?></div>
                     <?php foreach ($second as $key => $item) :
                         $active = ((string) $state['cat'] === (string) $key) ? ' is-active' : '';
                         ?>
-                        <a class="zw-fc-mid-item<?php echo esc_attr($active); ?>" href="<?php echo esc_url(zw_file_center_url(array('fc_space' => $state['space'], 'fc_cat' => $key))); ?>">
+                        <a class="tco-fc-mid-item<?php echo esc_attr($active); ?>" href="<?php echo esc_url(zw_file_center_url(array('fc_space' => $state['space'], 'fc_cat' => $key))); ?>">
                             <span class="ceofont ceoicon-folder-line" aria-hidden="true"></span>
                             <span><?php echo esc_html($item['label']); ?></span>
                         </a>
                     <?php endforeach; ?>
                 </section>
-                <main class="zw-fc-main">
+                <main class="tco-fc-main">
                     <?php
                     if ($state['space'] === 'branch' && $state['cat'] === 'member') {
                         zw_file_center_render_branch_member($state);
@@ -931,75 +936,75 @@ if (!function_exists('zw_file_center_render')) {
             </div>
         </div>
         <style>
-        .zw-fc-wrap{max-width:none!important;margin-right:20px}
-        .zw-fc-layout{display:grid;grid-template-columns:200px 240px minmax(0,1fr);gap:16px;align-items:start}
-        .zw-fc-nav,.zw-fc-mid{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:10px;position:sticky;top:46px}
-        .zw-fc-nav-title,.zw-fc-mid-title{font-size:12px;color:#8a8f99;padding:6px 10px 8px}
-        .zw-fc-nav-item,.zw-fc-mid-item{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:8px;color:#333;text-decoration:none;font-size:13px}
-        @media(hover:hover){.zw-fc-nav-item:hover,.zw-fc-mid-item:hover{background:#f6f7f7;color:var(--primary-color,#d80505)}}
-        .zw-fc-nav-item.is-active,.zw-fc-mid-item.is-active{background:#fff2f2;color:var(--primary-color,#d80505);font-weight:600}
-        .zw-fc-main{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px;min-height:420px}
-        .zw-fc-section-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px}
-        .zw-fc-section-head h2{margin:4px 0 0;font-size:20px}
-        .zw-fc-breadcrumb{font-size:12px;color:#8a8f99}
-        .zw-fc-breadcrumb a{color:#8a8f99;text-decoration:none}
-        .zw-fc-search{display:flex;gap:6px}
-        .zw-fc-search input[type=search]{min-width:180px}
+        .tco-fc-wrap{max-width:none!important;margin-right:20px}
+        .tco-fc-layout{display:grid;grid-template-columns:200px 240px minmax(0,1fr);gap:16px;align-items:start}
+        .tco-fc-nav,.tco-fc-mid{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:10px;position:sticky;top:46px}
+        .tco-fc-nav-title,.tco-fc-mid-title{font-size:12px;color:#8a8f99;padding:6px 10px 8px}
+        .tco-fc-nav-item,.tco-fc-mid-item{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:8px;color:#333;text-decoration:none;font-size:13px}
+        @media(hover:hover){.tco-fc-nav-item:hover,.tco-fc-mid-item:hover{background:#f6f7f7;color:var(--primary-color,#d80505)}}
+        .tco-fc-nav-item.is-active,.tco-fc-mid-item.is-active{background:#fff2f2;color:var(--primary-color,#d80505);font-weight:600}
+        .tco-fc-main{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px;min-height:420px}
+        .tco-fc-section-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px}
+        .tco-fc-section-head h2{margin:4px 0 0;font-size:20px}
+        .tco-fc-breadcrumb{font-size:12px;color:#8a8f99}
+        .tco-fc-breadcrumb a{color:#8a8f99;text-decoration:none}
+        .tco-fc-search{display:flex;gap:6px}
+        .tco-fc-search input[type=search]{min-width:180px}
         /* TASK-2140：图标 / 列表切换（适老化 44px 热区 + 焦点可见；当前态不只靠颜色——aria-pressed + 高亮） */
-        .zw-fc-section-tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
-        .zw-fc-view{display:inline-flex;gap:6px;background:#f4f5f7;border:1px solid #e5e7eb;border-radius:10px;padding:3px}
-        .zw-fc-view-btn{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px;border-radius:8px;color:#4b5563;font-size:14px;line-height:1.2;text-decoration:none}
-        .zw-fc-view-btn .ceofont{font-size:18px}
-        .zw-fc-view-btn.is-active{background:#fff;color:var(--primary-color,#d80505);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
-        .zw-fc-view-btn:focus-visible{outline:3px solid var(--primary-color,#d80505);outline-offset:2px}
-        @media(hover:hover){.zw-fc-view-btn:not(.is-active):hover{background:#fff;color:#111827}}
+        .tco-fc-section-tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+        .tco-fc-view{display:inline-flex;gap:6px;background:#f4f5f7;border:1px solid #e5e7eb;border-radius:10px;padding:3px}
+        .tco-fc-view-btn{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px;border-radius:8px;color:#4b5563;font-size:14px;line-height:1.2;text-decoration:none}
+        .tco-fc-view-btn .ceofont{font-size:18px}
+        .tco-fc-view-btn.is-active{background:#fff;color:var(--primary-color,#d80505);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+        .tco-fc-view-btn:focus-visible{outline:3px solid var(--primary-color,#d80505);outline-offset:2px}
+        @media(hover:hover){.tco-fc-view-btn:not(.is-active):hover{background:#fff;color:#111827}}
         /* TASK-2140：列表视图（名称/图标 = 默认打开；下载只走显式按钮） */
-        .zw-fc-list td{vertical-align:middle;padding:10px}
-        .zw-fc-list-open{display:inline-flex;align-items:center;gap:8px;min-height:44px;max-width:100%;color:inherit;text-decoration:none}
-        .zw-fc-list-name-t{font-weight:600;font-size:14px;line-height:1.5;word-break:break-word}
-        .zw-fc-list-open:focus-visible{outline:3px solid var(--primary-color,#d80505);outline-offset:2px}
-        @media(hover:hover){.zw-fc-list-open:hover .zw-fc-list-name-t{color:var(--primary-color,#d80505);text-decoration:underline}}
+        .tco-fc-list td{vertical-align:middle;padding:10px}
+        .tco-fc-list-open{display:inline-flex;align-items:center;gap:8px;min-height:44px;max-width:100%;color:inherit;text-decoration:none}
+        .tco-fc-list-name-t{font-weight:600;font-size:14px;line-height:1.5;word-break:break-word}
+        .tco-fc-list-open:focus-visible{outline:3px solid var(--primary-color,#d80505);outline-offset:2px}
+        @media(hover:hover){.tco-fc-list-open:hover .tco-fc-list-name-t{color:var(--primary-color,#d80505);text-decoration:underline}}
         /* 元信息（大小 / 上传时间）取 14px：不低于是次 <14px 的告警线，也与后台表格既有字号一致。 */
-        .zw-fc-list-size,.zw-fc-list-time{color:#6b7280;font-size:14px;white-space:nowrap}
-        .zw-fc-list-actions{white-space:nowrap}
-        @media(max-width:900px){.zw-fc-view-btn{padding:0 10px}}
-        .zw-fc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
-        .zw-fc-card{border:1px solid #eceff3;border-radius:10px;overflow:hidden;background:#fff;display:flex;flex-direction:column}
-        .zw-fc-card-preview{height:120px;display:flex;align-items:center;justify-content:center;background:#f7f8fa;color:#c0c4cc;text-decoration:none}
+        .tco-fc-list-size,.tco-fc-list-time{color:#6b7280;font-size:14px;white-space:nowrap}
+        .tco-fc-list-actions{white-space:nowrap}
+        @media(max-width:900px){.tco-fc-view-btn{padding:0 10px}}
+        .tco-fc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+        .tco-fc-card{border:1px solid #eceff3;border-radius:10px;overflow:hidden;background:#fff;display:flex;flex-direction:column}
+        .tco-fc-card-preview{height:120px;display:flex;align-items:center;justify-content:center;background:#f7f8fa;color:#c0c4cc;text-decoration:none}
         /* TASK-2008：预览区与文件名都是「默认打开」触发器（a.zw-fo-link，由 canonical 输出）⇒ 覆盖其内联排布，
            让它铺满 120px 预览框。**只调排版，不改任何色值**（色仍取页面既有值）。 */
-        .zw-fc-card-preview.zw-fo-link,.zw-fc-card-preview.zw-fo-static{padding:0;margin:0;border-radius:0;justify-content:center;width:100%}
-        .zw-fc-card-title-link{padding:0;margin:0;max-width:100%;vertical-align:bottom}
-        .zw-fc-card-preview img{width:100%;height:100%;object-fit:cover}
-        .zw-fc-card-preview .ceofont{font-size:40px}
-        .zw-fc-card-body{padding:10px 10px 6px}
-        .zw-fc-card-title{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-        .zw-fc-card-meta{display:flex;justify-content:space-between;gap:6px;font-size:11px;color:#8a8f99;margin-top:5px}
-        .zw-fc-card-actions{display:flex;justify-content:space-between;gap:6px;padding:8px 10px 10px;margin-top:auto}
-        .zw-fc-actions-main{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-        .zw-fc-upload{background:#f8f9fb;border:1px solid #eceff3;border-radius:8px;padding:10px;margin-bottom:10px}
-        .zw-fc-upload form{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-        .zw-fc-filter{margin:0 0 12px}
-        .zw-fc-table td,.zw-fc-table th{vertical-align:middle}
-        .zw-fc-empty{text-align:center;color:#8a8f99;padding:60px 20px}
-        .zw-fc-empty .ceofont{font-size:38px;display:block;margin-bottom:8px;color:#c0c4cc}
-        .zw-fc-pagination{display:flex;gap:6px;flex-wrap:wrap;margin-top:16px}
-        .zw-fc-source{margin:12px 0 18px;border:1px solid #eceff3;border-radius:8px;background:#fbfcfd}
-        .zw-fc-source summary{cursor:pointer;padding:10px 12px;font-weight:600;font-size:13px}
-        .zw-fc-source-body{padding:0 12px 12px;font-size:12.5px;color:#555}
-        .zw-fc-muted{color:#8a8f99;font-size:12px}
-        .zw-fc-subtitle{margin:18px 0 8px}
-        @media(max-width:1200px){.zw-fc-layout{grid-template-columns:170px 210px minmax(0,1fr)}}
-        @media(max-width:900px){.zw-fc-layout{grid-template-columns:1fr}.zw-fc-nav,.zw-fc-mid{position:static}}
+        .tco-fc-card-preview.zw-fo-link,.tco-fc-card-preview.zw-fo-static{padding:0;margin:0;border-radius:0;justify-content:center;width:100%}
+        .tco-fc-card-title-link{padding:0;margin:0;max-width:100%;vertical-align:bottom}
+        .tco-fc-card-preview img{width:100%;height:100%;object-fit:cover}
+        .tco-fc-card-preview .ceofont{font-size:40px}
+        .tco-fc-card-body{padding:10px 10px 6px}
+        .tco-fc-card-title{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .tco-fc-card-meta{display:flex;justify-content:space-between;gap:6px;font-size:11px;color:#8a8f99;margin-top:5px}
+        .tco-fc-card-actions{display:flex;justify-content:space-between;gap:6px;padding:8px 10px 10px;margin-top:auto}
+        .tco-fc-actions-main{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+        .tco-fc-upload{background:#f8f9fb;border:1px solid #eceff3;border-radius:8px;padding:10px;margin-bottom:10px}
+        .tco-fc-upload form{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+        .tco-fc-filter{margin:0 0 12px}
+        .tco-fc-table td,.tco-fc-table th{vertical-align:middle}
+        .tco-fc-empty{text-align:center;color:#8a8f99;padding:60px 20px}
+        .tco-fc-empty .ceofont{font-size:38px;display:block;margin-bottom:8px;color:#c0c4cc}
+        .tco-fc-pagination{display:flex;gap:6px;flex-wrap:wrap;margin-top:16px}
+        .tco-fc-source{margin:12px 0 18px;border:1px solid #eceff3;border-radius:8px;background:#fbfcfd}
+        .tco-fc-source summary{cursor:pointer;padding:10px 12px;font-weight:600;font-size:13px}
+        .tco-fc-source-body{padding:0 12px 12px;font-size:12.5px;color:#555}
+        .tco-fc-muted{color:#8a8f99;font-size:12px}
+        .tco-fc-subtitle{margin:18px 0 8px}
+        @media(max-width:1200px){.tco-fc-layout{grid-template-columns:170px 210px minmax(0,1fr)}}
+        @media(max-width:900px){.tco-fc-layout{grid-template-columns:1fr}.tco-fc-nav,.tco-fc-mid{position:static}}
         <?php
         // TASK-1632（TASK-1579 §7 P1-6 余项）：宽表横滑包裹唯一出处＝canonical
-        // （inc/admin/admin-ui-tokens.php 的 zw_adm_ui_table_wrap_css()）。
+        // （includes/ui/ui-tokens.php 的 tco_ui_table_wrap_css()）。
         // 「网盘文件中心」不在会员域外壳作用域内 ⇒ 须在本页**既有**内联 <style> 内输出该 canonical 规则；
         // **未**新增全局 CSS 文件、**未**复制第二套声明。
-        echo zw_adm_ui_table_wrap_css();
+        echo tco_ui_table_wrap_css();
         // TASK-1637（P1-4 余项 / 用户拍板②）：本页不在会员域外壳作用域内 ⇒ 触屏块同由 canonical
         // 输出、`body` 作用域（规则仅 `@media(pointer:coarse)` 命中 ⇒ 桌面零视觉变更）。
-        echo function_exists('zw_adm_ui_touch_css') ? zw_adm_ui_touch_css('body') : '';
+        echo function_exists('tco_ui_touch_css') ? tco_ui_touch_css('body') : '';
         ?>
         </style>
         <?php

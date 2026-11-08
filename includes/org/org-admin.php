@@ -9,6 +9,11 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// OA-2491：本页输出自有宽表横滑/触屏块；单测直接 require 本文件时也要保证助手在场。
+if (!function_exists('tco_ui_table_wrap_css')) {
+    require_once dirname(__DIR__) . '/ui/ui-tokens.php';
+}
+
 if (!function_exists('is_admin') || (!is_admin() && !(defined('WP_CLI') && WP_CLI))) {
     return;
 }
@@ -210,30 +215,30 @@ if (!function_exists('zw_org_page_term_cycles')) {
         $cycles = function_exists('zw_term_cycles') ? zw_term_cycles() : array();
         $notice = isset($_GET['zw_notice']) ? sanitize_text_field(wp_unslash((string) $_GET['zw_notice'])) : '';
         ?>
-        <div class="wrap zw-adm-org-term-cycles zw-org-term-cycles">
+        <div class="wrap tco-org-term-cycles">
             <style>
             /* TASK-1646（TASK-1579 P2-1 批次 3 / SPEC-10 §1.9.3 第 2/3 项；机制出处 CHG-300）：
                下列旧类为**兼容别名** —— canonical 规则的选择器组**同时承载**新类与旧类，
                旧类的历史声明**原位保留**（声明体逐字节未改 ⇒ 零取值变化）；
                标记面同时携带新类与旧类（双写）。**双写一个发布周期内不得删除任何旧类**。
-               [已废弃 → 见 .zw-adm-org-term-cycles] 旧类 .zw-org-term-cycles */
-            .zw-adm-org-term-cycles .zwtc-card,.zw-org-term-cycles .zwtc-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;margin:16px 0}
-            .zw-adm-org-term-cycles .zwtc-card-head,.zw-org-term-cycles .zwtc-card-head{padding:10px 14px;border-bottom:1px solid #f0f1f3;background:#fafbfc;font-weight:600;color:#1d2327;border-radius:12px 12px 0 0}
-            .zw-adm-org-term-cycles .zwtc-card-body,.zw-org-term-cycles .zwtc-card-body{padding:14px}
-            .zw-adm-org-term-cycles .zwtc-tbl,.zw-org-term-cycles .zwtc-tbl{width:100%;border-collapse:collapse}
-            .zw-adm-org-term-cycles .zwtc-tbl th,.zw-org-term-cycles .zwtc-tbl th{text-align:left;font-weight:600;color:#50575e;font-size:12.5px;padding:8px 6px;border-bottom:1px solid #e5e7eb}
-            .zw-adm-org-term-cycles .zwtc-tbl td,.zw-org-term-cycles .zwtc-tbl td{padding:8px 6px;border-bottom:1px solid #f0f1f3;vertical-align:middle}
-            .zw-adm-org-term-cycles .zwtc-hint,.zw-org-term-cycles .zwtc-hint{margin:0 0 10px;padding:8px 10px;background:#fafbfc;border-left:3px solid var(--primary-color,#d80505);color:#50575e;font-size:12.5px;line-height:1.6}
-            .zw-adm-org-term-cycles .zwtc-muted,.zw-org-term-cycles .zwtc-muted{color:#8c8f94;font-size:12.5px}
+               [已废弃 → 见 .tco-org-term-cycles] 旧类 .tco-org-term-cycles */
+            .tco-org-term-cycles .zwtc-card,.tco-org-term-cycles .zwtc-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;margin:16px 0}
+            .tco-org-term-cycles .zwtc-card-head,.tco-org-term-cycles .zwtc-card-head{padding:10px 14px;border-bottom:1px solid #f0f1f3;background:#fafbfc;font-weight:600;color:#1d2327;border-radius:12px 12px 0 0}
+            .tco-org-term-cycles .zwtc-card-body,.tco-org-term-cycles .zwtc-card-body{padding:14px}
+            .tco-org-term-cycles .zwtc-tbl,.tco-org-term-cycles .zwtc-tbl{width:100%;border-collapse:collapse}
+            .tco-org-term-cycles .zwtc-tbl th,.tco-org-term-cycles .zwtc-tbl th{text-align:left;font-weight:600;color:#50575e;font-size:12.5px;padding:8px 6px;border-bottom:1px solid #e5e7eb}
+            .tco-org-term-cycles .zwtc-tbl td,.tco-org-term-cycles .zwtc-tbl td{padding:8px 6px;border-bottom:1px solid #f0f1f3;vertical-align:middle}
+            .tco-org-term-cycles .zwtc-hint,.tco-org-term-cycles .zwtc-hint{margin:0 0 10px;padding:8px 10px;background:#fafbfc;border-left:3px solid var(--primary-color,#d80505);color:#50575e;font-size:12.5px;line-height:1.6}
+            .tco-org-term-cycles .zwtc-muted,.tco-org-term-cycles .zwtc-muted{color:#8c8f94;font-size:12.5px}
             <?php
             // TASK-1632（TASK-1579 §7 P1-6 余项）：宽表横滑包裹唯一出处＝canonical
-            // （inc/admin/admin-ui-tokens.php 的 zw_adm_ui_table_wrap_css()）。
+            // （includes/ui/ui-tokens.php 的 tco_ui_table_wrap_css()）。
             // 「组织架构」域不在会员域外壳作用域内（外壳前缀判定 zw-mc / zw-member / zw-policy / zw-notify）
             // ⇒ 须在本页**既有**内联 <style> 内输出该 canonical 规则；**未**新增全局 CSS 文件、**未**复制第二套声明。
-            echo zw_adm_ui_table_wrap_css();
-            // TASK-1637（P1-4 余项 / 用户拍板②）：同域不继承 `.zw-adm-tcpc` ⇒ 以 `body` 作用域输出
-            // canonical 触屏块（唯一出处 `zw_adm_ui_touch_css()`；仅 `@media(pointer:coarse)` 命中）。
-            echo function_exists('zw_adm_ui_touch_css') ? zw_adm_ui_touch_css('body') : '';
+            echo tco_ui_table_wrap_css();
+            // TASK-1637（P1-4 余项 / 用户拍板②）：同域不继承 `.tco-tcpc` ⇒ 以 `body` 作用域输出
+            // canonical 触屏块（唯一出处 `tco_ui_touch_css()`；仅 `@media(pointer:coarse)` 命中）。
+            echo function_exists('tco_ui_touch_css') ? tco_ui_touch_css('body') : '';
             ?>
             </style>
             <h1>届次周期</h1>
@@ -254,7 +259,7 @@ if (!function_exists('zw_org_page_term_cycles')) {
                 <div class="zwtc-card">
                     <div class="zwtc-card-head">届次与任期</div>
                     <div class="zwtc-card-body">
-                        <div class="zw-adm-table-wrap">
+                        <div class="tco-table-wrap">
                         <table class="zwtc-tbl" id="zwtc-table">
                             <thead><tr><th style="width:34%">届次名称</th><th style="width:24%">任期开始</th><th style="width:24%">任期结束（到期日）</th><th style="width:18%">操作</th></tr></thead>
                             <tbody>
@@ -763,9 +768,9 @@ if (!function_exists('zw_org_admin_styles')) {
      *
      * @param array $args {
      *     @type string $touch_css 可选：调用方（页面文件）自行生成的 canonical 触屏热区 CSS。
-     *                            TASK-2166：使用 `.zw-adm-touch` 标记的页面文件需要**同文件**
+     *                            TASK-2166：使用 `.tco-touch` 标记的页面文件需要**同文件**
      *                            持有 canonical 输出点（SPEC-10-B §3 / ux-guard 判据），
-     *                            因此由页面调用 `zw_adm_ui_touch_css('body')` 后传入；
+     *                            因此由页面调用 `tco_ui_touch_css('body')` 后传入；
      *                            CSS 仍只在本函数唯一的 `<style>` 块内输出一次。
      * }
      * @return void
@@ -779,192 +784,192 @@ if (!function_exists('zw_org_admin_styles')) {
         }
         $printed = true;
         ?>
-        <style id="zw-org-admin">
+        <style id="tco-org-admin">
         /* TASK-1646（TASK-1579 P2-1 批次 3 · SPEC-10 §1.9.3 第 2/3 项；机制出处 CHG-300）：
-           本域旧类 `.zw-org-*` 收敛到统一语义层 `.zw-adm-org-*`，处于**阶段 ① 双写**：
+           本域旧类 `.zw-org-*` 收敛到统一语义层 `.tco-org-*`，处于**阶段 ① 双写**：
            canonical 规则的选择器组**同时承载**新类与旧类（旧类＝**兼容别名**），
            标记面同时携带新类与旧类。**双写一个发布周期内不得删除任何旧类**；
            阶段 ②（切换）与阶段 ③（清理）另按 SPEC-10 §1.9.3 第 2 项的阶段门执行
            （清理**只能**由另一次 CHG 授权）。
-           **第 1 类（语义对应 canonical、取值统一会改变视觉）本批不做**：`.zw-org-card` /
-           `.zw-org-card-head` / `.zw-org-card-body` / `.zw-org-grid` / `.zw-org-badge` /
-           `.zw-org-empty` 须先走 UI 走查并另立 CHG ⇒ 本批其旧声明与旧标记**原样保留**
-           （登记为批次 3-残余）。`.zw-org-tbl-wrap` 已由批次 1（CHG-300）并入 canonical
-           `.zw-adm-table-wrap` 作兼容别名，本批**不再**改写。
+           **第 1 类（语义对应 canonical、取值统一会改变视觉）本批不做**：`.tco-org-card` /
+           `.tco-org-card-head` / `.tco-org-card-body` / `.tco-org-grid` / `.tco-org-badge` /
+           `.tco-org-empty` 须先走 UI 走查并另立 CHG ⇒ 本批其旧声明与旧标记**原样保留**
+           （登记为批次 3-残余）。`.tco-org-tbl-wrap` 已由批次 1（CHG-300）并入 canonical
+           `.tco-table-wrap` 作兼容别名，本批**不再**改写。
            废止标记（旧类 → 新类，逐类一行；带「标记面别名」者为无历史声明的纯标记类）：
-           [已废弃 → 见 .zw-adm-org-actions] 旧类 .zw-org-actions
-           [已废弃 → 见 .zw-adm-org-btn] 旧类 .zw-org-btn
-           [已废弃 → 见 .zw-adm-org-btn-danger] 旧类 .zw-org-btn-danger
-           [已废弃 → 见 .zw-adm-org-btn-primary] 旧类 .zw-org-btn-primary
-           [已废弃 → 见 .zw-adm-org-check] 旧类 .zw-org-check
-           [已废弃 → 见 .zw-adm-org-check-grid] 旧类 .zw-org-check-grid
-           [已废弃 → 见 .zw-adm-org-check-top] 旧类 .zw-org-check-top
-           [已废弃 → 见 .zw-adm-org-field] 旧类 .zw-org-field
-           [已废弃 → 见 .zw-adm-org-file-actions] 旧类 .zw-org-file-actions
-           [已废弃 → 见 .zw-adm-org-file-icon] 旧类 .zw-org-file-icon
-           [已废弃 → 见 .zw-adm-org-file-layout] 旧类 .zw-org-file-layout
-           [已废弃 → 见 .zw-adm-org-file-meta] 旧类 .zw-org-file-meta
-           [已废弃 → 见 .zw-adm-org-file-name] 旧类 .zw-org-file-name
-           [已废弃 → 见 .zw-adm-org-file-preview] 旧类 .zw-org-file-preview
-           [已废弃 → 见 .zw-adm-org-form-actions] 旧类 .zw-org-form-actions
-           [已废弃 → 见 .zw-adm-org-head] 旧类 .zw-org-head
-           [已废弃 → 见 .zw-adm-org-hidden] 旧类 .zw-org-hidden
-           [已废弃 → 见 .zw-adm-org-hint] 旧类 .zw-org-hint
-           [已废弃 → 见 .zw-adm-org-identity-strip] 旧类 .zw-org-identity-strip
-           [已废弃 → 见 .zw-adm-org-kpi] 旧类 .zw-org-kpi
-           [已废弃 → 见 .zw-adm-org-kpis] 旧类 .zw-org-kpis
-           [已废弃 → 见 .zw-adm-org-muted] 旧类 .zw-org-muted
-           [已废弃 → 见 .zw-adm-org-notice] 旧类 .zw-org-notice
-           [已废弃 → 见 .zw-adm-org-nowrap] 旧类 .zw-org-nowrap
-           [已废弃 → 见 .zw-adm-org-perm-tree] 旧类 .zw-org-perm-tree
-           [已废弃 → 见 .zw-adm-org-perm-tree-children] 旧类 .zw-org-perm-tree-children
-           [已废弃 → 见 .zw-adm-org-perm-tree-top] 旧类 .zw-org-perm-tree-top
-           [已废弃 → 见 .zw-adm-org-person-layout] 旧类 .zw-org-person-layout
-           [已废弃 → 见 .zw-adm-org-person-main] 旧类 .zw-org-person-main
-           [已废弃 → 见 .zw-adm-org-person-photo] 旧类 .zw-org-person-photo
-           [已废弃 → 见 .zw-adm-org-photo-input] 旧类 .zw-org-photo-input
-           [已废弃 → 见 .zw-adm-org-photo-preview] 旧类 .zw-org-photo-preview
-           [已废弃 → 见 .zw-adm-org-role-static] 旧类 .zw-org-role-static
-           [已废弃 → 见 .zw-adm-org-switch] 旧类 .zw-org-switch
-           [已废弃 → 见 .zw-adm-org-switch-thumb] 旧类 .zw-org-switch-thumb
-           [已废弃 → 见 .zw-adm-org-switch-track] 旧类 .zw-org-switch-track
-           [已废弃 → 见 .zw-adm-org-tab] 旧类 .zw-org-tab
-           [已废弃 → 见 .zw-adm-org-tabs] 旧类 .zw-org-tabs
-           [已废弃 → 见 .zw-adm-org-tbl] 旧类 .zw-org-tbl
-           [已废弃 → 见 .zw-adm-org-term-cycles] 旧类 .zw-org-term-cycles
-           [已废弃 → 见 .zw-adm-org-user-search] 旧类 .zw-org-user-search
-           [已废弃 → 见 .zw-adm-org-user-select] 旧类 .zw-org-user-select
-           [已废弃 → 见 .zw-adm-org-wrap] 旧类 .zw-org-wrap
-           [已废弃 → 见 .zw-adm-org-auto-age] 旧类 .zw-org-auto-age（标记面别名，无历史声明）
-           [已废弃 → 见 .zw-adm-org-auto-birthday] 旧类 .zw-org-auto-birthday（标记面别名，无历史声明）
-           [已废弃 → 见 .zw-adm-org-auto-gender] 旧类 .zw-org-auto-gender（标记面别名，无历史声明）
-           [已废弃 → 见 .zw-adm-org-auto-gender-key] 旧类 .zw-org-auto-gender-key（标记面别名，无历史声明）
-           [已废弃 → 见 .zw-adm-org-id-card-msg] 旧类 .zw-org-id-card-msg（标记面别名，无历史声明）
-           [已废弃 → 见 .zw-adm-org-link-form] 旧类 .zw-org-link-form（标记面别名，无历史声明）
-           [已废弃 → 见 .zw-adm-org-person-form] 旧类 .zw-org-person-form（标记面别名，无历史声明）
-           [已废弃 → 见 .zw-adm-org-person-id-card] 旧类 .zw-org-person-id-card（标记面别名，无历史声明） */
-        .zw-adm-org-wrap,.zw-org-wrap{max-width:none!important;width:auto!important;margin-right:0!important}
-        .zw-adm-org-head,.zw-org-head{margin:6px 0 16px}
-        .zw-adm-org-head h1,.zw-org-head h1{font-size:20px;font-weight:600;color:#222;margin:0}
-        .zw-adm-org-head p,.zw-org-head p{font-size:13px;color:#666;margin:5px 0 0}
-        .zw-adm-org-actions,.zw-org-actions{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 14px}
-        .zw-adm-org-btn,.zw-org-btn{display:inline-flex;align-items:center;gap:5px;font-size:13px;padding:7px 14px;border-radius:8px;border:1px solid #dcdfe6;background:#fff;color:#333;cursor:pointer;text-decoration:none;line-height:1.5}
-        @media(hover:hover){.zw-adm-org-btn:hover,.zw-org-btn:hover{color:#d80505;border-color:#d80505}}
-        .zw-adm-org-btn-primary,.zw-org-btn-primary{background:var(--primary-color,#d80505);border-color:var(--primary-color,#d80505);color:#fff}
-        @media(hover:hover){.zw-adm-org-btn-primary:hover,.zw-org-btn-primary:hover{background:#b30404;border-color:#b30404;color:#fff}}
-        .zw-adm-org-btn-danger,.zw-org-btn-danger{color:#c62828;border-color:#e5bebe}
-        @media(hover:hover){.zw-adm-org-btn-danger:hover,.zw-org-btn-danger:hover{background:#fff5f5;border-color:#c62828;color:#c62828}}
-        .zw-org-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;margin:0 0 16px}
-        .zw-org-card-head{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid #f0f1f3;background:#fafbfc}
-        .zw-org-card-head .ct{font-size:14px;font-weight:600;flex:1}
-        .zw-org-card-head .desc{font-size:12px;color:#999}
-        .zw-org-card-body{padding:16px}
+           [已废弃 → 见 .tco-org-actions] 旧类 .tco-org-actions
+           [已废弃 → 见 .tco-org-btn] 旧类 .tco-org-btn
+           [已废弃 → 见 .tco-org-btn-danger] 旧类 .tco-org-btn-danger
+           [已废弃 → 见 .tco-org-btn-primary] 旧类 .tco-org-btn-primary
+           [已废弃 → 见 .tco-org-check] 旧类 .tco-org-check
+           [已废弃 → 见 .tco-org-check-grid] 旧类 .tco-org-check-grid
+           [已废弃 → 见 .tco-org-check-top] 旧类 .tco-org-check-top
+           [已废弃 → 见 .tco-org-field] 旧类 .tco-org-field
+           [已废弃 → 见 .tco-org-file-actions] 旧类 .tco-org-file-actions
+           [已废弃 → 见 .tco-org-file-icon] 旧类 .tco-org-file-icon
+           [已废弃 → 见 .tco-org-file-layout] 旧类 .tco-org-file-layout
+           [已废弃 → 见 .tco-org-file-meta] 旧类 .tco-org-file-meta
+           [已废弃 → 见 .tco-org-file-name] 旧类 .tco-org-file-name
+           [已废弃 → 见 .tco-org-file-preview] 旧类 .tco-org-file-preview
+           [已废弃 → 见 .tco-org-form-actions] 旧类 .tco-org-form-actions
+           [已废弃 → 见 .tco-org-head] 旧类 .tco-org-head
+           [已废弃 → 见 .tco-org-hidden] 旧类 .tco-org-hidden
+           [已废弃 → 见 .tco-org-hint] 旧类 .tco-org-hint
+           [已废弃 → 见 .tco-org-identity-strip] 旧类 .tco-org-identity-strip
+           [已废弃 → 见 .tco-org-kpi] 旧类 .tco-org-kpi
+           [已废弃 → 见 .tco-org-kpis] 旧类 .tco-org-kpis
+           [已废弃 → 见 .tco-org-muted] 旧类 .tco-org-muted
+           [已废弃 → 见 .tco-org-notice] 旧类 .tco-org-notice
+           [已废弃 → 见 .tco-org-nowrap] 旧类 .tco-org-nowrap
+           [已废弃 → 见 .tco-org-perm-tree] 旧类 .tco-org-perm-tree
+           [已废弃 → 见 .tco-org-perm-tree-children] 旧类 .tco-org-perm-tree-children
+           [已废弃 → 见 .tco-org-perm-tree-top] 旧类 .tco-org-perm-tree-top
+           [已废弃 → 见 .tco-org-person-layout] 旧类 .tco-org-person-layout
+           [已废弃 → 见 .tco-org-person-main] 旧类 .tco-org-person-main
+           [已废弃 → 见 .tco-org-person-photo] 旧类 .tco-org-person-photo
+           [已废弃 → 见 .tco-org-photo-input] 旧类 .tco-org-photo-input
+           [已废弃 → 见 .tco-org-photo-preview] 旧类 .tco-org-photo-preview
+           [已废弃 → 见 .tco-org-role-static] 旧类 .tco-org-role-static
+           [已废弃 → 见 .tco-org-switch] 旧类 .tco-org-switch
+           [已废弃 → 见 .tco-org-switch-thumb] 旧类 .tco-org-switch-thumb
+           [已废弃 → 见 .tco-org-switch-track] 旧类 .tco-org-switch-track
+           [已废弃 → 见 .tco-org-tab] 旧类 .tco-org-tab
+           [已废弃 → 见 .tco-org-tabs] 旧类 .tco-org-tabs
+           [已废弃 → 见 .tco-org-tbl] 旧类 .tco-org-tbl
+           [已废弃 → 见 .tco-org-term-cycles] 旧类 .tco-org-term-cycles
+           [已废弃 → 见 .tco-org-user-search] 旧类 .tco-org-user-search
+           [已废弃 → 见 .tco-org-user-select] 旧类 .tco-org-user-select
+           [已废弃 → 见 .tco-org-wrap] 旧类 .tco-org-wrap
+           [已废弃 → 见 .tco-org-auto-age] 旧类 .tco-org-auto-age（标记面别名，无历史声明）
+           [已废弃 → 见 .tco-org-auto-birthday] 旧类 .tco-org-auto-birthday（标记面别名，无历史声明）
+           [已废弃 → 见 .tco-org-auto-gender] 旧类 .tco-org-auto-gender（标记面别名，无历史声明）
+           [已废弃 → 见 .tco-org-auto-gender-key] 旧类 .tco-org-auto-gender-key（标记面别名，无历史声明）
+           [已废弃 → 见 .tco-org-id-card-msg] 旧类 .tco-org-id-card-msg（标记面别名，无历史声明）
+           [已废弃 → 见 .tco-org-link-form] 旧类 .tco-org-link-form（标记面别名，无历史声明）
+           [已废弃 → 见 .tco-org-person-form] 旧类 .tco-org-person-form（标记面别名，无历史声明）
+           [已废弃 → 见 .tco-org-person-id-card] 旧类 .tco-org-person-id-card（标记面别名，无历史声明） */
+        .tco-org-wrap,.tco-org-wrap{max-width:none!important;width:auto!important;margin-right:0!important}
+        .tco-org-head,.tco-org-head{margin:6px 0 16px}
+        .tco-org-head h1,.tco-org-head h1{font-size:20px;font-weight:600;color:#222;margin:0}
+        .tco-org-head p,.tco-org-head p{font-size:13px;color:#666;margin:5px 0 0}
+        .tco-org-actions,.tco-org-actions{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 14px}
+        .tco-org-btn,.tco-org-btn{display:inline-flex;align-items:center;gap:5px;font-size:13px;padding:7px 14px;border-radius:8px;border:1px solid #dcdfe6;background:#fff;color:#333;cursor:pointer;text-decoration:none;line-height:1.5}
+        @media(hover:hover){.tco-org-btn:hover,.tco-org-btn:hover{color:#d80505;border-color:#d80505}}
+        .tco-org-btn-primary,.tco-org-btn-primary{background:var(--primary-color,#d80505);border-color:var(--primary-color,#d80505);color:#fff}
+        @media(hover:hover){.tco-org-btn-primary:hover,.tco-org-btn-primary:hover{background:#b30404;border-color:#b30404;color:#fff}}
+        .tco-org-btn-danger,.tco-org-btn-danger{color:#c62828;border-color:#e5bebe}
+        @media(hover:hover){.tco-org-btn-danger:hover,.tco-org-btn-danger:hover{background:#fff5f5;border-color:#c62828;color:#c62828}}
+        .tco-org-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;margin:0 0 16px}
+        .tco-org-card-head{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid #f0f1f3;background:#fafbfc}
+        .tco-org-card-head .ct{font-size:14px;font-weight:600;flex:1}
+        .tco-org-card-head .desc{font-size:12px;color:#999}
+        .tco-org-card-body{padding:16px}
         /* TASK-595：关联用户面板使用 SPEC-85 可搜索下拉，卡片不得裁剪弹层 */
-        #zw-org-panel-link{overflow:visible}
-        .zw-adm-org-kpis,.zw-org-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:0 0 16px}
-        @media(max-width:1100px){.zw-adm-org-kpis,.zw-org-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
-        @media(max-width:600px){.zw-adm-org-kpis,.zw-org-kpis{grid-template-columns:1fr}}
-        .zw-adm-org-kpi,.zw-org-kpi{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:14px 16px}
-        .zw-adm-org-kpi .l,.zw-org-kpi .l{font-size:12.5px;color:#666}
-        .zw-adm-org-kpi .n,.zw-org-kpi .n{font-size:26px;font-weight:700;color:#222;margin:5px 0 1px}
-        .zw-adm-org-kpi .d,.zw-org-kpi .d{font-size:11.5px;color:#999}
-        .zw-adm-org-tabs,.zw-org-tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;margin:0 0 14px}
-        .zw-adm-org-tab,.zw-org-tab{flex:0 0 auto;font-size:12.5px;color:#666;background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:6px 13px;text-decoration:none;white-space:nowrap}
-        .zw-adm-org-tab.on,.zw-org-tab.on{color:#fff;background:var(--primary-color,#d80505);border-color:var(--primary-color,#d80505);font-weight:600}
-        .zw-adm-org-tab .cnt,.zw-org-tab .cnt{color:#999;margin-left:4px}
-        .zw-adm-org-tab.on .cnt,.zw-org-tab.on .cnt{color:rgba(255,255,255,.82)}
-        .zw-org-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-        @media(max-width:900px){.zw-org-grid{grid-template-columns:1fr}}
-        .zw-adm-org-person-layout,.zw-org-person-layout{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:18px;align-items:start}
-        .zw-adm-org-person-main,.zw-org-person-main{min-width:0}
-        .zw-adm-org-person-photo,.zw-org-person-photo{background:#fafbfc;border:1px solid #e5e7eb;border-radius:12px;padding:14px;text-align:center}
-        .zw-adm-org-photo-preview,.zw-org-photo-preview{width:100%;aspect-ratio:3/4;border-radius:10px;background:#f0f1f3;border:1px dashed #dcdcde;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:10px}
-        .zw-adm-org-photo-preview img,.zw-org-photo-preview img{width:100%;height:100%;object-fit:cover;display:block}
-        .zw-adm-org-photo-preview .ph,.zw-org-photo-preview .ph{color:#999;font-size:13px}
-        .zw-adm-org-photo-input,.zw-org-photo-input{display:none}
-        @media(max-width:900px){.zw-adm-org-person-layout,.zw-org-person-layout{grid-template-columns:1fr}.zw-adm-org-person-photo,.zw-org-person-photo{max-width:220px}}
-        .zw-adm-org-field,.zw-org-field{margin:0 0 12px}
-        .zw-adm-org-field label,.zw-org-field label{display:block;font-size:12.5px;color:#444;margin:0 0 5px;font-weight:500}
-        .zw-adm-org-field input[type=text],.zw-adm-org-field input[type=number],.zw-adm-org-field input[type=search],.zw-adm-org-field input[type=email],.zw-adm-org-field select,.zw-adm-org-field textarea,.zw-org-field input[type=text],.zw-org-field input[type=number],.zw-org-field input[type=search],.zw-org-field input[type=email],.zw-org-field select,.zw-org-field textarea{width:100%;border:1px solid #dcdcde;border-radius:8px;padding:7px 10px;font-size:13px;background:#fff;box-sizing:border-box}
-        .zw-adm-org-field input[readonly],.zw-org-field input[readonly]{background:#f6f7f9;color:#555}
-        .zw-adm-org-field textarea,.zw-org-field textarea{min-height:96px;resize:vertical}
-        .zw-adm-org-hint,.zw-org-hint{font-size:11.5px;color:#999;margin:6px 0 0;line-height:1.6}
-        .zw-adm-org-form-actions,.zw-org-form-actions{display:flex;gap:10px;align-items:center;margin-top:14px}
-        .zw-adm-org-hidden,.zw-org-hidden{display:none}
-        .zw-adm-org-user-search,.zw-org-user-search{margin-bottom:8px}
-        .zw-adm-org-user-select,.zw-org-user-select{width:100%;min-height:180px;border:1px solid #dcdcde;border-radius:8px;padding:4px}
-        .zw-adm-org-tbl,.zw-org-tbl{width:100%;border-collapse:collapse}
-        .zw-adm-org-tbl th,.zw-org-tbl th{font-size:12px;color:#666;text-align:left;padding:10px 12px;background:#fafbfc;border-bottom:1px solid #e5e7eb;white-space:nowrap}
-        .zw-adm-org-tbl td,.zw-org-tbl td{padding:11px 12px;border-bottom:1px solid #f0f1f3;vertical-align:middle;font-size:13px}
-        .zw-adm-org-tbl tr:last-child td,.zw-org-tbl tr:last-child td{border-bottom:0}
-        @media(hover:hover){.zw-adm-org-tbl tr:hover td,.zw-org-tbl tr:hover td{background:#fafbfd}}
-        .zw-adm-org-tbl .zw-adm-org-nowrap,.zw-org-tbl .zw-org-nowrap{white-space:nowrap}
-        .zw-adm-org-muted,.zw-org-muted{color:#999;font-size:12px}
-        .zw-org-badge{display:inline-block;font-size:11.5px;line-height:18px;padding:1px 9px;border-radius:999px;background:#f2f3f5;color:#666}
-        .zw-org-badge.on{color:#2e7d32;background:rgba(76,175,80,.12)}
-        .zw-org-badge.info{color:#1a66cc;background:rgba(51,133,255,.1)}
-        .zw-adm-org-identity-strip,.zw-org-identity-strip{display:grid;grid-template-columns:minmax(220px,1fr) repeat(2,minmax(170px,auto));gap:14px;align-items:end;padding:12px 14px;margin:0 0 16px;background:#f8faf9;border:1px solid #dfe9e1;border-radius:10px}
-        @media(max-width:900px){.zw-adm-org-identity-strip,.zw-org-identity-strip{grid-template-columns:1fr}}
-        .zw-adm-org-identity-strip .zw-adm-org-field,.zw-org-identity-strip .zw-org-field{margin-bottom:0}
-        .zw-adm-org-role-static,.zw-org-role-static{display:inline-block;max-width:100%;padding:6px 0;font-size:13px;line-height:1.5;color:#333;word-break:break-word}
-        .zw-adm-org-switch,.zw-org-switch{display:inline-flex;align-items:center;gap:8px;margin-top:6px;font-size:13px;color:#333;cursor:pointer;user-select:none}
-        .zw-adm-org-switch input[type=checkbox],.zw-org-switch input[type=checkbox]{position:absolute;opacity:0;pointer-events:none}
-        .zw-adm-org-switch-track,.zw-org-switch-track{position:relative;flex:0 0 auto;width:42px;height:22px;border-radius:999px;background:#d9dee3;transition:background .2s}
-        .zw-adm-org-switch-thumb,.zw-org-switch-thumb{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.18);transition:left .2s}
-        .zw-adm-org-switch.on .zw-adm-org-switch-track,
-        .zw-adm-org-switch input:checked + .zw-adm-org-switch-track,
-        .zw-org-switch.on .zw-org-switch-track,
-        .zw-org-switch input:checked + .zw-org-switch-track{background:#2e7d32}
-        .zw-adm-org-switch.on .zw-adm-org-switch-thumb,
-        .zw-adm-org-switch input:checked + .zw-adm-org-switch-track .zw-adm-org-switch-thumb,
-        .zw-org-switch.on .zw-org-switch-thumb,
-        .zw-org-switch input:checked + .zw-org-switch-track .zw-org-switch-thumb{left:22px}
-        .zw-adm-org-switch.is-disabled,.zw-org-switch.is-disabled{cursor:not-allowed}
-        .zw-adm-org-switch input:disabled + .zw-adm-org-switch-track,.zw-org-switch input:disabled + .zw-org-switch-track{background:#e4e7ea;opacity:.65}
-        .zw-adm-org-switch.is-disabled.on .zw-adm-org-switch-track,.zw-org-switch.is-disabled.on .zw-org-switch-track{background:#9bbf9d}
-        .zw-adm-org-check-grid,.zw-org-check-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 14px}
-        .zw-adm-org-check,.zw-org-check{display:flex;align-items:flex-start;gap:6px;font-size:13px;line-height:1.6;color:#333}
-        .zw-adm-org-check input,.zw-org-check input{flex:0 0 auto;margin-top:3px}
-        .zw-adm-org-check-top,.zw-org-check-top{font-weight:600}
-        .zw-adm-org-perm-tree,.zw-org-perm-tree{max-height:560px;overflow:auto;border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;background:#fafbfc}
-        .zw-adm-org-perm-tree code,.zw-org-perm-tree code{font-size:11px;color:#777;background:#f0f1f3;padding:1px 4px;border-radius:4px}
-        .zw-adm-org-perm-tree-top,.zw-org-perm-tree-top{padding:6px 0;border-bottom:1px dashed #e5e7eb}
-        .zw-adm-org-perm-tree-top:last-child,.zw-org-perm-tree-top:last-child{border-bottom:0}
-        .zw-adm-org-perm-tree-children,.zw-org-perm-tree-children{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 14px;margin:6px 0 0 22px}
-        @media(max-width:900px){.zw-adm-org-check-grid,.zw-org-check-grid,.zw-adm-org-perm-tree-children,.zw-org-perm-tree-children{grid-template-columns:1fr}}
-        .zw-org-empty{text-align:center;color:#999;padding:34px 0;font-size:13px}
-        .zw-adm-org-notice,.zw-org-notice{margin:10px 0 14px;padding:10px 12px;border-radius:8px;font-size:13px;border:1px solid #dcdcde;background:#fff}
-        .zw-adm-org-notice.success,.zw-org-notice.success{border-color:#b7dfb9;background:#f3fbf4;color:#1e6b24}
-        .zw-adm-org-notice.error,.zw-org-notice.error{border-color:#f0c3c3;background:#fff5f5;color:#b42318}
+        #tco-org-panel-link{overflow:visible}
+        .tco-org-kpis,.tco-org-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:0 0 16px}
+        @media(max-width:1100px){.tco-org-kpis,.tco-org-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+        @media(max-width:600px){.tco-org-kpis,.tco-org-kpis{grid-template-columns:1fr}}
+        .tco-org-kpi,.tco-org-kpi{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:14px 16px}
+        .tco-org-kpi .l,.tco-org-kpi .l{font-size:12.5px;color:#666}
+        .tco-org-kpi .n,.tco-org-kpi .n{font-size:26px;font-weight:700;color:#222;margin:5px 0 1px}
+        .tco-org-kpi .d,.tco-org-kpi .d{font-size:11.5px;color:#999}
+        .tco-org-tabs,.tco-org-tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;margin:0 0 14px}
+        .tco-org-tab,.tco-org-tab{flex:0 0 auto;font-size:12.5px;color:#666;background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:6px 13px;text-decoration:none;white-space:nowrap}
+        .tco-org-tab.on,.tco-org-tab.on{color:#fff;background:var(--primary-color,#d80505);border-color:var(--primary-color,#d80505);font-weight:600}
+        .tco-org-tab .cnt,.tco-org-tab .cnt{color:#999;margin-left:4px}
+        .tco-org-tab.on .cnt,.tco-org-tab.on .cnt{color:rgba(255,255,255,.82)}
+        .tco-org-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+        @media(max-width:900px){.tco-org-grid{grid-template-columns:1fr}}
+        .tco-org-person-layout,.tco-org-person-layout{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:18px;align-items:start}
+        .tco-org-person-main,.tco-org-person-main{min-width:0}
+        .tco-org-person-photo,.tco-org-person-photo{background:#fafbfc;border:1px solid #e5e7eb;border-radius:12px;padding:14px;text-align:center}
+        .tco-org-photo-preview,.tco-org-photo-preview{width:100%;aspect-ratio:3/4;border-radius:10px;background:#f0f1f3;border:1px dashed #dcdcde;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:10px}
+        .tco-org-photo-preview img,.tco-org-photo-preview img{width:100%;height:100%;object-fit:cover;display:block}
+        .tco-org-photo-preview .ph,.tco-org-photo-preview .ph{color:#999;font-size:13px}
+        .tco-org-photo-input,.tco-org-photo-input{display:none}
+        @media(max-width:900px){.tco-org-person-layout,.tco-org-person-layout{grid-template-columns:1fr}.tco-org-person-photo,.tco-org-person-photo{max-width:220px}}
+        .tco-org-field,.tco-org-field{margin:0 0 12px}
+        .tco-org-field label,.tco-org-field label{display:block;font-size:12.5px;color:#444;margin:0 0 5px;font-weight:500}
+        .tco-org-field input[type=text],.tco-org-field input[type=number],.tco-org-field input[type=search],.tco-org-field input[type=email],.tco-org-field select,.tco-org-field textarea,.tco-org-field input[type=text],.tco-org-field input[type=number],.tco-org-field input[type=search],.tco-org-field input[type=email],.tco-org-field select,.tco-org-field textarea{width:100%;border:1px solid #dcdcde;border-radius:8px;padding:7px 10px;font-size:13px;background:#fff;box-sizing:border-box}
+        .tco-org-field input[readonly],.tco-org-field input[readonly]{background:#f6f7f9;color:#555}
+        .tco-org-field textarea,.tco-org-field textarea{min-height:96px;resize:vertical}
+        .tco-org-hint,.tco-org-hint{font-size:11.5px;color:#999;margin:6px 0 0;line-height:1.6}
+        .tco-org-form-actions,.tco-org-form-actions{display:flex;gap:10px;align-items:center;margin-top:14px}
+        .tco-org-hidden,.tco-org-hidden{display:none}
+        .tco-org-user-search,.tco-org-user-search{margin-bottom:8px}
+        .tco-org-user-select,.tco-org-user-select{width:100%;min-height:180px;border:1px solid #dcdcde;border-radius:8px;padding:4px}
+        .tco-org-tbl,.tco-org-tbl{width:100%;border-collapse:collapse}
+        .tco-org-tbl th,.tco-org-tbl th{font-size:12px;color:#666;text-align:left;padding:10px 12px;background:#fafbfc;border-bottom:1px solid #e5e7eb;white-space:nowrap}
+        .tco-org-tbl td,.tco-org-tbl td{padding:11px 12px;border-bottom:1px solid #f0f1f3;vertical-align:middle;font-size:13px}
+        .tco-org-tbl tr:last-child td,.tco-org-tbl tr:last-child td{border-bottom:0}
+        @media(hover:hover){.tco-org-tbl tr:hover td,.tco-org-tbl tr:hover td{background:#fafbfd}}
+        .tco-org-tbl .tco-org-nowrap,.tco-org-tbl .tco-org-nowrap{white-space:nowrap}
+        .tco-org-muted,.tco-org-muted{color:#999;font-size:12px}
+        .tco-org-badge{display:inline-block;font-size:11.5px;line-height:18px;padding:1px 9px;border-radius:999px;background:#f2f3f5;color:#666}
+        .tco-org-badge.on{color:#2e7d32;background:rgba(76,175,80,.12)}
+        .tco-org-badge.info{color:#1a66cc;background:rgba(51,133,255,.1)}
+        .tco-org-identity-strip,.tco-org-identity-strip{display:grid;grid-template-columns:minmax(220px,1fr) repeat(2,minmax(170px,auto));gap:14px;align-items:end;padding:12px 14px;margin:0 0 16px;background:#f8faf9;border:1px solid #dfe9e1;border-radius:10px}
+        @media(max-width:900px){.tco-org-identity-strip,.tco-org-identity-strip{grid-template-columns:1fr}}
+        .tco-org-identity-strip .tco-org-field,.tco-org-identity-strip .tco-org-field{margin-bottom:0}
+        .tco-org-role-static,.tco-org-role-static{display:inline-block;max-width:100%;padding:6px 0;font-size:13px;line-height:1.5;color:#333;word-break:break-word}
+        .tco-org-switch,.tco-org-switch{display:inline-flex;align-items:center;gap:8px;margin-top:6px;font-size:13px;color:#333;cursor:pointer;user-select:none}
+        .tco-org-switch input[type=checkbox],.tco-org-switch input[type=checkbox]{position:absolute;opacity:0;pointer-events:none}
+        .tco-org-switch-track,.tco-org-switch-track{position:relative;flex:0 0 auto;width:42px;height:22px;border-radius:999px;background:#d9dee3;transition:background .2s}
+        .tco-org-switch-thumb,.tco-org-switch-thumb{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.18);transition:left .2s}
+        .tco-org-switch.on .tco-org-switch-track,
+        .tco-org-switch input:checked + .tco-org-switch-track,
+        .tco-org-switch.on .tco-org-switch-track,
+        .tco-org-switch input:checked + .tco-org-switch-track{background:#2e7d32}
+        .tco-org-switch.on .tco-org-switch-thumb,
+        .tco-org-switch input:checked + .tco-org-switch-track .tco-org-switch-thumb,
+        .tco-org-switch.on .tco-org-switch-thumb,
+        .tco-org-switch input:checked + .tco-org-switch-track .tco-org-switch-thumb{left:22px}
+        .tco-org-switch.is-disabled,.tco-org-switch.is-disabled{cursor:not-allowed}
+        .tco-org-switch input:disabled + .tco-org-switch-track,.tco-org-switch input:disabled + .tco-org-switch-track{background:#e4e7ea;opacity:.65}
+        .tco-org-switch.is-disabled.on .tco-org-switch-track,.tco-org-switch.is-disabled.on .tco-org-switch-track{background:#9bbf9d}
+        .tco-org-check-grid,.tco-org-check-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 14px}
+        .tco-org-check,.tco-org-check{display:flex;align-items:flex-start;gap:6px;font-size:13px;line-height:1.6;color:#333}
+        .tco-org-check input,.tco-org-check input{flex:0 0 auto;margin-top:3px}
+        .tco-org-check-top,.tco-org-check-top{font-weight:600}
+        .tco-org-perm-tree,.tco-org-perm-tree{max-height:560px;overflow:auto;border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;background:#fafbfc}
+        .tco-org-perm-tree code,.tco-org-perm-tree code{font-size:11px;color:#777;background:#f0f1f3;padding:1px 4px;border-radius:4px}
+        .tco-org-perm-tree-top,.tco-org-perm-tree-top{padding:6px 0;border-bottom:1px dashed #e5e7eb}
+        .tco-org-perm-tree-top:last-child,.tco-org-perm-tree-top:last-child{border-bottom:0}
+        .tco-org-perm-tree-children,.tco-org-perm-tree-children{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 14px;margin:6px 0 0 22px}
+        @media(max-width:900px){.tco-org-check-grid,.tco-org-check-grid,.tco-org-perm-tree-children,.tco-org-perm-tree-children{grid-template-columns:1fr}}
+        .tco-org-empty{text-align:center;color:#999;padding:34px 0;font-size:13px}
+        .tco-org-notice,.tco-org-notice{margin:10px 0 14px;padding:10px 12px;border-radius:8px;font-size:13px;border:1px solid #dcdcde;background:#fff}
+        .tco-org-notice.success,.tco-org-notice.success{border-color:#b7dfb9;background:#f3fbf4;color:#1e6b24}
+        .tco-org-notice.error,.tco-org-notice.error{border-color:#f0c3c3;background:#fff5f5;color:#b42318}
         /* TASK-1586 / SPEC-10 §1.9.2 第 5 条：宽表横滑容器**必须常驻**。
-           原先 `.zw-org-tbl-wrap{overflow-x:auto}` 只写在 ≤782px 内，而卡片
-           `.zw-org-card{…overflow:hidden}`（:754）常驻 ⇒ **783–1200px 区间**该 17 列宽表
+           原先 `.tco-org-tbl-wrap{overflow-x:auto}` 只写在 ≤782px 内，而卡片
+           `.tco-org-card{…overflow:hidden}`（:754）常驻 ⇒ **783–1200px 区间**该 17 列宽表
            既无横滑容器、又被卡片裁掉 ⇒ **内容不可达**（比横向溢出更糟）。
            修法：`overflow-x:auto` 提到常驻（+ iOS 惯性滚动）；`min-width` 仍只在窄屏生效。
            **TASK-1643（P2-1 第一批 / CHG-300 · SPEC-10 §1.9.3 第 2 条）**：本类
-           `[已废弃 → 见 .zw-adm-table-wrap]` —— 它是 canonical 宽表包裹的历史命名空间
+           `[已废弃 → 见 .tco-table-wrap]` —— 它是 canonical 宽表包裹的历史命名空间
            **兼容别名**（canonical 规则的**选择器组**已同时承载它，见本块下方
-           `echo zw_adm_ui_table_wrap_css();`），**双写一个发布周期内不得删除**；
+           `echo tco_ui_table_wrap_css();`），**双写一个发布周期内不得删除**；
            本声明保留是为了不丢失 iOS 惯性滚动语义（canonical 声明体不含该属性）。 */
-        .zw-org-tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+        .tco-org-tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
         @media(max-width:782px){
-            .zw-org-card-body{padding:12px}
-            .zw-adm-org-tbl,.zw-org-tbl{min-width:1280px}
+            .tco-org-card-body{padding:12px}
+            .tco-org-tbl,.tco-org-tbl{min-width:1280px}
         }
         <?php
         // TASK-1632（TASK-1579 §7 P1-6 余项）：宽表横滑包裹唯一出处＝canonical
-        // （inc/admin/admin-ui-tokens.php 的 zw_adm_ui_table_wrap_css()）。
+        // （includes/ui/ui-tokens.php 的 tco_ui_table_wrap_css()）。
         // 「组织架构」域不在会员域外壳作用域内 ⇒ 须在本模块**既有**内联 <style>
         // （唯一出处 zw_org_admin_styles()）内输出该 canonical 规则；
-        // 页面上的历史容器 `.zw-org-tbl-wrap` **保留**（含 iOS 惯性滚动声明），
+        // 页面上的历史容器 `.tco-org-tbl-wrap` **保留**（含 iOS 惯性滚动声明），
         // 与 canonical 类**双写**（SPEC-10 §1.9.2 第 10 条 / P2-1 收敛口径），未复制第二套声明。
-        echo zw_adm_ui_table_wrap_css();
+        echo tco_ui_table_wrap_css();
         // TASK-1637（P1-4 余项 / 用户拍板②）：触屏块同由 canonical 输出、`body` 作用域
-        //（本模块不注入 `.zw-adm-tcpc`；规则仅 `@media(pointer:coarse)` 命中 ⇒ 桌面零变化）。
+        //（本模块不注入 `.tco-tcpc`；规则仅 `@media(pointer:coarse)` 命中 ⇒ 桌面零变化）。
         // TASK-2166：页面文件若已自行生成 canonical 热区 CSS（同文件输出点），此处只输出它，
         // 保证「唯一 style 输出点 + 不重复声明」；未传时维持既有自生成行为（其它 org 页不变）。
         if ($touch_css === null) {
-            $touch_css = function_exists('zw_adm_ui_touch_css') ? zw_adm_ui_touch_css('body') : '';
+            $touch_css = function_exists('tco_ui_touch_css') ? tco_ui_touch_css('body') : '';
         }
         echo $touch_css;
         ?>

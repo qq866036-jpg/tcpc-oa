@@ -75,3 +75,20 @@
 
 主题侧 `scripts/oa-contract-shadow-check.php`（`wp eval-file`，只读）比对「契约 vs 旧实现」，
 输出 `OA_CONTRACT_SHADOW=ok|diff`，缺任一侧 rc=2 fail-closed。上线前与每次发版前必须为 `ok`。
+
+## UI-1 · 后台样式命名空间独立（OA-2491 / 主题铁律 32 · CHG-466）
+
+**口径（用户 2026-11-09 拍板）**：「独立仓用完全独立的样式 ui js，工作台记录差异，防止修改一处样式影响关联的其他功能」。
+
+| 项 | 值 |
+| --- | --- |
+| 类名命名空间 | 本仓后台一律 `tco-*`（`tco-*` / `tco-doc-*` / `tco-org-*` / `tco-sec-*` / `tco-fc-*` / `tco-receipt-*` / `tco-policy-*` / `tco-secretariat-*`）；**不得**出现主题 `zw-adm-*` / `zw-doc-*` / `zw-org-*` / `zw-sec-*` / `zw-fc-*` 类名 |
+| 样式/脚本资源 | 本仓自带 `assets/css/oa-admin.css` + `assets/js/oa-admin.js`，由 `includes/ui/ui-tokens.php` 的 `tco_ui_enqueue_assets()` 注册（仅本仓后台页） |
+| 令牌出处 | 颜色/字号/间距对齐 `docs/tokens/tcpc-design-tokens.json`；CSS 一律 `var(--tco-*, <令牌兜底>)` |
+| 后台壳 | 本仓自有 `tco-oa-admin` body class 与 100% 宽度规则；**不再**依赖主题会员域外壳判定 |
+| 宽表横滑 / 触屏 / 徽章 / 三态 | 本仓 `includes/ui/ui-tokens.php`（`tco_ui_table_wrap_css()` / `tco_ui_touch_css()` / `tco_badge()` / `tco_ui_state_css()`）唯一出处 |
+| 菜单 slug | **保持稳定**（`zw-doc-*` / `zw-org-*` / `zw-receipt-*` / `zw-policy-*` / `zw-secretariat-*`）——主题侧 RBAC 功能 ID（`sub:<parent>:<slug>`）与用户书签按 slug 保存；页面类名由 `*_page_classes()` / `*_page_slug_map()` 映射到 `tco-*`，**slug 不随 UI 改名** |
+| 差异登记 | 主题 `docs/ops/satellite-ui-registry.yml`（`dev-tcpc-oa` 行）；门禁 `scripts/satellite-ui-gate.py` R1–R4 |
+
+**纪律**：新增后台样式只写本仓 `tco-*`；新增页面必须在 `tco_ui_page_slugs()` 登记（否则不装载资源）；
+确需与主题视觉不同 ⇒ 允许，但必须在该登记表留 owner/理由/日期，禁止「悄悄不同」。

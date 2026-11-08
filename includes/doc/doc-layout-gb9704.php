@@ -217,7 +217,7 @@ if (!function_exists('zw_doc_gb9704_spec')) {
                 // **失败模式警示（禁止复发）**：把 1.2 乘进字号即**重犯 TASK-1280 的红头溢出缺陷**
                 // （用户已截图报过一次）—— 9 字 43pt 实测已 142.87mm，×1.2 = 51.6pt ⇒ **163.8mm > 156mm 版心**。
                 // 生效方式（只改高度、宽度不变）：
-                //  · HTML / 加密 PDF（走 HTML 栅格化）：`.zw-doc-org` 加 `transform: scaleY(1.2)`；
+                //  · HTML / 加密 PDF（走 HTML 栅格化）：`.tco-doc-org` 加 `transform: scaleY(1.2)`；
                 //  · DOCX：字号 = 宽度口径字号 × 1.2 + OOXML **字符宽度缩放** `<w:w w:val="83"/>`（100/1.2≈83）。
                 // 两侧共用口径见 `zw_doc_head_stretch()`。
                 'org_height_scale'    => 1.2,      // 垂直拉长系数（仅高度；与宽度预算**解耦**）；`org_height_mode=fixed` 时生效
@@ -339,7 +339,7 @@ if (!function_exists('zw_doc_gb9704_spec')) {
                 // TASK-1994（用户 2026-10-24 更正原文「印章 调整方向错了，不是文字的下方 是文字的**下一层**」）：
                 // 用户要的是**层叠顺序**（章在文字之下、文字盖在章上），**不是**把章垂直搬到文字下方 ⇒
                 // 默认恢复 'over'（TASK-1993 曾把默认改成 'below'，导致 52 号溢出成 2 页）；层序另由
-                // `seal.text_above` 控制（见渲染层：`.zw-doc-seal` z-index 1、署名/日期 z-index 2）。
+                // `seal.text_above` 控制（见渲染层：`.tco-doc-seal` z-index 1、署名/日期 z-index 2）。
                 'placement'          => 'over',
                 // TASK-1994：**文字在章之上**（用户口径「印章置于落款单位和日期的下一层」）——真章压在字上，
                 // 但本会版式要求**落款单位与成文日期清晰可读**，故把章放到文字**下面一层**。
@@ -851,7 +851,7 @@ if (!function_exists('zw_doc_head_stretch')) {
      * **为什么绝不直接放大字号（失败模式警示，禁止复发）**：9 字 43pt 在实机预览里**已实测 142.87mm**，
      * 若字号 ×1.2 = 51.6pt ⇒ **163.8mm > 156mm 版心即溢出**；26 字若按 2.85× 放大字号更会到 **≈615mm**，
      * 与「绝不折行 / 不出界」硬约束冲突。故采用**纵向拉长（宽度不变）**：
-     *  - HTML / 加密 PDF（走 HTML 栅格化）：`.zw-doc-org` 加 `transform: scaleY(scale_y)`
+     *  - HTML / 加密 PDF（走 HTML 栅格化）：`.tco-doc-org` 加 `transform: scaleY(scale_y)`
      *    （`transform` **不改变布局宽度** ⇒ 单行与不出界继续成立）；
      *    行高补偿见 `zw_doc_head_org_padding_pt()`；
      *  - DOCX：字号 = **宽度口径字号 × scale_y**（`docx_pt`）＋ OOXML **字符宽度缩放**
@@ -917,13 +917,13 @@ if (!function_exists('zw_doc_head_stretch')) {
 
 if (!function_exists('zw_doc_head_org_padding_pt')) {
     /**
-     * 红头 `.zw-doc-org` 的**行高补偿**（对称上下 padding，pt）—— 把纵向拉长后的字面**包回布局盒**，
+     * 红头 `.tco-doc-org` 的**行高补偿**（对称上下 padding，pt）—— 把纵向拉长后的字面**包回布局盒**，
      * 从而不压占上方「份号/密级/紧急程度」标记与下方发文字号
      * （TASK-1282 / CHG-158 引入；TASK-1287 / CHG-159 改为**按实际 `scale_y`**）。
      *
      * **为什么不复用 CHG-158 的固定补偿量**：CHG-158 的 `Δ = max(0, 0.5 × org_ink_ratio × org_pt_max ×
      * org_height_scale − 0.5 × title.line_pt)` = **4.688pt 恒定**（用字号**上限** + 固定 1.2 推导），
-     * 对 26 字（scale_y ≈2.85）**补偿不足**；且它在 `.zw-doc-org` 上恒定，与「每篇实际拉长系数」无关。
+     * 对 26 字（scale_y ≈2.85）**补偿不足**；且它在 `.tco-doc-org` 上恒定，与「每篇实际拉长系数」无关。
      * 本函数改为**逐用例**计算。
      *
      * 推导（`transform-origin:center center`，`transform` 不改变布局高度 ⇒ 缩放后字面会溢出原行盒）：
@@ -933,7 +933,7 @@ if (!function_exists('zw_doc_head_org_padding_pt')) {
      *    这是 `transform` 与「把 padding 写进盒」的关键差别）；
      *  - 要求「包住 + 安全余量」⇒ `P = max(0, (H − L × scale_y)/2 + org_pad_safe_mm×25.4/72)`。
      *
-     * ⚠️ `L` **不能**用 `title.line_pt`（35pt）：`.zw-doc-org` 的 `font-size` 在 15.86~43pt 之间变化，
+     * ⚠️ `L` **不能**用 `title.line_pt`（35pt）：`.tco-doc-org` 的 `font-size` 在 15.86~43pt 之间变化，
      * 而静态 `line-height:35pt` 是**绝对值**，`html` 未设字号（继承浏览器默认）⇒ 浏览器实测计算行盒
      * 随字号变化且**明显大于** `title.line_pt`（实测比值 1.25~2.44 × 当前字号，见 CHG-159 §四）。
      * 故 `L` 取**保守下界** `title.line_pt`：`L` 越小 ⇒ `P` 越大 ⇒ 补偿**只多不少**（安全侧）。
@@ -1106,8 +1106,8 @@ if (!function_exists('zw_doc_gb9704_seal_geometry')) {
      *
      * 落款（有印章）的版面结构（见 `zw_doc_render_sign_html()` / `zw_doc_render_style_block()`）：
      * ```
-     *   署名行  ┐            ← `.zw-doc-sign-org`（绝对定位，水平居中于成文日期）
-     *   日期行  ┘ 块心 = 日期行顶边  ← `.zw-doc-sign-ref`（宽度 = 成文日期宽；右空 N 字）
+     *   署名行  ┐            ← `.tco-doc-sign-org`（绝对定位，水平居中于成文日期）
+     *   日期行  ┘ 块心 = 日期行顶边  ← `.tco-doc-sign-ref`（宽度 = 成文日期宽；右空 N 字）
      * ```
      * 成文日期右空四字（`sign.date_right_indent_chars_with_seal`）；署名「以成文日期为准居中」。
      *

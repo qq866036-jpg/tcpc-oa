@@ -658,23 +658,23 @@ if (!function_exists('zw_doc_render_list_page')) {
             ? '按年份、文号筛选已通过发文；列顺序按 2026 标准工作簿：发文类型、发文日期、文号、文件名称、部门、审核、分管领导。'
             : '文号自动调取、跳过、预留选择，单级审核，审核通过后抄送人可见。';
         ?>
-        <div class="wrap zw-doc-list">
+        <div class="wrap tco-doc-list">
             <?php echo zw_doc_admin_ui_style(); // 唯一出处：SPEC-10 §1.9 卡片范式（TASK-778） ?>
             <style>
-            .zw-doc-list .zw-doc-tabs{margin:14px 0 10px}
-            .zw-doc-list .zw-doc-status{display:inline-block;padding:1px 7px;border-radius:999px;background:#f0f0f1;font-size:12px}
-            .zw-doc-list .zw-doc-actions{margin:10px 0}
-            .zw-doc-list .zw-doc-ledger-filter{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
-            .zw-doc-list .zw-doc-ledger-filter label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:#666}
+            .tco-doc-list .tco-doc-tabs{margin:14px 0 10px}
+            .tco-doc-list .tco-doc-status{display:inline-block;padding:1px 7px;border-radius:999px;background:#f0f0f1;font-size:12px}
+            .tco-doc-list .tco-doc-actions{margin:10px 0}
+            .tco-doc-list .tco-doc-ledger-filter{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+            .tco-doc-list .tco-doc-ledger-filter label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:#666}
             </style>
             <h1><?php echo esc_html($page_title); ?></h1>
-            <p class="zw-doc-muted"><?php echo esc_html($page_intro); ?></p>
+            <p class="tco-doc-muted"><?php echo esc_html($page_intro); ?></p>
             <?php if ($notice !== '') { zw_doc_admin_notice($notice, zw_doc_notice_level($notice)); } // TASK-1362：级别唯一出处 ?>
-            <div class="zw-doc-actions">
+            <div class="tco-doc-actions">
                 <a class="button button-primary" href="<?php echo esc_url(zw_doc_admin_url(array('view' => 'create'))); ?>">新建发文</a>
             </div>
             <?php if ($tab === 'ledger') : ?>
-                <form method="get" class="zw-doc-ledger-filter">
+                <form method="get" class="tco-doc-ledger-filter">
                     <input type="hidden" name="page" value="zw-doc">
                     <input type="hidden" name="tab" value="ledger">
                     <label>年份
@@ -690,11 +690,11 @@ if (!function_exists('zw_doc_render_list_page')) {
                     </label>
                     <button class="button button-primary">筛选</button>
                     <a class="button" href="<?php echo esc_url(zw_doc_ledger_admin_url()); ?>">重置</a>
-                    <span class="zw-doc-muted">按文号年份与完整文号/序号筛选。</span>
+                    <span class="tco-doc-muted">按文号年份与完整文号/序号筛选。</span>
                 </form>
             <?php endif; ?>
             <?php if ($tab !== 'ledger') : ?>
-                <div class="nav-tab-wrapper zw-doc-tabs">
+                <div class="nav-tab-wrapper tco-doc-tabs">
                     <?php foreach ($tabs as $key => $label) : ?>
                         <a class="nav-tab<?php echo $tab === $key ? ' nav-tab-active' : ''; ?>" href="<?php echo esc_url(zw_doc_admin_url(array('tab' => $key))); ?>"><?php echo esc_html($label); ?><?php if ($tab === $key) : ?> (<?php echo (int) $result['total']; ?>)<?php endif; ?></a>
                     <?php endforeach; ?>
@@ -702,7 +702,7 @@ if (!function_exists('zw_doc_render_list_page')) {
             <?php endif; ?>
 
             <?php if ($tab === 'ledger') : ?>
-                <div class="zw-adm-table-wrap">
+                <div class="tco-table-wrap">
                 <table class="widefat striped">
                     <thead>
                     <tr>
@@ -736,7 +736,7 @@ if (!function_exists('zw_doc_render_list_page')) {
                 </table>
                 </div>
             <?php else : ?>
-                <div class="zw-adm-table-wrap">
+                <div class="tco-table-wrap">
                 <table class="widefat striped">
                     <thead>
                     <tr>
@@ -756,7 +756,7 @@ if (!function_exists('zw_doc_render_list_page')) {
                             <tr>
                                 <td><a href="<?php echo esc_url(zw_doc_admin_url(array('view' => 'detail', 'doc_id' => $doc['id']))); ?>"><strong><?php echo esc_html($doc['number']); ?></strong></a></td>
                                 <td><?php echo esc_html($doc['title']); ?></td>
-                                <td><span class="zw-doc-status"><?php echo esc_html(zw_doc_status_label($doc['status'])); ?></span></td>
+                                <td><span class="tco-doc-status"><?php echo esc_html(zw_doc_status_label($doc['status'])); ?></span></td>
                                 <td><?php echo esc_html(zw_doc_flow_person_label($doc)); ?></td>
                                 <td><?php echo esc_html(zw_doc_user_label($doc['author_id'])); ?></td>
                                 <td><?php echo esc_html($doc['updated_at']); ?></td>
@@ -820,23 +820,23 @@ if (!function_exists('zw_doc_render_create_page')) {
         $current  = get_current_user_id();
         $notice   = isset($_GET['zw_doc_msg']) ? sanitize_text_field(wp_unslash($_GET['zw_doc_msg'])) : '';
         ?>
-        <div class="wrap zw-doc-create">
+        <div class="wrap tco-doc-create">
             <?php echo zw_doc_admin_ui_style(); // 唯一出处：SPEC-10 §1.9 卡片范式（TASK-778） ?>
             <style>
-            .zw-doc-create .zw-doc-number-box{background:#fafbfc;border:1px dashed #dcdfe6;border-radius:8px;padding:12px 14px;margin-bottom:14px}
+            .tco-doc-create .tco-doc-number-box{background:#fafbfc;border:1px dashed #dcdfe6;border-radius:8px;padding:12px 14px;margin-bottom:14px}
             </style>
             <h1>新建发文</h1>
             <?php if ($notice !== '') { zw_doc_admin_notice($notice, zw_doc_notice_level($notice)); } // TASK-1362：级别唯一出处 ?>
-            <div class="zw-doc-card">
+            <div class="tco-doc-card">
                 <form method="post" enctype="multipart/form-data">
                     <?php wp_nonce_field('zw_doc_create_document'); ?>
                     <input type="hidden" name="zw_doc_action" value="create_document">
                     <input type="hidden" name="zw_doc_idempotency_key" value="<?php echo esc_attr(wp_generate_uuid4()); ?>">
 
-                    <div class="zw-doc-number-box">
+                    <div class="tco-doc-number-box">
                         <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
                             <label style="margin:0">文种
-                                <select name="num_type" id="zw-doc-create-type" onchange="zwDocReloadCreate()" style="min-width:100px">
+                                <select name="num_type" id="tco-doc-create-type" onchange="zwDocReloadCreate()" style="min-width:100px">
                                     <?php foreach ($settings['doc_types'] as $type_option) : ?>
                                         <option value="<?php echo esc_attr($type_option); ?>"<?php selected($type, $type_option); ?>><?php echo esc_html($type_option); ?></option>
                                     <?php endforeach; ?>
@@ -846,7 +846,7 @@ if (!function_exists('zw_doc_render_create_page')) {
                                 <?php if (is_wp_error($preview)) : ?>
                                     <span style="color:#b32d2e"><?php echo esc_html($preview->get_error_message()); ?></span>
                                 <?php else : ?>
-                                    <span id="zw-doc-preview-number" data-auto="<?php echo esc_attr($preview['full_number']); ?>" style="font-size:16px"><?php echo esc_html($preview['full_number']); ?></span>
+                                    <span id="tco-doc-preview-number" data-auto="<?php echo esc_attr($preview['full_number']); ?>" style="font-size:16px"><?php echo esc_html($preview['full_number']); ?></span>
                                     <input type="hidden" name="skip_seq" value="<?php echo (int) $preview['seq']; ?>">
                                     <button class="button button-small" type="submit" name="zw_doc_skip_button" value="1" formnovalidate onclick="return confirm('确认跳过当前文号？');">跳过当前号</button>
                                 <?php endif; ?>
@@ -855,9 +855,9 @@ if (!function_exists('zw_doc_render_create_page')) {
                         <input type="hidden" name="num_year" value="<?php echo (int) $year; ?>">
                     </div>
 
-                    <div class="zw-doc-field">
+                    <div class="tco-doc-field">
                         <label>选择预留 / 已跳过文号</label>
-                        <select id="zw-doc-existing-number" name="reserved_number_id" onchange="zwDocSyncSelectedNumber()">
+                        <select id="tco-doc-existing-number" name="reserved_number_id" onchange="zwDocSyncSelectedNumber()">
                             <option value="0" data-number="">不选择，按系统自动取号</option>
                             <?php foreach ($reusable as $row) : ?>
                                 <?php
@@ -868,39 +868,39 @@ if (!function_exists('zw_doc_render_create_page')) {
                                 <option value="<?php echo (int) $row['id']; ?>" data-number="<?php echo esc_attr($row['full_number']); ?>"><?php echo esc_html($label . $row['full_number'] . $extra); ?></option>
                             <?php endforeach; ?>
                         </select>
-                        <div class="zw-doc-muted">已跳过的文号也可在这里重新选择；保存/提交时以所选文号为准。自动取号会跳过预留和已跳过记录。</div>
+                        <div class="tco-doc-muted">已跳过的文号也可在这里重新选择；保存/提交时以所选文号为准。自动取号会跳过预留和已跳过记录。</div>
                     </div>
 
-                    <div class="zw-doc-field">
+                    <div class="tco-doc-field">
                         <label>公文标题 *</label>
                         <input type="text" name="doc_title" maxlength="200" required>
                     </div>
-                    <div class="zw-doc-field">
+                    <div class="tco-doc-field">
                         <label>公文摘要</label>
                         <textarea name="doc_summary" rows="4" maxlength="500"></textarea>
                     </div>
-                    <div class="zw-doc-field">
+                    <div class="tco-doc-field">
                         <label>发文部门（台账 + 版记）</label>
                         <?php // TASK-1259：SPEC-85 canonical 搜索下拉；候选 = 协会本级 + 正常状态分支机构，默认协会本级 ?>
                         <?php zw_control_search_select(array(
-                            'id'          => 'zw-doc-department',
+                            'id'          => 'tco-doc-department',
                             'name'        => 'doc_department',
                             'value'       => zw_doc_department_head_name(),
                             'placeholder' => '输入关键词搜索分支机构',
                             'empty_text'  => '没有匹配的分支机构',
                             'options'     => zw_doc_department_select_options(),
                         )); ?>
-                        <div class="zw-doc-muted">默认「中国传统文化促进会」；候选只含<strong>正常状态</strong>的分支机构；保存时服务端按同一名录二次校验。历史导入仍按关键字关联现有分支机构。</div>
+                        <div class="tco-doc-muted">默认「中国传统文化促进会」；候选只含<strong>正常状态</strong>的分支机构；保存时服务端按同一名录二次校验。历史导入仍按关键字关联现有分支机构。</div>
                     </div>
-                    <div class="zw-doc-field">
+                    <div class="tco-doc-field">
                         <label>发文日期（流转记录用 + 版记）</label>
                         <input type="date" name="doc_issue_date">
                     </div>
-                    <div class="zw-doc-field">
+                    <div class="tco-doc-field">
                         <label>备注（历史发文类型）</label>
                         <textarea name="doc_remark" rows="2" maxlength="255" placeholder="如：通知、任命、决定；历史导入时写入发文类型"></textarea>
                         <?php // TASK-1402：台账「发文类型」按简称 → 全称映射展示（唯一出处 zw_doc_number_type_labels()）。 ?>
-                        <div class="zw-doc-muted">台账「发文类型」列按映射展示全称：<?php
+                        <div class="tco-doc-muted">台账「发文类型」列按映射展示全称：<?php
                             $zw_remark_map = array();
                             foreach (zw_doc_number_type_labels() as $zw_remark_short => $zw_remark_full) {
                                 $zw_remark_map[] = $zw_remark_short . ' → ' . $zw_remark_full;
@@ -918,9 +918,9 @@ if (!function_exists('zw_doc_render_create_page')) {
                     $leader_current    = '';
                     $leader_value      = zw_doc_leader_default_name($leader_current);
                     ?>
-                    <div class="zw-doc-field">
+                    <div class="tco-doc-field">
                         <label>分管领导</label>
-                        <select name="doc_leader_name" id="zw-doc-leader">
+                        <select name="doc_leader_name" id="tco-doc-leader">
                             <option value="">请选择</option>
                             <?php if ($leader_value !== '' && !in_array($leader_value, $leader_values, true)) : ?>
                             <option value="<?php echo esc_attr($leader_value); ?>" selected><?php echo esc_html($leader_value); ?>（原值）</option>
@@ -930,14 +930,14 @@ if (!function_exists('zw_doc_render_create_page')) {
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    <div class="zw-doc-field">
+                    <div class="tco-doc-field">
                         <label>公文附件</label>
                         <input type="file" name="zw_doc_attachments[]" multiple>
-                        <div class="zw-doc-muted">类型：doc/docx/pdf/xls/xlsx/zip/jpg/png；单文件 ≤20MB，最多 10 个。</div>
+                        <div class="tco-doc-muted">类型：doc/docx/pdf/xls/xlsx/zip/jpg/png；单文件 ≤20MB，最多 10 个。</div>
                     </div>
-                    <div class="zw-doc-field">
+                    <div class="tco-doc-field">
                         <label>审核人 *</label>
-                        <select name="doc_reviewer_id" id="zw-doc-reviewer" required>
+                        <select name="doc_reviewer_id" id="tco-doc-reviewer" required>
                             <option value="">请选择</option>
                             <?php foreach ($reviewer_candidates as $candidate) : ?>
                                 <?php if ((int) $candidate['user_id'] > 0 && (int) $candidate['user_id'] === $current) { continue; } ?>
@@ -948,19 +948,19 @@ if (!function_exists('zw_doc_render_create_page')) {
                         </select>
                         <?php $reviewer_pool_note = zw_doc_reviewer_pool_note(); ?>
                         <?php if ($reviewer_pool_note !== '') : ?>
-                        <div class="zw-doc-muted"><?php echo esc_html($reviewer_pool_note); ?></div>
+                        <div class="tco-doc-muted"><?php echo esc_html($reviewer_pool_note); ?></div>
                         <?php endif; ?>
                     </div>
-                    <div class="zw-doc-field">
+                    <div class="tco-doc-field">
                         <label>抄送人</label>
                         <select name="doc_cc_ids[]" multiple size="6" style="min-height:120px">
                             <?php foreach ($cc_candidates as $candidate) : ?>
                                 <option value="<?php echo esc_attr($candidate['value']); ?>"><?php echo esc_html($candidate['label']); ?></option>
                             <?php endforeach; ?>
                         </select>
-                        <div class="zw-doc-muted">可多选；抄送人不能与审核人重复（重复项会被自动忽略）。</div>
+                        <div class="tco-doc-muted">可多选；抄送人不能与审核人重复（重复项会被自动忽略）。</div>
                     </div>
-                    <?php zw_doc_leader_reviewer_sync_script('zw-doc-leader', 'zw-doc-reviewer'); ?>
+                    <?php zw_doc_leader_reviewer_sync_script('tco-doc-leader', 'tco-doc-reviewer'); ?>
 
                     <p>
                         <button class="button" type="submit" name="zw_doc_create_mode" value="draft">保存草稿并占用文号</button>
@@ -971,7 +971,7 @@ if (!function_exists('zw_doc_render_create_page')) {
             </div>
             <script>
             function zwDocReloadCreate() {
-                var typeEl = document.getElementById('zw-doc-create-type');
+                var typeEl = document.getElementById('tco-doc-create-type');
                 if (!typeEl) { return; }
                 var url = new URL(window.location.href);
                 url.searchParams.set('page', 'zw-doc');
@@ -981,8 +981,8 @@ if (!function_exists('zw_doc_render_create_page')) {
                 window.location.href = url.toString();
             }
             function zwDocSyncSelectedNumber() {
-                var sel = document.getElementById('zw-doc-existing-number');
-                var el  = document.getElementById('zw-doc-preview-number');
+                var sel = document.getElementById('tco-doc-existing-number');
+                var el  = document.getElementById('tco-doc-preview-number');
                 if (!sel || !el) { return; }
                 var opt = sel.options[sel.selectedIndex];
                 var num = opt ? (opt.getAttribute('data-number') || '') : '';
@@ -1012,11 +1012,11 @@ if (!function_exists('zw_doc_render_detail_page')) {
         $flow   = zw_doc_flow_settings();
         $events = zw_doc_get_events($doc_id);
         ?>
-        <div class="wrap zw-doc-detail">
+        <div class="wrap tco-doc-detail">
             <?php echo zw_doc_admin_ui_style(); // 唯一出处：SPEC-10 §1.9 卡片范式（TASK-778） ?>
             <style>
-            .zw-doc-detail .zw-doc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
-            .zw-doc-detail .zw-doc-status{display:inline-block;padding:2px 8px;border-radius:999px;background:#f0f0f1}
+            .tco-doc-detail .tco-doc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+            .tco-doc-detail .tco-doc-status{display:inline-block;padding:2px 8px;border-radius:999px;background:#f0f0f1}
             </style>
             <?php
             // TASK-2008：文件默认打开动作 canonical 资源（doc-viewer 弹层/图片灯箱 + file-icon + 本控件样式）。
@@ -1056,22 +1056,22 @@ if (!function_exists('zw_doc_render_detail_page')) {
                 $ov_pdf_hint = '尚未生成（已用印，需在「完成文件」点「生成正式用印件」）';
             }
             ?>
-            <div class="zw-doc-card">
+            <div class="tco-doc-card">
                 <h2>概览</h2>
-                <div class="zw-doc-grid">
+                <div class="tco-doc-grid">
                     <div>
                         <strong>发文状态</strong><br>
-                        <span class="zw-doc-status"><?php echo esc_html(zw_doc_status_label($doc['status'])); ?></span>
-                        <span class="zw-doc-muted">文号 <?php echo esc_html($doc['number']); ?></span>
+                        <span class="tco-doc-status"><?php echo esc_html(zw_doc_status_label($doc['status'])); ?></span>
+                        <span class="tco-doc-muted">文号 <?php echo esc_html($doc['number']); ?></span>
                     </div>
                     <div>
                         <strong>完成文件</strong><br>
                         <?php if ($ov_pdf_ready && $ov_has_files_card) : ?>
-                            <span class="zw-doc-status">已生成</span>
-                            <span class="zw-doc-muted"><?php echo (int) $ov_pdf['pages']; ?> 页 / <?php echo esc_html(size_format($ov_pdf['bytes'])); ?> / SHA-256 <?php echo esc_html(substr((string) $ov_pdf['sha256'], 0, 12)); ?>…</span>
-                            <br><a class="button button-small" href="#zw-doc-files">查看完成文件（加密 PDF）</a>
+                            <span class="tco-doc-status">已生成</span>
+                            <span class="tco-doc-muted"><?php echo (int) $ov_pdf['pages']; ?> 页 / <?php echo esc_html(size_format($ov_pdf['bytes'])); ?> / SHA-256 <?php echo esc_html(substr((string) $ov_pdf['sha256'], 0, 12)); ?>…</span>
+                            <br><a class="button button-small" href="#tco-doc-files">查看完成文件（加密 PDF）</a>
                         <?php elseif (function_exists('zw_doc_pdf_status_label')) : ?>
-                            <span class="zw-doc-muted"><?php echo esc_html(zw_doc_pdf_status_label($ov_pdf['status'])); ?>：<?php echo esc_html($ov_pdf_hint); ?></span>
+                            <span class="tco-doc-muted"><?php echo esc_html(zw_doc_pdf_status_label($ov_pdf['status'])); ?>：<?php echo esc_html($ov_pdf_hint); ?></span>
                             <?php
                             // TASK-1412：未就绪时给出**下一步动作链接**，且只在目标卡片确实渲染时输出（无死链）。
                             if (!$ov_has_body) :
@@ -1079,22 +1079,22 @@ if (!function_exists('zw_doc_render_detail_page')) {
                                 ?>
                             <?php elseif (!$ov_has_files_card) : ?>
                                 <?php if ($ov_has_legal_card && !$ov_legal_pass) : ?>
-                                    <br><a class="button button-small" href="#zw-doc-legal">去「法务审核」送审</a>
+                                    <br><a class="button button-small" href="#tco-doc-legal">去「法务审核」送审</a>
                                     <?php // 次级跳转：用印卡会如实列出「尚未取得法务审批结论」等阻断项，属说明而非绕过。 ?>
-                                    <?php if ($ov_has_seal_card) : ?><a class="button button-small" href="#zw-doc-seal">去「用印」</a><?php endif; ?>
+                                    <?php if ($ov_has_seal_card) : ?><a class="button button-small" href="#tco-doc-seal">去「用印」</a><?php endif; ?>
                                 <?php elseif ($ov_has_seal_card) : ?>
-                                    <br><a class="button button-small" href="#zw-doc-seal">去「用印」正式用印</a>
+                                    <br><a class="button button-small" href="#tco-doc-seal">去「用印」正式用印</a>
                                 <?php endif; ?>
                             <?php else : ?>
-                                <br><a class="button button-small" href="#zw-doc-files">去「完成文件」生成正式用印件</a>
+                                <br><a class="button button-small" href="#tco-doc-files">去「完成文件」生成正式用印件</a>
                             <?php endif; ?>
                         <?php else : ?>
-                            <span class="zw-doc-muted">—</span>
+                            <span class="tco-doc-muted">—</span>
                         <?php endif; ?>
                     </div>
                     <div>
                         <strong>流转</strong><br>
-                        <span class="zw-doc-muted">发起人 <?php echo esc_html(zw_doc_user_label((int) $doc['author_id'])); ?> ｜ 审核人 <?php echo esc_html(zw_doc_flow_person_label($doc)); ?></span>
+                        <span class="tco-doc-muted">发起人 <?php echo esc_html(zw_doc_user_label((int) $doc['author_id'])); ?> ｜ 审核人 <?php echo esc_html(zw_doc_flow_person_label($doc)); ?></span>
                     </div>
                 </div>
                 <?php
@@ -1102,32 +1102,32 @@ if (!function_exists('zw_doc_render_detail_page')) {
                 // 首屏给出到「纸面要素 / 流转 / 法务审核 / 用印 / 完成文件」的**锚点跳转**。
                 // TASK-1412：**逐项按目标存在性渲染** —— 目标卡片不存在时该链接**一律不渲染**，
                 // 避免出现「点了没反应」的死锚点（用户报障根因）。
-                $ov_jump = array('<a href="#zw-doc-face">纸面要素</a>', '<a href="#zw-doc-flow">流转</a>');
+                $ov_jump = array('<a href="#tco-doc-face">纸面要素</a>', '<a href="#tco-doc-flow">流转</a>');
                 if ($ov_has_legal_card) {
-                    $ov_jump[] = '<a href="#zw-doc-legal">法务审核</a>';
+                    $ov_jump[] = '<a href="#tco-doc-legal">法务审核</a>';
                 }
                 if ($ov_has_seal_card) {
-                    $ov_jump[] = '<a href="#zw-doc-seal">用印</a>';
+                    $ov_jump[] = '<a href="#tco-doc-seal">用印</a>';
                 }
                 if ($ov_has_files_card) {
-                    $ov_jump[] = '<a href="#zw-doc-files">完成文件</a>';
+                    $ov_jump[] = '<a href="#tco-doc-files">完成文件</a>';
                 }
                 if (!empty($doc['linked_files'])) {
                     // TASK-1644 阶段四：关联网盘文件存在时才给锚点（逐项按目标存在性渲染，无死链）。
-                    $ov_jump[] = '<a href="#zw-doc-netdisk">归档文件</a>';
+                    $ov_jump[] = '<a href="#tco-doc-netdisk">归档文件</a>';
                 }
                 ?>
-                <p class="zw-doc-muted" style="margin:10px 0 0">
+                <p class="tco-doc-muted" style="margin:10px 0 0">
                     快速跳转：<?php echo implode(' ｜ ', $ov_jump); // phpcs:ignore WordPress.Security.EscapeOutput -- 静态锚点，逐项按目标存在性渲染 ?>
                 </p>
             </div>
-            <div class="zw-doc-card" id="zw-doc-face">
+            <div class="tco-doc-card" id="tco-doc-face">
                 <h2>纸面要素</h2>
-                <div class="zw-doc-grid">
+                <div class="tco-doc-grid">
                     <div><strong>文号</strong><br><?php echo esc_html($doc['number']); ?></div>
-                    <div><strong>状态</strong><br><span class="zw-doc-status"><?php echo esc_html(zw_doc_status_label($doc['status'])); ?></span></div>
+                    <div><strong>状态</strong><br><span class="tco-doc-status"><?php echo esc_html(zw_doc_status_label($doc['status'])); ?></span></div>
                     <div><strong>发文日期</strong><br><?php echo $doc['issue_date'] !== '' ? esc_html($doc['issue_date']) : '—'; ?></div>
-                    <div><strong>发文部门</strong><br><?php echo $doc['department'] !== '' ? esc_html($doc['department']) : '—'; ?><?php if ((int) $doc['branch_id'] > 0) : ?><span class="zw-doc-muted">（已关联分支机构 #<?php echo (int) $doc['branch_id']; ?>）</span><?php endif; ?></div>
+                    <div><strong>发文部门</strong><br><?php echo $doc['department'] !== '' ? esc_html($doc['department']) : '—'; ?><?php if ((int) $doc['branch_id'] > 0) : ?><span class="tco-doc-muted">（已关联分支机构 #<?php echo (int) $doc['branch_id']; ?>）</span><?php endif; ?></div>
                 </div>
                 <hr>
                 <p><strong>摘要</strong><br><?php echo nl2br(esc_html($doc['summary'])); ?></p>
@@ -1175,9 +1175,9 @@ if (!function_exists('zw_doc_render_detail_page')) {
                     <?php endif; ?>
                 </p>
                 <?php // TASK-1644 阶段四：关联网盘文件（归档通道）——与上方媒体库「附件」两套通道并列展示。 ?>
-                <p id="zw-doc-netdisk"><strong>归档文件（网盘）</strong><br>
+                <p id="tco-doc-netdisk"><strong>归档文件（网盘）</strong><br>
                     <?php if (empty($doc['linked_files'])) : ?>
-                        <span class="zw-doc-muted">暂无。分支机构发文归档至「网盘文件 · 分支机构 · 发文管理」，总会发文归档至「网盘文件 · 内部办公 · 办公文档」。</span>
+                        <span class="tco-doc-muted">暂无。分支机构发文归档至「网盘文件 · 分支机构 · 发文管理」，总会发文归档至「网盘文件 · 内部办公 · 办公文档」。</span>
                     <?php else : ?>
                         <?php foreach ($doc['linked_files'] as $lf) : ?>
                             <?php
@@ -1207,7 +1207,7 @@ if (!function_exists('zw_doc_render_detail_page')) {
                             <span style="display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap">
                             <?php echo $lf_link; // phpcs:ignore WordPress.Security.EscapeOutput -- canonical 控件自带转义 ?>
                             <?php echo $lf_dl; // phpcs:ignore WordPress.Security.EscapeOutput -- canonical 控件自带转义 ?>
-                            <span class="zw-doc-muted">（<?php echo esc_html($lf_space_label); ?> / <?php echo esc_html(size_format((int) $lf['size'])); ?> / <?php echo esc_html($lf['uploaded_at']); ?>）</span>
+                            <span class="tco-doc-muted">（<?php echo esc_html($lf_space_label); ?> / <?php echo esc_html(size_format((int) $lf['size'])); ?> / <?php echo esc_html($lf['uploaded_at']); ?>）</span>
                             </span><br>
                         <?php endforeach; ?>
                     <?php endif; ?>
@@ -1221,9 +1221,9 @@ if (!function_exists('zw_doc_render_detail_page')) {
             // TASK-1382 ③ 信息架构重排：**流转** 独立成卡（原在「纸面要素」格内）。
             // 发起人 / 审核人一律显示**姓名**：`zw_doc_user_label()` 姓名优先于账号昵称（TASK-1379 已实现）。
             ?>
-            <div class="zw-doc-card" id="zw-doc-flow">
+            <div class="tco-doc-card" id="tco-doc-flow">
                 <h2>流转</h2>
-                <div class="zw-doc-grid">
+                <div class="tco-doc-grid">
                     <div><strong>发起人</strong><br><?php echo esc_html(zw_doc_user_label((int) $doc['author_id'])); ?></div>
                     <div><strong>审核人</strong><br><?php echo esc_html(zw_doc_flow_person_label($doc)); ?></div>
                     <div><strong>分管领导</strong><br><?php echo $doc['leader_name'] !== '' ? esc_html($doc['leader_name']) : '—'; ?></div>
@@ -1236,7 +1236,7 @@ if (!function_exists('zw_doc_render_detail_page')) {
                         ?>
                     </div>
                 </div>
-                <p class="zw-doc-muted">流转明细（含时间 / 操作人 / 事件）见页尾「流转记录」。</p>
+                <p class="tco-doc-muted">流转明细（含时间 / 操作人 / 事件）见页尾「流转记录」。</p>
             </div>
 
             <?php
@@ -1251,7 +1251,7 @@ if (!function_exists('zw_doc_render_detail_page')) {
                     'status'           => $pdf['status'],
                 ));
                 ?>
-                <div class="zw-doc-card">
+                <div class="tco-doc-card">
                     <?php // TASK-1839：标题前挂 canonical 文件图标（图标是**兄弟节点**，`<h2>` 原文逐字不变，避免改动既有断言契约）。 ?>
                     <div style="display:flex;align-items:center;gap:8px">
                         <?php
@@ -1259,28 +1259,28 @@ if (!function_exists('zw_doc_render_detail_page')) {
                             ? zw_control_file_icon(array('name' => '完成文件.pdf', 'size' => 'sm')) // phpcs:ignore WordPress.Security.EscapeOutput -- canonical 控件自带转义
                             : '';
                         ?>
-                        <h2 id="zw-doc-files">完成文件（正式用印件（加密 PDF））</h2>
+                        <h2 id="tco-doc-files">完成文件（正式用印件（加密 PDF））</h2>
                     </div>
                     <p>
                         <strong>状态：</strong><?php echo esc_html(zw_doc_pdf_status_label($pdf['status'])); ?>
                         <?php if ($pdf['status'] === 'ready') : ?>
-                            <span class="zw-doc-muted">
+                            <span class="tco-doc-muted">
                                 （<?php echo (int) $pdf['pages']; ?> 页 / <?php echo esc_html(size_format($pdf['bytes'])); ?> / <?php echo (int) $pdf['dpi']; ?>dpi / SHA-256 <?php echo esc_html(substr($pdf['sha256'], 0, 12)); ?>…）
                             </span>
                         <?php endif; ?>
                     </p>
                     <?php if (function_exists('zw_doc_seal_edit_unlocked') && zw_doc_seal_edit_unlocked($doc['id'])) : ?>
                         <?php // TASK-1382 ④：解锁编辑态下，本卡产物仍是「已用印版本」，不得被误当最终稿。 ?>
-                        <p class="zw-doc-muted">⚠️ 该发文已<strong>同版本解锁编辑</strong>：下方为<strong>已用印版本</strong>的产物；若正文 / 要素已修改，请以<strong>重新用印后</strong>生成的新产物为准。</p>
+                        <p class="tco-doc-muted">⚠️ 该发文已<strong>同版本解锁编辑</strong>：下方为<strong>已用印版本</strong>的产物；若正文 / 要素已修改，请以<strong>重新用印后</strong>生成的新产物为准。</p>
                     <?php endif; ?>
                     <?php if ($pdf['error'] !== '') : ?>
-                        <p class="zw-doc-muted">失败原因：<?php echo esc_html($pdf['error']); ?></p>
+                        <p class="tco-doc-muted">失败原因：<?php echo esc_html($pdf['error']); ?></p>
                     <?php endif; ?>
                     <?php if (!empty($pdf_tools['missing'])) : ?>
-                        <p class="zw-doc-muted">⚠️ 生成依赖未就绪：<?php echo esc_html(implode('、', $pdf_tools['missing'])); ?>（需先执行 <code>scripts/install-doc-render-worker.sh</code>）</p>
+                        <p class="tco-doc-muted">⚠️ 生成依赖未就绪：<?php echo esc_html(implode('、', $pdf_tools['missing'])); ?>（需先执行 <code>scripts/install-doc-render-worker.sh</code>）</p>
                     <?php endif; ?>
                     <?php if (!zw_doc_pdf_owner_pass_configured()) : ?>
-                        <p class="zw-doc-muted">⚠️ 未在 <code>wp-config.php</code> 配置编辑口令常量 <code>ZW_DOC_PDF_OWNER_PASS</code>；未配置时拒绝生成（安全默认）。</p>
+                        <p class="tco-doc-muted">⚠️ 未在 <code>wp-config.php</code> 配置编辑口令常量 <code>ZW_DOC_PDF_OWNER_PASS</code>；未配置时拒绝生成（安全默认）。</p>
                     <?php endif; ?>
                     <?php if (!empty($pdf_blockers)) : ?>
                         <ul style="margin:0 0 10px 20px;list-style:disc">
@@ -1318,11 +1318,11 @@ if (!function_exists('zw_doc_render_detail_page')) {
                             ?>
                             <div style="margin:12px 0 0;padding:10px 12px;border:1px solid #e5e7eb;border-radius:6px;background:#fafafa">
                                 <strong>历史版本（旧产物留档 · 仅超级管理员可见）</strong>
-                                <p class="zw-doc-muted" style="margin:4px 0 8px">
+                                <p class="tco-doc-muted" style="margin:4px 0 8px">
                                     重新生成 / 再次用印<strong>不覆盖</strong>旧加密 PDF：每次产物都是新文件并登记为一个版本（只增不减）；
                                     普通有权者只见<strong>当前版本</strong>，历史版本的下载 / 内嵌浏览只放行<strong>超级管理员</strong>。
                                 </p>
-                                <div class="zw-adm-table-wrap">
+                                <div class="tco-table-wrap">
                                 <table class="widefat striped" style="max-width:100%">
                                     <thead>
                                         <tr>
@@ -1341,7 +1341,7 @@ if (!function_exists('zw_doc_render_detail_page')) {
                                             <tr>
                                                 <td>
                                                     v<?php echo (int) $pdf_vno; ?>
-                                                    <?php if ($pdf_vno === $pdf_vcount) : ?><span class="zw-doc-muted">（最新）</span><?php endif; ?>
+                                                    <?php if ($pdf_vno === $pdf_vcount) : ?><span class="tco-doc-muted">（最新）</span><?php endif; ?>
                                                 </td>
                                                 <td><?php echo esc_html((string) $pdf_ver['generated_at']); ?></td>
                                                 <td><?php echo (int) $pdf_ver['pages']; ?></td>
@@ -1394,7 +1394,7 @@ if (!function_exists('zw_doc_render_detail_page')) {
                                 <a class="button" href="<?php echo esc_url($pdf_inline_url); ?>" target="_blank" rel="noopener">在线浏览（加密 PDF）</a>
                             <?php endif; ?>
                         </p>
-                        <p class="zw-doc-muted">
+                        <p class="tco-doc-muted">
                             文件为 <strong>AES-256 加密件</strong>，打开时会提示<strong>编辑口令</strong>；系统<strong>不在服务端解密</strong>，
                             仅向<strong>本发文的可见者</strong>（发起人 / 审核人 / 抄送 / 分管领导 / 管理员）提供该内嵌通道。
                         </p>
@@ -1415,7 +1415,7 @@ if (!function_exists('zw_doc_render_detail_page')) {
                             </p>
                         </form>
                     <?php endif; ?>
-                    <p class="zw-doc-muted">
+                    <p class="tco-doc-muted">
                         P1 整页栅格化 + AES-256 加密（编辑口令）：PDF 内<strong>没有独立的印章对象</strong>，无法被单独提取；
                         但<strong>权限位是规范层标记、不是密码学保护</strong>，<strong>无法阻止截图</strong>。文字不可选中、不可检索。
                     </p>
@@ -1441,11 +1441,11 @@ if (!function_exists('zw_doc_render_detail_page')) {
                         $ap_target = $ap_first;
                     }
                     ?>
-                    <div class="zw-doc-card">
+                    <div class="tco-doc-card">
                         <h2>任命同步状态</h2>
                         <p>
-                            <span class="zw-doc-badge <?php echo esc_attr($ap_badge); ?>"><?php echo esc_html($ap_label); ?></span>
-                            <span class="zw-doc-muted">
+                            <span class="tco-doc-badge <?php echo esc_attr($ap_badge); ?>"><?php echo esc_html($ap_label); ?></span>
+                            <span class="tco-doc-muted">
                                 <?php echo esc_html('通道：' . $ap_scope); ?><?php echo $ap_target !== '' ? '｜对象：' . esc_html($ap_target) : ''; ?>
                                 <?php echo '｜任命 ' . (int) $ap_meta['count'] . ' 人'; ?>
                                 <?php echo '｜触发口径：' . esc_html(zw_doc_appoint_sync_trigger_label()); ?>
@@ -1460,7 +1460,7 @@ if (!function_exists('zw_doc_render_detail_page')) {
                                 <?php endforeach; ?>
                             </ul>
                         <?php elseif ($ap_state === 'none') : ?>
-                            <p class="zw-doc-muted"><?php echo esc_html((string) $ap_sync['detail']); ?></p>
+                            <p class="tco-doc-muted"><?php echo esc_html((string) $ap_sync['detail']); ?></p>
                         <?php endif; ?>
                         <?php if (current_user_can('manage_options')) : ?>
                             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin:0">
@@ -1468,10 +1468,10 @@ if (!function_exists('zw_doc_render_detail_page')) {
                                 <input type="hidden" name="action" value="zw_doc_appoint_resync">
                                 <input type="hidden" name="doc_id" value="<?php echo (int) $doc['id']; ?>">
                                 <button class="button" type="submit">重新同步</button>
-                                <span class="zw-doc-muted">重新同步重试人员库写入与后置通道（带印章正式版归档 / 任命文件 webp / 任命书证书）；<strong>公文审批 / 用印状态不回滚</strong>。</span>
+                                <span class="tco-doc-muted">重新同步重试人员库写入与后置通道（带印章正式版归档 / 任命文件 webp / 任命书证书）；<strong>公文审批 / 用印状态不回滚</strong>。</span>
                             </form>
                         <?php else : ?>
-                            <p class="zw-doc-muted">当前账号没有重新同步权限（需管理员）。</p>
+                            <p class="tco-doc-muted">当前账号没有重新同步权限（需管理员）。</p>
                         <?php endif; ?>
                     </div>
                 <?php endif; ?>
@@ -1482,7 +1482,7 @@ if (!function_exists('zw_doc_render_detail_page')) {
             if (!empty($doc['body']) && function_exists('zw_doc_render_preview_html')) :
                 $preview_args = zw_doc_build_render_args($doc);
                 ?>
-                <div class="zw-doc-card">
+                <div class="tco-doc-card">
                     <h2>版式预览</h2>
                     <p>
                         <a class="button button-primary" target="_blank" rel="noopener"
@@ -1491,7 +1491,7 @@ if (!function_exists('zw_doc_render_detail_page')) {
                         <?php if (function_exists('zw_doc_can_edit_doc') && zw_doc_can_edit_doc($doc)) : ?>
                             <a class="button" href="<?php echo esc_url(zw_doc_admin_url(array('view' => 'compose', 'doc_id' => (int) $doc['id']))); ?>">编辑正文</a>
                         <?php endif; ?>
-                        <span class="zw-doc-muted">打印视图在新窗口打开并自动调起打印对话框；DOCX 为可编辑排版件（<strong>不含印章</strong>，用印请走正式用印件流程），且<strong>只写入国标字体名</strong> —— 本机未安装 仿宋_GB2312 / 方正小标宋简体 时，Word/WPS 会用替代字体显示。</span>
+                        <span class="tco-doc-muted">打印视图在新窗口打开并自动调起打印对话框；DOCX 为可编辑排版件（<strong>不含印章</strong>，用印请走正式用印件流程），且<strong>只写入国标字体名</strong> —— 本机未安装 仿宋_GB2312 / 方正小标宋简体 时，Word/WPS 会用替代字体显示。</span>
                     </p>
                     <?php if (function_exists('zw_doc_letterhead_registry')) : ?>
                         <?php
@@ -1523,21 +1523,21 @@ if (!function_exists('zw_doc_render_detail_page')) {
                                 </select>
                             </label>
                             <button class="button button-small" type="submit">保存红头</button>
-                            <span class="zw-doc-muted">
+                            <span class="tco-doc-muted">
                                 当前：<?php echo esc_html(isset($lh_labels[$lh_now['source']]) ? $lh_labels[$lh_now['source']] : $lh_now['source']); ?>
                                 <?php if ($lh_now['name'] !== '') : ?>（<?php echo esc_html($lh_now['name']); ?>，<?php echo (int) $lh_now['dpi']; ?>dpi）<?php endif; ?>
-                                <?php if ($lh_now['low']) : ?><span class="zw-doc-badge is-warn">低清</span><?php endif; ?>
+                                <?php if ($lh_now['low']) : ?><span class="tco-doc-badge is-warn">低清</span><?php endif; ?>
                             </span>
                         </form>
                         <?php if (!empty($lh_now['blocked'])) : ?>
-                            <p class="zw-doc-muted" style="color:#b30404">
+                            <p class="tco-doc-muted" style="color:#b30404">
                                 <strong>红头 fail-closed：</strong><?php echo esc_html((string) $lh_now['reason']); ?>
                                 <?php if (!empty($lh_now['assets_url'])) : ?>
                                     <a href="<?php echo esc_url((string) $lh_now['assets_url']); ?>">前往「红头与印章 → 红头模板」</a>
                                 <?php endif; ?>
                             </p>
                         <?php elseif ($lh_is_auto) : ?>
-                            <p class="zw-doc-muted">
+                            <p class="tco-doc-muted">
                                 全局红头生成方式为「系统自动生成红头」（默认）：本页「红头」选择与「文种映射」<strong>当前不生效</strong>，
                                 仅在「红头与印章 → 红头模板」把生成方式切为「使用上传的红头文件（图片）」后生效。
                                 <a href="<?php echo esc_url(zw_doc_assets_admin_url(array('tab' => 'letterhead'))); ?>">前往设置</a>
@@ -1556,16 +1556,16 @@ if (!function_exists('zw_doc_render_detail_page')) {
                 $legal     = zw_doc_legal_status($doc['id']);
                 $can_legal = zw_doc_legal_can_review();
                 ?>
-                <div class="zw-doc-card" id="zw-doc-legal">
+                <div class="tco-doc-card" id="tco-doc-legal">
                     <h2>法务审核</h2>
                     <p>
                         <strong>状态：</strong><?php echo esc_html(zw_doc_legal_status_label($legal['status'])); ?>
                         <?php if ($legal['reviewer_type'] !== '') : ?>
-                            <span class="zw-doc-muted">（<?php echo $legal['reviewer_type'] === 'ai' ? 'AI 初审' : '人工判定'; ?><?php echo $legal['reviewed_at'] !== '' ? '，' . esc_html($legal['reviewed_at']) : ''; ?>）</span>
+                            <span class="tco-doc-muted">（<?php echo $legal['reviewer_type'] === 'ai' ? 'AI 初审' : '人工判定'; ?><?php echo $legal['reviewed_at'] !== '' ? '，' . esc_html($legal['reviewed_at']) : ''; ?>）</span>
                         <?php endif; ?>
                     </p>
                     <?php if ($legal['policy_version'] !== '') : ?>
-                        <p class="zw-doc-muted">政策版本：<?php echo esc_html($legal['policy_version']); ?>｜参与判定条款：<?php echo (int) $legal['clause_sent']; ?> / <?php echo (int) $legal['clause_total']; ?></p>
+                        <p class="tco-doc-muted">政策版本：<?php echo esc_html($legal['policy_version']); ?>｜参与判定条款：<?php echo (int) $legal['clause_sent']; ?> / <?php echo (int) $legal['clause_total']; ?></p>
                     <?php endif; ?>
                     <?php if ($legal['summary'] !== '') : ?>
                         <p><strong>结论：</strong><?php echo esc_html($legal['summary']); ?></p>
@@ -1577,12 +1577,12 @@ if (!function_exists('zw_doc_render_detail_page')) {
                                     [<?php echo esc_html((string) $issue['severity']); ?>]
                                     <?php if ($issue['label'] !== '') : ?><?php echo esc_html((string) $issue['label']); ?>：<?php endif; ?>
                                     <?php echo esc_html((string) $issue['message']); ?>
-                                    <?php if ($issue['suggestion'] !== '') : ?><span class="zw-doc-muted">（建议：<?php echo esc_html((string) $issue['suggestion']); ?>）</span><?php endif; ?>
+                                    <?php if ($issue['suggestion'] !== '') : ?><span class="tco-doc-muted">（建议：<?php echo esc_html((string) $issue['suggestion']); ?>）</span><?php endif; ?>
                                 </li>
                             <?php endforeach; ?>
                         </ul>
                     <?php endif; ?>
-                    <p class="zw-doc-muted">AI 异常/不通过一律转人工且**不自动放行**；本模块只保存结论与问题摘要，<strong>不保存正文全文</strong>。</p>
+                    <p class="tco-doc-muted">AI 异常/不通过一律转人工且**不自动放行**；本模块只保存结论与问题摘要，<strong>不保存正文全文</strong>。</p>
                     <?php if ($can_legal) : ?>
                         <form method="post" action="<?php echo esc_url(zw_doc_legal_admin_url()); ?>" style="display:inline">
                             <?php wp_nonce_field('zw_doc_legal'); ?>
@@ -1600,7 +1600,7 @@ if (!function_exists('zw_doc_render_detail_page')) {
                             </form>
                         <?php endif; ?>
                     <?php else : ?>
-                        <p class="zw-doc-muted">当前账号没有法务判定权限（需 AI法务部角色或管理员）。</p>
+                        <p class="tco-doc-muted">当前账号没有法务判定权限（需 AI法务部角色或管理员）。</p>
                     <?php endif; ?>
                 </div>
             <?php endif; ?>
@@ -1631,7 +1631,7 @@ if (!function_exists('zw_doc_render_detail_page')) {
                     'confirmed'    => true,
                 )) : array();
                 ?>
-                <div class="zw-doc-card" id="zw-doc-seal">
+                <div class="tco-doc-card" id="tco-doc-seal">
                     <h2>用印</h2>
                     <?php if ($is_sealed) : ?>
                         <?php if ($edit_unlocked) : ?>
@@ -1640,7 +1640,7 @@ if (!function_exists('zw_doc_render_detail_page')) {
                                 <strong>已同版本解锁编辑</strong>：正文与要素可修改，<strong>已用印记录与完成文件保留</strong>。
                                 编辑完成后请<strong>重新用印</strong>；上一版用印记录会进入用印历史，不丢失。
                             </p>
-                            <p class="zw-doc-muted">解锁期间请勿触发「重新同步 / 证书生成」：这些通道以当前产物为准，重新用印后才是最终版。</p>
+                            <p class="tco-doc-muted">解锁期间请勿触发「重新同步 / 证书生成」：这些通道以当前产物为准，重新用印后才是最终版。</p>
                         <?php else : ?>
                             <p>
                                 已用印（印章 <code><?php echo esc_html((string) $doc['seal_id']); ?></code>）：正文已锁定，如需修改有两条路径 ——
@@ -1663,7 +1663,7 @@ if (!function_exists('zw_doc_render_detail_page')) {
                     <?php endif; ?>
                     <?php if (!$is_sealed || $edit_unlocked) : ?>
                         <?php if (!$can_seal) : ?>
-                            <p class="zw-doc-muted">当前账号没有用印权限。</p>
+                            <p class="tco-doc-muted">当前账号没有用印权限。</p>
                         <?php endif; ?>
                         <?php if (!empty($blockers)) : ?>
                             <p><strong>当前尚不满足用印条件：</strong></p>
@@ -1674,7 +1674,7 @@ if (!function_exists('zw_doc_render_detail_page')) {
                             </ul>
                         <?php endif; ?>
                         <?php if ($can_seal && empty($seal_opts)) : ?>
-                            <p class="zw-doc-muted">尚未上传可用印章，请先到「<a href="<?php echo esc_url(zw_doc_assets_admin_url()); ?>">红头与印章</a>」上传。</p>
+                            <p class="tco-doc-muted">尚未上传可用印章，请先到「<a href="<?php echo esc_url(zw_doc_assets_admin_url()); ?>">红头与印章</a>」上传。</p>
                         <?php endif; ?>
                         <form method="post" action="<?php echo esc_url(zw_doc_assets_admin_url()); ?>">
                             <?php wp_nonce_field('zw_doc_assets'); ?>
@@ -1700,21 +1700,21 @@ if (!function_exists('zw_doc_render_detail_page')) {
                             </p>
                             <p>
                                 <button class="button button-primary" type="submit"><?php echo $edit_unlocked ? '重新用印（以新产物为准）' : '正式用印'; ?></button>
-                                <span class="zw-doc-muted">用印不可逆：确认后正文将被锁定，且正式用印件为加密 PDF（通道 C，见后续任务）。</span>
+                                <span class="tco-doc-muted">用印不可逆：确认后正文将被锁定，且正式用印件为加密 PDF（通道 C，见后续任务）。</span>
                             </p>
                         </form>
-                        <p class="zw-doc-muted">门禁（服务端强制）：发文已审核通过 · 已取得法务审批结论（无审批不得用印）· 具备用印权限 · 印章启用 · 二次确认 · 版式自检通过。</p>
+                        <p class="tco-doc-muted">门禁（服务端强制）：发文已审核通过 · 已取得法务审批结论（无审批不得用印）· 具备用印权限 · 印章启用 · 二次确认 · 版式自检通过。</p>
                     <?php endif; ?>
                 </div>
             <?php endif; ?>
 
             <?php
-            // TASK-1382 ③：完成文件卡片已按新的信息架构**前移到「流转」之后**（同文件上方 `id="zw-doc-files"` 区块）。
+            // TASK-1382 ③：完成文件卡片已按新的信息架构**前移到「流转」之后**（同文件上方 `id="tco-doc-files"` 区块）。
             // 判定条件与数据来源逐字未改，仅改变渲染位置 —— 保证首屏「概览 → 纸面要素 → 流转 → 完成文件」的顺序目标。
             ?>
 
             <?php if ($doc['status'] === 'pending' && (int) $doc['reviewer_id'] === get_current_user_id()) : ?>
-                <div class="zw-doc-card">
+                <div class="tco-doc-card">
                     <h2>审核操作</h2>
                     <form method="post">
                         <?php wp_nonce_field('zw_doc_review_document'); ?>
@@ -1730,7 +1730,7 @@ if (!function_exists('zw_doc_render_detail_page')) {
             <?php endif; ?>
 
             <?php if ($doc['status'] === 'pending' && (int) $doc['author_id'] === get_current_user_id() && !empty($flow['allow_withdraw'])) : ?>
-                <div class="zw-doc-card">
+                <div class="tco-doc-card">
                     <h2>发起人操作</h2>
                     <form method="post" onsubmit="return confirm('确认撤回该发文？');">
                         <?php wp_nonce_field('zw_doc_withdraw_document'); ?>
@@ -1741,7 +1741,7 @@ if (!function_exists('zw_doc_render_detail_page')) {
                 </div>
             <?php endif; ?>
 
-            <div class="zw-doc-card">
+            <div class="tco-doc-card">
                 <h2>流转记录</h2>
                 <?php
                 // TASK-1410：自动流转轨迹 meta（`_zw_doc_auto_flow`）。与事件表并列展示 ——
@@ -1750,7 +1750,7 @@ if (!function_exists('zw_doc_render_detail_page')) {
                 ?>
                 <?php if (!empty($auto_trace['steps'])) : ?>
                     <h3 style="margin:14px 0 6px">系统自动流转轨迹</h3>
-                    <div class="zw-adm-table-wrap">
+                    <div class="tco-table-wrap">
                     <table class="widefat striped">
                         <thead><tr><th>时间</th><th>步骤</th><th>触发开关</th><th>结果</th><th>原因 / 门禁结论</th></tr></thead>
                         <tbody>
@@ -1760,8 +1760,8 @@ if (!function_exists('zw_doc_render_detail_page')) {
                                 <td><?php echo esc_html(zw_doc_auto_flow_step_label($auto_step['step'])); ?></td>
                                 <td><code><?php echo esc_html($auto_step['switch']); ?></code></td>
                                 <td><?php echo $auto_step['result'] === 'done'
-                                    ? '<span class="zw-adm-badge is-on">已完成</span>'
-                                    : '<span class="zw-adm-badge">已停住</span>'; ?></td>
+                                    ? '<span class="tco-badge is-on">已完成</span>'
+                                    : '<span class="tco-badge">已停住</span>'; ?></td>
                                 <td><?php echo esc_html($auto_step['reason']); ?></td>
                             </tr>
                         <?php endforeach; ?>
@@ -1769,7 +1769,7 @@ if (!function_exists('zw_doc_render_detail_page')) {
                     </table>
                     </div>
                 <?php endif; ?>
-                <div class="zw-adm-table-wrap">
+                <div class="tco-table-wrap">
                 <table class="widefat striped">
                     <thead><tr><th>时间</th><th>来源</th><th>操作人</th><th>事件</th><th>说明</th></tr></thead>
                     <tbody>
@@ -1781,8 +1781,8 @@ if (!function_exists('zw_doc_render_detail_page')) {
                             <tr>
                                 <td><?php echo esc_html($event['created_at']); ?></td>
                                 <td><?php echo $event_origin === 'auto'
-                                    ? '<span class="zw-adm-badge is-on">系统自动</span>'
-                                    : '<span class="zw-adm-badge">人工</span>'; ?></td>
+                                    ? '<span class="tco-badge is-on">系统自动</span>'
+                                    : '<span class="tco-badge">人工</span>'; ?></td>
                                 <td><?php echo esc_html(zw_doc_user_label((int) $event['actor_id'])); ?></td>
                                 <td><?php echo esc_html($event['event_type']); ?></td>
                                 <td><?php echo esc_html($event['note']); ?></td>

@@ -274,7 +274,7 @@ if (!function_exists('zw_legal_consent_admin_page')) {
 
         $docs = zw_legal_consent_admin_internal_docs();
         if (!$docs) {
-            echo '<div class="zw-adm-card" style="padding:14px"><p style="margin:0;color:#666">尚未登记「内部文件」类规范，或未配置机构角色适用对象（`applies_to`）。</p></div>';
+            echo '<div class="tco-card" style="padding:14px"><p style="margin:0;color:#666">尚未登记「内部文件」类规范，或未配置机构角色适用对象（`applies_to`）。</p></div>';
             zw_policy_platform_page_footer();
             return;
         }

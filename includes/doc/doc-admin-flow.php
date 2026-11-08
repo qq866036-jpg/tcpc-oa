@@ -77,24 +77,24 @@ if (!function_exists('zw_doc_page_flow')) {
         $notice   = isset($_GET['zw_doc_msg']) ? sanitize_text_field(wp_unslash($_GET['zw_doc_msg'])) : '';
         $settings = zw_doc_flow_settings();
         ?>
-        <div class="wrap zw-doc-flow">
+        <div class="wrap tco-doc-flow">
             <?php echo zw_doc_admin_ui_style(); // 唯一出处：SPEC-10 §1.9 卡片范式（TASK-778） ?>
             <style>
-            .zw-doc-flow .zw-doc-muted{line-height:1.7}
+            .tco-doc-flow .tco-doc-muted{line-height:1.7}
             </style>
             <h1>公文流转配置</h1>
-            <p class="zw-doc-muted">MVP 固定为单级审核，不做可视化流程设计器、多级审批或会签。</p>
-            <p class="zw-doc-muted">流转字典已集中到 <a href="<?php echo esc_url(zw_doc_dict_admin_url()); ?>">发文管理 → 数据字典</a> 统一维护（本页表单保留，写入走同一唯一写入口）。</p>
+            <p class="tco-doc-muted">MVP 固定为单级审核，不做可视化流程设计器、多级审批或会签。</p>
+            <p class="tco-doc-muted">流转字典已集中到 <a href="<?php echo esc_url(zw_doc_dict_admin_url()); ?>">发文管理 → 数据字典</a> 统一维护（本页表单保留，写入走同一唯一写入口）。</p>
             <?php if ($notice !== '') { zw_doc_admin_notice($notice); } ?>
-            <div class="zw-doc-card">
+            <div class="tco-doc-card">
                 <form method="post">
                     <?php wp_nonce_field('zw_doc_save_flow'); ?>
                     <input type="hidden" name="zw_doc_action" value="save_flow">
-                    <div class="zw-doc-field">
-                        <label class="zw-adm-touch"><input type="checkbox" name="require_review" value="1"<?php checked(!empty($settings['require_review'])); ?>> 需要审核</label>
-                        <div class="zw-doc-muted">关闭后提交可直接进入已通过（MVP 保留开关，默认开启）。</div>
+                    <div class="tco-doc-field">
+                        <label class="tco-touch"><input type="checkbox" name="require_review" value="1"<?php checked(!empty($settings['require_review'])); ?>> 需要审核</label>
+                        <div class="tco-doc-muted">关闭后提交可直接进入已通过（MVP 保留开关，默认开启）。</div>
                     </div>
-                    <div class="zw-doc-field">
+                    <div class="tco-doc-field">
                         <label>审核方式</label>
                         <input type="text" value="单人审核（MVP 固定）" readonly style="width:280px">
                     </div>
@@ -109,12 +109,12 @@ if (!function_exists('zw_doc_page_flow')) {
                         );
                     }
                     ?>
-                    <div class="zw-doc-field">
+                    <div class="tco-doc-field">
                         <label>审核人候选部门</label>
                         <?php
                         if (function_exists('zw_control_search_select')) {
                             zw_control_search_select(array(
-                                'id'          => 'zw-doc-flow-reviewer-depts',
+                                'id'          => 'tco-doc-flow-reviewer-depts',
                                 'name'        => 'reviewer_dept_keys[]',
                                 'multiple'    => true,
                                 'value'       => $settings['reviewer_dept_keys'],
@@ -133,18 +133,18 @@ if (!function_exists('zw_doc_page_flow')) {
                         }
                         ?>
                     </div>
-                    <div class="zw-doc-field">
+                    <div class="tco-doc-field">
                         <?php
                         // TASK-1410：四项自动流转开关**统一渲染**（唯一实现，配置页与数据字典页共用）。
-                        echo zw_doc_auto_flow_render_switches($settings, 'zw-doc-flow-auto');
+                        echo zw_doc_auto_flow_render_switches($settings, 'tco-doc-flow-auto');
                         ?>
                     </div>
-                    <div class="zw-doc-field">
+                    <div class="tco-doc-field">
                         <label>抄送人候选部门</label>
                         <?php
                         if (function_exists('zw_control_search_select')) {
                             zw_control_search_select(array(
-                                'id'          => 'zw-doc-flow-cc-depts',
+                                'id'          => 'tco-doc-flow-cc-depts',
                                 'name'        => 'cc_dept_keys[]',
                                 'multiple'    => true,
                                 'value'       => $settings['cc_dept_keys'],
@@ -162,22 +162,22 @@ if (!function_exists('zw_doc_page_flow')) {
                         }
                         ?>
                     </div>
-                    <div class="zw-doc-field">
+                    <div class="tco-doc-field">
                         <label>抄送人可见时点</label>
                         <select name="cc_visibility">
                             <option value="approved"<?php selected($settings['cc_visibility'], 'approved'); ?>>审核通过后可见</option>
                             <option value="submitted"<?php selected($settings['cc_visibility'], 'submitted'); ?>>提交后可见</option>
                         </select>
                     </div>
-                    <div class="zw-doc-field">
-                        <label class="zw-adm-touch"><input type="checkbox" name="allow_withdraw" value="1"<?php checked(!empty($settings['allow_withdraw'])); ?>> 待审核阶段允许发起人撤回</label>
+                    <div class="tco-doc-field">
+                        <label class="tco-touch"><input type="checkbox" name="allow_withdraw" value="1"<?php checked(!empty($settings['allow_withdraw'])); ?>> 待审核阶段允许发起人撤回</label>
                     </div>
-                    <div class="zw-doc-field">
-                        <label class="zw-adm-touch"><input type="checkbox" name="allow_resubmit" value="1"<?php checked(!empty($settings['allow_resubmit'])); ?>> 驳回后允许修改重提</label>
+                    <div class="tco-doc-field">
+                        <label class="tco-touch"><input type="checkbox" name="allow_resubmit" value="1"<?php checked(!empty($settings['allow_resubmit'])); ?>> 驳回后允许修改重提</label>
                     </div>
-                    <div class="zw-doc-field">
-                        <label class="zw-adm-touch"><input type="checkbox" name="download_log_enabled" value="1"<?php checked(!empty($settings['download_log_enabled'])); ?>> 记录附件下载日志</label>
-                        <div class="zw-doc-muted">关闭后附件仍可下载，但不再写入下载日志表。</div>
+                    <div class="tco-doc-field">
+                        <label class="tco-touch"><input type="checkbox" name="download_log_enabled" value="1"<?php checked(!empty($settings['download_log_enabled'])); ?>> 记录附件下载日志</label>
+                        <div class="tco-doc-muted">关闭后附件仍可下载，但不再写入下载日志表。</div>
                     </div>
                     <p><button class="button button-primary" type="submit">保存配置</button></p>
                 </form>

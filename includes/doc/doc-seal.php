@@ -1245,7 +1245,7 @@ if (!function_exists('zw_doc_render_seal_admin_section')) {
         ?>
         <?php if ($notice !== '') { zw_doc_admin_notice($notice, (strpos($notice, '⚠️') !== false || stripos($notice, '失败') !== false) ? 'warning' : 'success'); } ?>
 
-        <div class="zw-doc-card">
+        <div class="tco-doc-card">
             <h2>上传印章</h2>
             <form method="post" enctype="multipart/form-data">
                 <?php wp_nonce_field('zw_doc_assets'); ?>
@@ -1259,7 +1259,7 @@ if (!function_exists('zw_doc_render_seal_admin_section')) {
                                placeholder="<?php echo esc_attr((string) (float) zw_doc_gb9704_get('seal.diameter_mm', 42.0)); ?>">
                         mm
                     </label>
-                    <span class="zw-doc-muted">
+                    <span class="tco-doc-muted">
                         用尺量<strong>实物印章</strong>的圆直径后如实填写（本会公章为 <strong>40mm</strong>）。
                         可填 40 / 4（按厘米理解）；法规上限 45mm（国发〔1999〕25号第十四条）。
                         版面 1mm = 纸面 1mm，填错会直接改变印章的物理大小。
@@ -1268,7 +1268,7 @@ if (!function_exists('zw_doc_render_seal_admin_section')) {
                 <p>
                     <input type="file" name="zw_doc_seal_file" accept="image/png" required>
                 </p>
-                <p class="zw-doc-muted">
+                <p class="tco-doc-muted">
                     仅接受 <strong>PNG 透明底</strong>；短边 ≥ <?php echo (int) zw_doc_gb9704_get('seal.min_source_px', 600); ?>px；
                     体积 ≤ <?php echo (int) round((int) zw_doc_gb9704_get('seal.max_bytes', 2097152) / 1048576); ?>MB；
                     不接受 SVG。素材存于 <strong>站点根目录之外</strong>，不注册为媒体附件。
@@ -1277,14 +1277,14 @@ if (!function_exists('zw_doc_render_seal_admin_section')) {
             </form>
         </div>
 
-        <div class="zw-doc-card">
+        <div class="tco-doc-card">
             <h2>印章列表（<?php echo count($list); ?>）</h2>
             <?php if (empty($list)) : ?>
-                <p class="zw-doc-muted">尚未上传印章。</p>
+                <p class="tco-doc-muted">尚未上传印章。</p>
             <?php else : ?>
                 <!-- TASK-1633（TASK-1579 P1-6 第四批）：宽表落 canonical 横滑包裹。
                      规则由本模块唯一出处 zw_doc_admin_ui_style()（本页 :1090 输出）提供 ⇒ 本页不新增 <style>。 -->
-                <div class="zw-adm-table-wrap">
+                <div class="tco-table-wrap">
                 <table class="widefat striped">
                     <thead><tr><th>预览</th><th>名称</th><th>尺寸</th><th>真实直径</th><th>有效 dpi</th><th>透明底</th><th>状态</th><th>操作</th></tr></thead>
                     <tbody>
@@ -1302,15 +1302,15 @@ if (!function_exists('zw_doc_render_seal_admin_section')) {
                             <td><img src="<?php echo esc_url(zw_doc_seal_view_url($id)); ?>" alt="" style="width:56px;height:56px;object-fit:contain;background:#fff;border:1px solid #dcdcde"></td>
                             <td>
                                 <?php echo esc_html((string) $meta['name']); ?>
-                                <?php if ($is_def) : ?><span class="zw-doc-badge">默认</span><?php endif; ?>
+                                <?php if ($is_def) : ?><span class="tco-doc-badge">默认</span><?php endif; ?>
                             </td>
                             <td><?php echo (int) $meta['w']; ?>×<?php echo (int) $meta['h']; ?>px</td>
                             <td>
                                 <?php if ($d_set) : ?>
                                     <strong><?php echo (float) $d_mm; ?> mm</strong>
                                 <?php else : ?>
-                                    <span class="zw-doc-badge is-warn">未登记</span>
-                                    <span class="zw-doc-muted">（排印回退 <?php echo (float) $d_mm; ?> mm）</span>
+                                    <span class="tco-doc-badge is-warn">未登记</span>
+                                    <span class="tco-doc-muted">（排印回退 <?php echo (float) $d_mm; ?> mm）</span>
                                 <?php endif; ?>
                                 <form method="post" style="margin-top:4px">
                                     <?php wp_nonce_field('zw_doc_assets'); ?>
@@ -1324,15 +1324,15 @@ if (!function_exists('zw_doc_render_seal_admin_section')) {
                             </td>
                             <td>
                                 <?php echo $dpi; ?> dpi
-                                <?php if ($low) : ?><span class="zw-doc-badge is-warn">低清素材</span><?php endif; ?>
+                                <?php if ($low) : ?><span class="tco-doc-badge is-warn">低清素材</span><?php endif; ?>
                             </td>
                             <td>
                                 <?php if ($trans === true) : ?>
                                     是
                                 <?php elseif ($trans === false) : ?>
-                                    <span class="zw-doc-badge is-warn">白底不透明</span>
+                                    <span class="tco-doc-badge is-warn">白底不透明</span>
                                 <?php else : ?>
-                                    <span class="zw-doc-muted">无法判定</span>
+                                    <span class="tco-doc-muted">无法判定</span>
                                 <?php endif; ?>
                             </td>
                             <td><?php echo !empty($meta['enabled']) ? '启用' : '停用'; ?></td>
@@ -1382,10 +1382,10 @@ if (!function_exists('zw_doc_page_assets')) {
         }
         $tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : 'seal';
         ?>
-        <div class="wrap zw-doc-assets">
+        <div class="wrap tco-doc-assets">
             <?php echo zw_doc_admin_ui_style(); // 唯一出处：SPEC-10 §1.9 卡片范式（TASK-778） ?>
             <style>
-            .zw-doc-assets .nav-tab-wrapper{margin-bottom:16px}
+            .tco-doc-assets .nav-tab-wrapper{margin-bottom:16px}
             </style>
             <h1>红头与印章</h1>
             <h2 class="nav-tab-wrapper">

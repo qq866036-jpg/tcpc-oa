@@ -1117,8 +1117,8 @@ if (!function_exists('zw_policy_age_retire_marker')) {
      *  - `ok` + `unverified` ⇒ `tone=off`，文案「**未实名·未做年龄校验**」（**不误判为超龄**）；
      *  - `ok`          ⇒ 不产出标记（`visible=false`），页面据此**不渲染徽章**。
      *
-     * 徽章类名映射（UI 层唯一约定，**禁止各页自定**）：`danger ⇒ zw-adm-badge err` / `wait ⇒ wait` /
-     * `off ⇒ off`（语义色取自 `inc/admin/admin-ui-tokens.php` 的 `.zw-adm-badge.*` 规范徽章）。
+     * 徽章类名映射（UI 层唯一约定，**禁止各页自定**）：`danger ⇒ tco-badge err` / `wait ⇒ wait` /
+     * `off ⇒ off`（语义色取自 `includes/ui/ui-tokens.php` 的 `.tco-badge.*` 规范徽章）。
      *
      * 个人信息最小必要（R-9）：本函数只输出**周岁 / 实名态 / 差额**，**绝不输出出生日期、证件号**。
      *

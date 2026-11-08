@@ -3,7 +3,7 @@
  * Plugin Name: 中传网办公协同
  * Plugin URI:  https://tcpc.org.cn/
  * Description: 中传网办公协同（发文管理 / 收文管理 / AI法务部 / AI秘书处 / 网盘文件中心 / 组织架构业务）。独立仓 tcpc-oa。
- * Version:     0.1.25
+ * Version:     0.1.26
  * Author:      中国传统文化促进会
  * Requires PHP: 7.4
  * Text Domain: tcpc-oa
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 if (!defined('TCPC_OA_VERSION')) {
-    define('TCPC_OA_VERSION', '0.1.25');
+    define('TCPC_OA_VERSION', '0.1.26');
 }
 
 if (!defined('TCPC_OA_DIR')) {
@@ -44,6 +44,11 @@ if (!defined('TCPC_OA_MIN_THEME')) {
  *
  * 启用必须在「主题侧 shim + 插件部署」同一发布窗口完成，否则会出现两份加载。
  */
+// OA-2491 / 铁律 32：呈现层基础设施（自有 tco-* 令牌 + 资源装载 + 后台壳 body class）。
+// 与业务模块的「双钥匙」无关：本文件不注册菜单、不读业务数据，无条件装载也零行为。
+if (file_exists(TCPC_OA_DIR . '/includes/ui/ui-bootstrap.php')) {
+    require_once TCPC_OA_DIR . '/includes/ui/ui-bootstrap.php';
+}
 if (file_exists(TCPC_OA_DIR . '/includes/load-list.php')) {
     require_once TCPC_OA_DIR . '/includes/load-list.php';
     // AGENT-0248：工作台卡片 provider（只返回数据，渲染由 tcpc-workbench 负责）。

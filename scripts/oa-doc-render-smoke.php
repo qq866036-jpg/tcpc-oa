@@ -10,7 +10,7 @@
  *   zw-doc            → zw_doc_page_list
  *   zw-doc-create     → zw_doc_page_create
  *   zw-doc-ledger     → zw_doc_page_ledger
- *   zw-doc-numbers    → zw_doc_page_numbers
+ *   tco-doc-numbers    → zw_doc_page_numbers
  *   zw-doc-flow       → zw_doc_page_flow
  *   zw-doc-dict       → zw_doc_page_dict
  *   zw-doc-layout     → zw_doc_layout_render_page
@@ -58,7 +58,7 @@ function zw_oa_doc_render_pages() {
         'zw-doc'         => 'zw_doc_page_list',
         'zw-doc-create'  => 'zw_doc_page_create',
         'zw-doc-ledger'  => 'zw_doc_page_ledger',
-        'zw-doc-numbers' => 'zw_doc_page_numbers',
+        'tco-doc-numbers' => 'zw_doc_page_numbers',
         'zw-doc-flow'    => 'zw_doc_page_flow',
         'zw-doc-dict'    => 'zw_doc_page_dict',
         'zw-doc-layout'  => 'zw_doc_layout_render_page',

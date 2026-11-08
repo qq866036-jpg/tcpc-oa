@@ -800,9 +800,9 @@ if (!function_exists('zw_doc_render_letterhead_admin_section')) {
         ?>
         <?php if ($notice !== '') { zw_doc_admin_notice($notice, (stripos($notice, '失败') !== false || stripos($notice, '不存在') !== false || stripos($notice, '不符合') !== false || stripos($notice, '无法切换') !== false || stripos($notice, '未知的红头生成方式') !== false) ? 'error' : 'success'); } ?>
 
-        <div class="zw-doc-card">
+        <div class="tco-doc-card">
             <h2>红头生成方式（全局默认）</h2>
-            <p class="zw-doc-muted">
+            <p class="tco-doc-muted">
                 改一次<strong>全场生效</strong>（非每篇切换）：<strong>版式预览</strong>与<strong>出件</strong>
                 （HTML 打印 / DOCX / 加密 PDF）<strong>同源</strong>使用本设置。
                 「数据字典」页只读展示当前值。
@@ -811,13 +811,13 @@ if (!function_exists('zw_doc_render_letterhead_admin_section')) {
                 <?php wp_nonce_field('zw_doc_assets'); ?>
                 <input type="hidden" name="zw_doc_assets_action" value="letterhead_mode">
                 <p>
-                    <label class="zw-adm-touch">
+                    <label class="tco-touch">
                         <input type="radio" name="letterhead_mode" value="<?php echo esc_attr(ZW_DOC_LETTERHEAD_MODE_AUTO); ?>"<?php checked($mode_state['mode'], ZW_DOC_LETTERHEAD_MODE_AUTO); ?>>
                         <strong>系统自动生成红头</strong>（默认）—— 程序绘制「文字发文机关标志 + 红色分隔线」，<strong>不需要图片素材</strong>
                     </label>
                 </p>
                 <p>
-                    <label class="zw-adm-touch">
+                    <label class="tco-touch">
                         <input type="radio" name="letterhead_mode" value="<?php echo esc_attr(ZW_DOC_LETTERHEAD_MODE_IMAGE); ?>"<?php checked($mode_state['mode'], ZW_DOC_LETTERHEAD_MODE_IMAGE); ?>>
                         <strong>使用上传的红头文件（图片）</strong> —— 按「单篇指定 → 文种映射 → 默认红头」取<strong>已启用</strong>图片<?php echo $mode_state['ready'] ? '' : '（⚠️ 当前没有已启用的红头文件，切换会被拒绝）'; ?>
                     </label>
@@ -825,7 +825,7 @@ if (!function_exists('zw_doc_render_letterhead_admin_section')) {
                 <p><button class="button button-primary" type="submit">保存生成方式</button></p>
             </form>
             <?php if ($mode_state['blocked']) : ?>
-                <p class="zw-doc-muted" style="color:#b30404">
+                <p class="tco-doc-muted" style="color:#b30404">
                     <strong>fail-closed：</strong>已切到「使用上传的红头文件（图片）」但无可用已启用红头 ——
                     预览与出件都不会静默改回「系统自动生成红头」，也不会渲染空白红头；
                     请先在下方<strong>上传 / 登记并启用</strong>红头文件，或切回「系统自动生成红头」。
@@ -833,14 +833,14 @@ if (!function_exists('zw_doc_render_letterhead_admin_section')) {
             <?php endif; ?>
         </div>
 
-        <div class="zw-doc-card">
+        <div class="tco-doc-card">
             <h2>上传 / 登记红头模板</h2>
             <form method="post" enctype="multipart/form-data">
                 <?php wp_nonce_field('zw_doc_assets'); ?>
                 <input type="hidden" name="zw_doc_assets_action" value="letterhead_upload">
                 <p><label>模板名称 <input type="text" name="zw_doc_letterhead_name" maxlength="60" placeholder="如：总会红头（原文双线）"></label></p>
                 <p><input type="file" name="zw_doc_letterhead_file" accept="image/png,image/jpeg" required></p>
-                <p class="zw-doc-muted">
+                <p class="tco-doc-muted">
                     规格：宽度 ≥ <?php echo $min_px; ?>px（156mm @300dpi）、PNG/JPG、≤ 3MB。
                     图片含发文机关标志与红色分隔线者，渲染时按「图片模式」整体置顶、宽度铺满版心。
                 </p>
@@ -860,10 +860,10 @@ if (!function_exists('zw_doc_render_letterhead_admin_section')) {
             </form>
         </div>
 
-        <div class="zw-doc-card">
+        <div class="tco-doc-card">
             <h2>模板列表（<?php echo count($list); ?>）</h2>
             <?php if (empty($list)) : ?>
-                <p class="zw-doc-muted">
+                <p class="tco-doc-muted">
                     尚未登记红头模板。生成方式为「系统自动生成红头」（默认）时，渲染使用「文字发文机关标志 + 红色分隔线」，不需要素材；
                     若要切到「使用上传的红头文件（图片）」，必须先在此<strong>登记并启用</strong>至少一个红头文件（否则切换被拒绝、出件 fail-closed）。
                 </p>
@@ -871,7 +871,7 @@ if (!function_exists('zw_doc_render_letterhead_admin_section')) {
                 <!-- TASK-1633（TASK-1579 P1-6 第四批）：宽表落 canonical 横滑包裹。
                      本区块由 doc-seal.php（页 slug `zw-doc-assets`）调用渲染，canonical 规则由该页
                      :1090 的 zw_doc_admin_ui_style()（本模块唯一出处）输出 ⇒ 本文件不新增 <style>。 -->
-                <div class="zw-adm-table-wrap">
+                <div class="tco-table-wrap">
                 <table class="widefat striped">
                     <thead><tr><th>预览</th><th>名称</th><th>尺寸</th><th>dpi</th><th>状态</th><th>操作</th></tr></thead>
                     <tbody>
@@ -884,19 +884,19 @@ if (!function_exists('zw_doc_render_letterhead_admin_section')) {
                             <td><img src="<?php echo esc_url(zw_doc_letterhead_url($id)); ?>" alt="" style="max-width:160px;height:auto;background:#fff;border:1px solid #dcdcde"></td>
                             <td>
                                 <?php echo esc_html((string) $meta['name']); ?>
-                                <?php if ($is_def) : ?><span class="zw-doc-badge">默认</span><?php endif; ?>
+                                <?php if ($is_def) : ?><span class="tco-doc-badge">默认</span><?php endif; ?>
                             </td>
                             <td><?php echo (int) $meta['w']; ?>×<?php echo (int) $meta['h']; ?>px</td>
                             <td>
                                 <?php echo (int) $meta['dpi']; ?> dpi
-                                <?php if ($low) : ?><span class="zw-doc-badge is-warn">低清</span><?php endif; ?>
+                                <?php if ($low) : ?><span class="tco-doc-badge is-warn">低清</span><?php endif; ?>
                             </td>
                             <td>
                                 <?php echo !empty($meta['enabled']) ? '启用' : '停用'; ?>
                                 <?php if ((float) (isset($meta['number_y']) ? $meta['number_y'] : 0) > 0) : ?>
-                                    <span class="zw-doc-badge">文号已定位</span>
+                                    <span class="tco-doc-badge">文号已定位</span>
                                 <?php else : ?>
-                                    <span class="zw-doc-badge is-warn">文号未定位</span>
+                                    <span class="tco-doc-badge is-warn">文号未定位</span>
                                 <?php endif; ?>
                             </td>
                             <td>
@@ -934,7 +934,7 @@ if (!function_exists('zw_doc_render_letterhead_admin_section')) {
                                     <label>纵 % <input type="number" name="number_y" step="0.1" min="0" max="100" value="<?php echo esc_attr((string) (isset($meta['number_y']) ? $meta['number_y'] : 0)); ?>" style="width:80px"></label>
                                     <label>字号 pt <input type="number" name="number_size" step="0.5" min="0" max="72" value="<?php echo esc_attr((string) (isset($meta['number_size']) ? $meta['number_size'] : 0)); ?>" style="width:80px"></label>
                                     <button class="button button-small" type="submit">保存坐标</button>
-                                    <span class="zw-doc-muted">
+                                    <span class="tco-doc-muted">
                                         纵坐标为 0 = 未配置，渲染会<strong>降级</strong>为「文号排在图片下方」；而 GB/T 9704 要求文号位于<strong>红色反线之上</strong>。<br>
                                         请先确认素材<strong>在机关标志与红线之间预留了文号区</strong>（建议 ≥2 行、约占图片高度 15%~20%），再把纵坐标设到该空白带（一般 60~75）。<br>
                                         若素材是<strong>紧裁</strong>的（标志与红线之间没有空白），则无论叠加还是排下方都<strong>不符合国标顺序</strong> —— 此时应改用
@@ -950,13 +950,13 @@ if (!function_exists('zw_doc_render_letterhead_admin_section')) {
             <?php endif; ?>
         </div>
 
-        <div class="zw-doc-card">
+        <div class="tco-doc-card">
             <h2>按文种指定模板</h2>
-            <p class="zw-doc-muted">未指定文种时使用「默认红头」；单篇发文仍可在详情页单独覆盖。</p>
+            <p class="tco-doc-muted">未指定文种时使用「默认红头」；单篇发文仍可在详情页单独覆盖。</p>
             <?php if (empty($list)) : ?>
-                <p class="zw-doc-muted">登记模板后可在此配置。</p>
+                <p class="tco-doc-muted">登记模板后可在此配置。</p>
             <?php else : ?>
-                <div class="zw-adm-table-wrap">
+                <div class="tco-table-wrap">
                 <table class="widefat striped">
                     <thead><tr><th>文种</th><th>指定模板</th><th>操作</th></tr></thead>
                     <tbody>

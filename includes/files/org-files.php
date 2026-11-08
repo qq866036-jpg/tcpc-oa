@@ -530,18 +530,18 @@ if (!function_exists('zw_org_page_files')) {
         $notice = zw_org_admin_take_notice();
         zw_org_admin_styles();
         ?>
-        <style id="zw-org-files-css">
+        <style id="tco-org-files-css">
         /* TASK-1646（TASK-1579 P2-1 批次 3 / SPEC-10 §1.9.3 第 2/3 项；机制出处 CHG-300）：
            下列旧类为**兼容别名**（阶段 ① 双写）：canonical 规则的选择器组同时承载
-           `.zw-adm-org-file-*` 与旧类 `.zw-org-file-*`，声明体逐字节未改（零取值变化）；
+           `.tco-org-file-*` 与旧类 `.tco-org-file-*`，声明体逐字节未改（零取值变化）；
            标记面同时携带新类与旧类。**双写一个发布周期内不得删除任何旧类**。
            废止标记逐类见 `zw_org_admin_styles()`（本域唯一登记处，org-admin.php）。 */
-        .zw-adm-org-file-layout,.zw-org-file-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
-        .zw-adm-org-file-name,.zw-org-file-name{font-weight:600;color:#222}
-        .zw-adm-org-file-preview,.zw-org-file-preview{width:48px;height:48px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;vertical-align:middle}
-        .zw-adm-org-file-icon,.zw-org-file-icon{display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:8px;background:#f2f3f5;color:#8a8f99;font-size:20px}
-        .zw-adm-org-file-meta,.zw-org-file-meta{font-size:12px;color:#999;margin-top:3px}
-        .zw-adm-org-file-actions,.zw-org-file-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+        .tco-org-file-layout,.tco-org-file-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+        .tco-org-file-name,.tco-org-file-name{font-weight:600;color:#222}
+        .tco-org-file-preview,.tco-org-file-preview{width:48px;height:48px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;vertical-align:middle}
+        .tco-org-file-icon,.tco-org-file-icon{display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:8px;background:#f2f3f5;color:#8a8f99;font-size:20px}
+        .tco-org-file-meta,.tco-org-file-meta{font-size:12px;color:#999;margin-top:3px}
+        .tco-org-file-actions,.tco-org-file-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
         </style>
         <?php
         // TASK-2008：文件默认打开动作 canonical 资源（doc-viewer 弹层/图片灯箱 + file-icon + 本控件样式）。
@@ -549,61 +549,61 @@ if (!function_exists('zw_org_page_files')) {
             zw_control_file_open_assets();
         }
         ?>
-        <div class="wrap zw-adm-org-wrap zw-org-wrap">
-            <div class="zw-adm-org-head zw-org-head">
+        <div class="wrap tco-org-wrap tco-org-wrap">
+            <div class="tco-org-head tco-org-head">
                 <h1>网盘文件</h1>
                 <p>内部办公统一文件存放区：照片、附件、文档均存放于此，不进入 WordPress 媒体库，不提供公网访问。</p>
             </div>
             <?php if ($notice) : ?>
-                <div class="zw-adm-org-notice zw-org-notice <?php echo esc_attr($notice['type']); ?>"><?php echo esc_html($notice['text']); ?></div>
+                <div class="tco-org-notice tco-org-notice <?php echo esc_attr($notice['type']); ?>"><?php echo esc_html($notice['text']); ?></div>
             <?php endif; ?>
             <?php if (is_wp_error($ensure)) : ?>
-                <div class="zw-adm-org-notice zw-org-notice error"><?php echo esc_html($ensure->get_error_message()); ?></div>
+                <div class="tco-org-notice tco-org-notice error"><?php echo esc_html($ensure->get_error_message()); ?></div>
             <?php endif; ?>
-            <div class="zw-adm-org-kpis zw-org-kpis">
-                <div class="zw-adm-org-kpi zw-org-kpi"><div class="l">文件总数</div><div class="n"><?php echo (int) count($files); ?></div><div class="d">独立存储，不进媒体库</div></div>
-                <div class="zw-adm-org-kpi zw-org-kpi"><div class="l">人员照片</div><div class="n"><?php echo (int) count(zw_org_files_list('person_photo')); ?></div><div class="d">关联组织人员</div></div>
-                <div class="zw-adm-org-kpi zw-org-kpi"><div class="l">存储位置</div><div class="n" style="font-size:14px;padding-top:7px;word-break:break-all"><?php echo esc_html(zw_org_files_base_dir()); ?></div><div class="d">可后台下载/预览</div></div>
-                <div class="zw-adm-org-kpi zw-org-kpi"><div class="l">访问方式</div><div class="n" style="font-size:18px;padding-top:6px">仅后台</div><div class="d">manage_options + nonce</div></div>
+            <div class="tco-org-kpis tco-org-kpis">
+                <div class="tco-org-kpi tco-org-kpi"><div class="l">文件总数</div><div class="n"><?php echo (int) count($files); ?></div><div class="d">独立存储，不进媒体库</div></div>
+                <div class="tco-org-kpi tco-org-kpi"><div class="l">人员照片</div><div class="n"><?php echo (int) count(zw_org_files_list('person_photo')); ?></div><div class="d">关联组织人员</div></div>
+                <div class="tco-org-kpi tco-org-kpi"><div class="l">存储位置</div><div class="n" style="font-size:14px;padding-top:7px;word-break:break-all"><?php echo esc_html(zw_org_files_base_dir()); ?></div><div class="d">可后台下载/预览</div></div>
+                <div class="tco-org-kpi tco-org-kpi"><div class="l">访问方式</div><div class="n" style="font-size:18px;padding-top:6px">仅后台</div><div class="d">manage_options + nonce</div></div>
             </div>
-            <div class="zw-org-card">
-                <div class="zw-org-card-head"><span class="ct">上传文件</span><span class="desc">单文件上限 <?php echo esc_html(zw_org_files_format_size(zw_org_files_max_size())); ?></span></div>
-                <div class="zw-org-card-body">
+            <div class="tco-org-card">
+                <div class="tco-org-card-head"><span class="ct">上传文件</span><span class="desc">单文件上限 <?php echo esc_html(zw_org_files_format_size(zw_org_files_max_size())); ?></span></div>
+                <div class="tco-org-card-body">
                     <form method="post" action="<?php echo esc_url(add_query_arg('page', 'zw-org-files', admin_url('admin.php'))); ?>" enctype="multipart/form-data">
                         <?php wp_nonce_field('zw_org_upload_file'); ?>
                         <input type="hidden" name="zw_org_action" value="upload_file">
-                        <div class="zw-org-grid">
-                            <div class="zw-adm-org-field zw-org-field">
-                                <label for="zw-org-file-title">文件标题</label>
-                                <input type="text" id="zw-org-file-title" name="file_title" placeholder="可选，默认使用文件名">
+                        <div class="tco-org-grid">
+                            <div class="tco-org-field tco-org-field">
+                                <label for="tco-org-file-title">文件标题</label>
+                                <input type="text" id="tco-org-file-title" name="file_title" placeholder="可选，默认使用文件名">
                             </div>
-                            <div class="zw-adm-org-field zw-org-field">
-                                <label for="zw-org-file-kind">归档目录</label>
-                                <select id="zw-org-file-kind" name="file_kind">
+                            <div class="tco-org-field tco-org-field">
+                                <label for="tco-org-file-kind">归档目录</label>
+                                <select id="tco-org-file-kind" name="file_kind">
                                     <?php foreach (zw_org_files_kinds() as $zw_kind_key => $zw_kind_label) : ?>
                                         <option value="<?php echo esc_attr($zw_kind_key); ?>"><?php echo esc_html($zw_kind_label); ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <div class="zw-adm-org-field zw-org-field">
-                                <label for="zw-org-file-input">选择文件</label>
-                                <input type="file" id="zw-org-file-input" name="office_file" required>
+                            <div class="tco-org-field tco-org-field">
+                                <label for="tco-org-file-input">选择文件</label>
+                                <input type="file" id="tco-org-file-input" name="office_file" required>
                             </div>
                         </div>
-                        <div class="zw-adm-org-form-actions zw-org-form-actions">
-                            <button type="submit" class="zw-adm-org-btn zw-org-btn zw-adm-org-btn-primary zw-org-btn-primary">上传到网盘文件</button>
+                        <div class="tco-org-form-actions tco-org-form-actions">
+                            <button type="submit" class="tco-org-btn tco-org-btn tco-org-btn-primary tco-org-btn-primary">上传到网盘文件</button>
                         </div>
                     </form>
                 </div>
             </div>
-            <div class="zw-org-card">
-                <div class="zw-org-card-head"><span class="ct">文件列表</span><span class="desc">共 <?php echo (int) count($files); ?> 个</span></div>
-                <div class="zw-org-card-body" style="padding:0">
+            <div class="tco-org-card">
+                <div class="tco-org-card-head"><span class="ct">文件列表</span><span class="desc">共 <?php echo (int) count($files); ?> 个</span></div>
+                <div class="tco-org-card-body" style="padding:0">
                     <?php if (empty($files)) : ?>
-                        <div class="zw-org-empty">暂无文件，可上传照片、文档或附件。</div>
+                        <div class="tco-org-empty">暂无文件，可上传照片、文档或附件。</div>
                     <?php else : ?>
-                        <div class="zw-org-tbl-wrap zw-adm-table-wrap">
-                            <table class="zw-adm-org-tbl zw-org-tbl">
+                        <div class="tco-org-tbl-wrap tco-table-wrap">
+                            <table class="tco-org-tbl tco-org-tbl">
                                 <thead><tr><th>文件</th><th>类型</th><th>大小</th><th>关联人员</th><th>上传时间</th><th>操作</th></tr></thead>
                                 <tbody>
                                 <?php foreach ($files as $post) :
@@ -622,14 +622,14 @@ if (!function_exists('zw_org_page_files')) {
                                         'download_url' => (string) $file['url'],
                                     );
                                     $thumb = $is_image && $file['exists']
-                                        ? '<img class="zw-adm-org-file-preview zw-org-file-preview" src="' . esc_url($file['preview_url']) . '" alt="">'
+                                        ? '<img class="tco-org-file-preview tco-org-file-preview" src="' . esc_url($file['preview_url']) . '" alt="">'
                                         : (function_exists('zw_control_file_icon')
                                             ? (string) zw_control_file_icon(array('name' => $fi_name, 'size' => 'lg'))
-                                            : '<span class="zw-adm-org-file-icon zw-org-file-icon">文</span>');
+                                            : '<span class="tco-org-file-icon tco-org-file-icon">文</span>');
                                     $thumb_link = function_exists('zw_control_file_open_link')
                                         ? zw_control_file_open_link(array_merge($open_args, array(
                                             'content'    => $thumb,
-                                            'class'      => 'zw-org-file-open',
+                                            'class'      => 'tco-org-file-open',
                                             'aria_label' => ($is_image ? '查看图片：' : '在线浏览：') . $fi_name,
                                         )))
                                         : $thumb;
@@ -642,17 +642,17 @@ if (!function_exists('zw_org_page_files')) {
                                             <div style="display:flex;gap:10px;align-items:center">
                                                 <?php echo $thumb_link; // phpcs:ignore WordPress.Security.EscapeOutput -- canonical 控件自带转义 ?>
                                                 <div>
-                                                    <div class="zw-adm-org-file-name zw-org-file-name"><?php echo $name_link; // phpcs:ignore WordPress.Security.EscapeOutput -- canonical 控件自带转义 ?></div>
-                                                    <div class="zw-adm-org-file-meta zw-org-file-meta"><?php echo esc_html($file['original_name']); ?></div>
+                                                    <div class="tco-org-file-name tco-org-file-name"><?php echo $name_link; // phpcs:ignore WordPress.Security.EscapeOutput -- canonical 控件自带转义 ?></div>
+                                                    <div class="tco-org-file-meta tco-org-file-meta"><?php echo esc_html($file['original_name']); ?></div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td><?php echo esc_html(zw_org_files_kind_label($file['kind'] ?? '')); ?></td>
                                         <td><?php echo esc_html(zw_org_files_format_size($file['size'])); ?></td>
-                                        <td><?php echo $person_title !== '' ? esc_html($person_title) : '<span class="zw-adm-org-muted zw-org-muted">—</span>'; ?></td>
+                                        <td><?php echo $person_title !== '' ? esc_html($person_title) : '<span class="tco-org-muted tco-org-muted">—</span>'; ?></td>
                                         <td><?php echo esc_html($file['uploaded_at']); ?></td>
                                         <td>
-                                            <div class="zw-adm-org-file-actions zw-org-file-actions">
+                                            <div class="tco-org-file-actions tco-org-file-actions">
                                                 <?php
                                                 // TASK-2008：下载 = 显式按钮（唯一入口），不再在这里并列「在线浏览」触发器。
                                                 // TASK-2008：下载 = 显式按钮（唯一入口，且**无兜底第二套**）——
@@ -661,7 +661,7 @@ if (!function_exists('zw_org_page_files')) {
                                                 echo zw_control_file_download_button(array( // phpcs:ignore WordPress.Security.EscapeOutput -- canonical 控件自带转义
                                                     'url'   => (string) $file['url'],
                                                     'name'  => $fi_name,
-                                                    'class' => 'zw-adm-org-btn zw-org-btn',
+                                                    'class' => 'tco-org-btn tco-org-btn',
                                                     'icon'  => false,
                                                 ));
                                                 ?>
@@ -669,7 +669,7 @@ if (!function_exists('zw_org_page_files')) {
                                                     <?php wp_nonce_field('zw_org_delete_file_' . $post->ID); ?>
                                                     <input type="hidden" name="zw_org_action" value="delete_file">
                                                     <input type="hidden" name="file_id" value="<?php echo (int) $post->ID; ?>">
-                                                    <button type="submit" class="zw-adm-org-btn zw-org-btn zw-adm-org-btn-danger zw-org-btn-danger">删除</button>
+                                                    <button type="submit" class="tco-org-btn tco-org-btn tco-org-btn-danger tco-org-btn-danger">删除</button>
                                                 </form>
                                             </div>
                                         </td>
