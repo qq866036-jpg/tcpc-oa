@@ -436,7 +436,7 @@ if (!function_exists('zw_policy_document_center_page')) {
 
         $switch = function_exists('zw_legal_text_source') ? zw_legal_text_source() : 'legacy';
         $switch_label = $switch === 'db' ? 'db（DB 为渲染源）' : 'legacy（现状：协议走条款表、隐私政策走文件）';
-        echo '<div class="zw-adm-card" style="padding:12px 14px;margin-bottom:14px">'
+        echo '<div class="tco-card" style="padding:12px 14px;margin-bottom:14px">'
             . '<p style="margin:0;font-size:13px"><strong>读源开关</strong> <code>zw_legal_text_source</code> = <code>' . esc_html($switch_label) . '</code>'
             . '　｜　<strong>你的权限</strong>：' . ($finalize
                 ? '<span style="color:#1b5e20">可终审（manage_options）</span>'
@@ -446,7 +446,7 @@ if (!function_exists('zw_policy_document_center_page')) {
 
         if (!function_exists('zw_legal_text_tables_ready') || !zw_legal_text_tables_ready()) {
             if (function_exists('zw_policy_platform_missing_notice')) { zw_policy_platform_missing_notice(); }
-            echo '<div class="zw-adm-card" style="padding:14px"><p style="margin:0;color:#666">统一文本源数据表尚未初始化。请在站点根目录执行：<br>'
+            echo '<div class="tco-card" style="padding:14px"><p style="margin:0;color:#666">统一文本源数据表尚未初始化。请在站点根目录执行：<br>'
                 . '<code>wp --allow-root eval-file wp-content/themes/tcpc/scripts/migrate-policy-document-center.php execute</code></p></div>';
             zw_policy_platform_page_footer();
             return;
@@ -476,7 +476,7 @@ if (!function_exists('zw_policy_document_center_list')) {
     function zw_policy_document_center_list() {
         $docs = zw_legal_text_documents_visible();
         if (!$docs) {
-            echo '<div class="zw-adm-card" style="padding:14px"><p style="margin:0;color:#666">尚未迁移任何文档。执行迁移脚本后可在此编辑与生效。</p></div>';
+            echo '<div class="tco-card" style="padding:14px"><p style="margin:0;color:#666">尚未迁移任何文档。执行迁移脚本后可在此编辑与生效。</p></div>';
             return;
         }
         $rows = array();
@@ -547,7 +547,7 @@ if (!function_exists('zw_policy_document_center_detail')) {
         $slug = trim((string) ($doc['page_slug'] ?? ''));
         $vis  = function_exists('zw_legal_text_visibility') ? zw_legal_text_visibility($doc_id) : 'public';
         if ($slug !== '') {
-            echo '<div class="zw-adm-card" style="padding:12px 14px;margin:0 0 14px">';
+            echo '<div class="tco-card" style="padding:12px 14px;margin:0 0 14px">';
             echo '<p style="margin:0 0 8px;font-size:13px"><strong>发布到页面</strong>：把<strong>生效版本</strong>正文写入 <code>/'
                 . esc_html($slug) . '/</code>（逐字比对幂等；页面写入与自动发布/CLI 共用同一实现）。</p>';
             if ($vis === 'internal') {
@@ -601,7 +601,7 @@ if (!function_exists('zw_policy_document_center_detail')) {
 
         /* 当前生效正文预览 */
         echo '<h3 style="font-size:14px;margin:18px 0 8px">当前生效正文</h3>';
-        echo '<div class="zw-adm-card" style="padding:14px;max-height:420px;overflow:auto">';
+        echo '<div class="tco-card" style="padding:14px;max-height:420px;overflow:auto">';
         if ($current && zw_legal_text_normalize((string) ($current['body_html'] ?? '')) !== '') {
             $body_html = (string) $current['body_html'];
             echo zw_policy_document_center_preview_html($body_html);
@@ -615,7 +615,7 @@ if (!function_exists('zw_policy_document_center_detail')) {
             $new = $versions[0];
             $old = $versions[1];
             echo '<h3 style="font-size:14px;margin:18px 0 8px">差异：' . esc_html((string) ($old['version_no'] ?? '')) . ' → ' . esc_html((string) ($new['version_no'] ?? '')) . '</h3>';
-            echo '<div class="zw-adm-card" style="padding:12px;overflow:auto">'
+            echo '<div class="tco-card" style="padding:12px;overflow:auto">'
                 . zw_legal_text_diff((string) ($old['body_html'] ?? ''), (string) ($new['body_html'] ?? ''))
                 . '</div>';
         }
@@ -627,7 +627,7 @@ if (!function_exists('zw_policy_document_center_detail')) {
 
         /* 新建版本 */
         echo '<h3 style="font-size:14px;margin:20px 0 8px">新建版本（整篇正文）</h3>';
-        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="zw-adm-card" style="padding:14px">';
+        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="tco-card" style="padding:14px">';
         wp_nonce_field(ZW_POLICY_DOC_CREATE_ACTION);
         echo '<input type="hidden" name="action" value="' . esc_attr(ZW_POLICY_DOC_CREATE_ACTION) . '">'
             . '<input type="hidden" name="doc" value="' . esc_attr($doc_id) . '">'
@@ -640,7 +640,7 @@ if (!function_exists('zw_policy_document_center_detail')) {
 
         /* 确认生效（护栏 ③） */
         echo '<h3 style="font-size:14px;margin:20px 0 8px">确认生效（二次确认）</h3>';
-        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="zw-adm-card" style="padding:14px">';
+        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="tco-card" style="padding:14px">';
         wp_nonce_field(ZW_POLICY_DOC_ACTIVATE_ACTION);
         echo '<input type="hidden" name="action" value="' . esc_attr(ZW_POLICY_DOC_ACTIVATE_ACTION) . '">'
             . '<input type="hidden" name="doc" value="' . esc_attr($doc_id) . '">'
@@ -656,7 +656,7 @@ if (!function_exists('zw_policy_document_center_detail')) {
 
         /* 一键回退（护栏 ④） */
         echo '<h3 style="font-size:14px;margin:20px 0 8px">一键回退（新增回退版本，历史不删）</h3>';
-        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="zw-adm-card" style="padding:14px">';
+        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="tco-card" style="padding:14px">';
         wp_nonce_field(ZW_POLICY_DOC_ROLLBACK_ACTION);
         echo '<input type="hidden" name="action" value="' . esc_attr(ZW_POLICY_DOC_ROLLBACK_ACTION) . '">'
             . '<input type="hidden" name="doc" value="' . esc_attr($doc_id) . '">'

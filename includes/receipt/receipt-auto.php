@@ -641,35 +641,35 @@ if (!function_exists('zw_receipt_auto_render_settings')) {
             wp_nonce_field(ZW_RECEIPT_AUTO_SAVE_NONCE, 'zw_receipt_auto_nonce');
         }
 
-        echo '<div class="zw-adm-card" style="margin:0 0 16px">';
+        echo '<div class="tco-card" style="margin:0 0 16px">';
         echo '<h2>自动办理开关</h2>';
-        echo '<div class="zw-adm-grid is-2">';
+        echo '<div class="tco-grid is-2">';
         foreach (zw_receipt_auto_switches() as $key => $meta) {
-            echo '<div class="zw-adm-field"><label>' . esc_html((string) $meta['label']) . '</label>'
+            echo '<div class="tco-field"><label>' . esc_html((string) $meta['label']) . '</label>'
                 . '<label style="display:flex;gap:8px;align-items:center;font-size:14px">'
                 . '<input type="checkbox" name="' . esc_attr($key) . '" value="1"'
                 . (!empty($settings[$key]) ? ' checked' : '') . '> 开启</label>'
                 . '<p class="description">' . esc_html((string) $meta['note']) . '</p></div>';
         }
         echo '</div>';
-        echo '<p class="zw-doc-muted">自动写入的留痕一律标记 <code>system:*</code> + 时间线灰标「系统自动」，'
+        echo '<p class="tco-doc-muted">自动写入的留痕一律标记 <code>system:*</code> + 时间线灰标「系统自动」，'
             . '不假冒任何真人账号；关闭开关即完全回到人工（与未开启前逐字一致）。</p>';
         echo '</div>';
 
-        echo '<div class="zw-adm-card" style="margin:0 0 16px">';
+        echo '<div class="tco-card" style="margin:0 0 16px">';
         echo '<h2>批示库（按政治站位分类的模板）</h2>';
-        echo '<p class="zw-doc-muted">每行一条批示语（空行忽略）；关键词用顿号/逗号/空格分隔。'
+        echo '<p class="tco-doc-muted">每行一条批示语（空行忽略）；关键词用顿号/逗号/空格分隔。'
             . '系统按「关键词命中顺序（督查整改 → 请示报告 → 人事 → 财务 → 贯彻落实 → 部署落实 → 常规阅办）」'
             . '选类别，再按记录 ID 做**确定性轮换**（同一收文永远同一条，便于复现与审计）。</p>';
         foreach ($library as $key => $meta) {
             $label = isset($meta['label']) ? (string) $meta['label'] : $key;
             $kw    = isset($meta['keywords']) ? implode('、', (array) $meta['keywords']) : '';
             $ph    = isset($meta['phrases']) ? implode("\n", (array) $meta['phrases']) : '';
-            echo '<div class="zw-adm-sec">' . esc_html($label) . '（<code>' . esc_attr($key) . '</code>）</div>';
-            echo '<div class="zw-adm-field"><label for="kw-' . esc_attr($key) . '">关键词（命中即归入本类）</label>'
+            echo '<div class="tco-sec">' . esc_html($label) . '（<code>' . esc_attr($key) . '</code>）</div>';
+            echo '<div class="tco-field"><label for="kw-' . esc_attr($key) . '">关键词（命中即归入本类）</label>'
                 . '<input type="text" id="kw-' . esc_attr($key) . '" name="kw_' . esc_attr($key) . '" value="'
                 . esc_attr($kw) . '"></div>';
-            echo '<div class="zw-adm-field"><label for="lib-' . esc_attr($key) . '">批示语（每行一条，≤5000 字/条）</label>'
+            echo '<div class="tco-field"><label for="lib-' . esc_attr($key) . '">批示语（每行一条，≤5000 字/条）</label>'
                 . '<textarea id="lib-' . esc_attr($key) . '" name="lib_' . esc_attr($key) . '" rows="4">'
                 . esc_html($ph) . '</textarea></div>';
         }
@@ -678,7 +678,7 @@ if (!function_exists('zw_receipt_auto_render_settings')) {
         zw_receipt_auto_render_rule_section();
         zw_receipt_auto_render_dispatch_preview();
 
-        echo '<div class="zw-adm-foot">'
+        echo '<div class="tco-foot">'
             . '<a class="button" href="' . esc_url(function_exists('zw_receipt_ledger_admin_url') ? zw_receipt_ledger_admin_url() : '') . '">返回台账</a>'
             . '<button type="submit" class="button button-primary">保存自动化设置</button>'
             . '</div>';
@@ -951,19 +951,19 @@ if (!function_exists('zw_receipt_auto_render_rule_section')) {
         }
         $orgs = function_exists('zw_receipt_org_options') ? zw_receipt_org_options() : array();
 
-        echo '<div class="zw-adm-card" style="margin:0 0 16px">';
+        echo '<div class="tco-card" style="margin:0 0 16px">';
         echo '<h2>催办与派单规则</h2>';
-        echo '<div class="zw-adm-grid is-2">';
-        echo '<div class="zw-adm-field"><label for="zw-auto-urge-days">催办提前量（天）</label>'
+        echo '<div class="tco-grid is-2">';
+        echo '<div class="tco-field"><label for="zw-auto-urge-days">催办提前量（天）</label>'
             . '<input type="number" id="zw-auto-urge-days" name="auto_urge_days" min="0" max="30" value="' . esc_attr((string) $days) . '">'
             . '<p class="description">时限前 N 天（含已逾期）开始催办；0 = 只在逾期当天催。</p></div>';
         echo '</div>';
-        echo '<div class="zw-adm-field"><label for="zw-auto-archive-tpl">归档盒号模板</label>'
+        echo '<div class="tco-field"><label for="zw-auto-archive-tpl">归档盒号模板</label>'
             . '<input type="text" id="zw-auto-archive-tpl" name="auto_archive_template" value="'
             . esc_attr(zw_receipt_auto_archive_template()) . '" placeholder="{year}-{org}-{seq}">'
             . '<p class="description">占位：<code>{year}</code> 归档年度、<code>{org}</code> 部委 key、'
             . '<code>{seq}</code> 同年度序号（4 位补零）。盒号重复会自动换号重试。</p></div>';
-        echo '<div class="zw-adm-field"><label for="zw-auto-rules">自动派单规则（一行一条：部委 key | 承办部门 key | 天数）</label>'
+        echo '<div class="tco-field"><label for="zw-auto-rules">自动派单规则（一行一条：部委 key | 承办部门 key | 天数）</label>'
             . '<textarea id="zw-auto-rules" name="auto_dispatch_rules" rows="5" placeholder="mca | office | 5">'
             . esc_html(implode("\n", $lines)) . '</textarea>'
             . '<p class="description">可用部委 key：' . esc_html(implode('、', array_keys($orgs))) . '；'
@@ -1358,18 +1358,18 @@ if (!function_exists('zw_receipt_auto_render_dispatch_preview')) {
             $lines[] = $org . ' | ' . $one['dept'] . ' | ' . (int) $one['days'];
         }
 
-        echo '<div class="zw-adm-card" style="margin:0 0 16px">';
+        echo '<div class="tco-card" style="margin:0 0 16px">';
         echo '<h2>派单干跑预览（只读，不会生成工单）</h2>';
-        echo '<p class="zw-doc-muted">下表是「若现在打开自动派单，这几件会派给谁、时限几号」。'
+        echo '<p class="tco-doc-muted">下表是「若现在打开自动派单，这几件会派给谁、时限几号」。'
             . '规则或部门不对就先改规则；确认无误再打开开关。</p>';
-        echo '<div class="zw-adm-table-wrap"><table class="widefat striped"><thead><tr>'
+        echo '<div class="tco-table-wrap"><table class="widefat striped"><thead><tr>'
             . '<th>收文</th><th>来文单位</th><th>解析部委</th><th>拟派部门</th><th>拟定时限</th><th>判定</th>'
             . '</tr></thead><tbody>';
         if (!$preview['rows']) {
             echo '<tr><td colspan="6">（没有来文可预览）</td></tr>';
         }
         foreach ($preview['rows'] as $r) {
-            echo '<tr><td>' . esc_html($r['id']) . '<br><span class="zw-doc-muted">' . esc_html($r['title']) . '</span></td>'
+            echo '<tr><td>' . esc_html($r['id']) . '<br><span class="tco-doc-muted">' . esc_html($r['title']) . '</span></td>'
                 . '<td>' . esc_html($r['org']) . '</td>'
                 . '<td>' . esc_html($r['org_key'] === '' ? '未登记' : $r['org_key']) . '</td>'
                 . '<td>' . esc_html($r['dept'] === '' ? '—' : $r['dept']) . '</td>'
@@ -1377,7 +1377,7 @@ if (!function_exists('zw_receipt_auto_render_dispatch_preview')) {
                 . '<td>' . esc_html($r['verdict']) . '</td></tr>';
         }
         echo '</tbody></table></div>';
-        echo '<p class="zw-doc-muted">建议规则（可复制到上面的规则框，按需改）：'
+        echo '<p class="tco-doc-muted">建议规则（可复制到上面的规则框，按需改）：'
             . '<code>' . esc_html(implode(' ／ ', $lines)) . '</code></p>';
         echo '</div>';
     }

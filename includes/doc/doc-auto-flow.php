@@ -154,18 +154,18 @@ if (!function_exists('zw_doc_auto_flow_render_switches')) {
      * @param string $prefix   复选框 id 前缀（避免两页 id 撞车）。
      * @return string HTML（已 escape）。
      */
-    function zw_doc_auto_flow_render_switches($settings, $prefix = 'zw-doc-auto') {
+    function zw_doc_auto_flow_render_switches($settings, $prefix = 'tco-doc-auto') {
         $settings = is_array($settings) ? $settings : array();
-        $html     = '<div class="zw-doc-auto-switches" id="' . esc_attr($prefix) . '-switches">';
+        $html     = '<div class="tco-doc-auto-switches" id="' . esc_attr($prefix) . '-switches">';
         $html    .= '<h3 style="margin:18px 0 8px">自动流转开关组（四项）</h3>';
         $html    .= '<p style="margin:0 0 12px;padding:10px 12px;border-left:4px solid var(--primary-color,#d80505);'
                   . 'background:#fff7f7;line-height:1.8">' . esc_html(zw_doc_auto_flow_switch_group_intro()) . '</p>';
         foreach (zw_doc_auto_flow_switch_definitions() as $key => $meta) {
             $id    = esc_attr($prefix . '-' . $key);
-            $html .= '<div class="zw-doc-field">';
-            $html .= '<label class="zw-adm-touch" for="' . $id . '"><input type="checkbox" id="' . $id . '" name="' . esc_attr($key) . '" value="1"'
+            $html .= '<div class="tco-doc-field">';
+            $html .= '<label class="tco-touch" for="' . $id . '"><input type="checkbox" id="' . $id . '" name="' . esc_attr($key) . '" value="1"'
                    . checked(!empty($settings[$key]), true, false) . '> ' . esc_html($meta['label']) . '</label>';
-            $html .= '<div class="zw-doc-muted">' . esc_html(zw_doc_auto_flow_switch_note($key)) . '</div>';
+            $html .= '<div class="tco-doc-muted">' . esc_html(zw_doc_auto_flow_switch_note($key)) . '</div>';
             $html .= '</div>';
         }
         $html .= '</div>';

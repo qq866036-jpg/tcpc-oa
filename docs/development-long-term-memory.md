@@ -523,3 +523,25 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
 - `workbench/finish.sh` 在「本仓质量门通过之后」置 `ZW_MARKER_CLEAR_ON_EXIT=1` 并 `trap ... EXIT`：
   之后任何失败（含长期记忆判据、跨仓验证）都会清 marker，不再残留拦住下一单。
 - 质量门**之前**失败仍**保留** marker（在制语义不变）。
+
+## 2026-11-09 · 卫星仓后台 UI 全量独立（OA-2491 / 载体单 AGENT-0332 / 铁律 32）
+
+- **用户拍板**：「独立仓用完全独立的样式 ui js」。本仓后台从主题命名空间整体迁到 `tco-*`，判断依据
+  不是「想不想一致」，而是**爆炸半径**：此前主题改一处 `.zw-adm-*` 内联样式，本仓多个后台页会静默变样。
+- **唯一出处（改样式先看这三处）**：
+  - 类名/助手：`includes/ui/ui-tokens.php`（`tco_ui_table_wrap_css()` / `tco_ui_touch_css()` / `tco_badge()` /
+    `tco_ui_state_css()` / `tco_ui_page_slugs()` / enqueue / body class）；
+  - 样式资源：`assets/css/oa-admin.css`（颜色一律 `var(--tco-*, 令牌兜底)`，令牌来源
+    `docs/tokens/tcpc-design-tokens.json`）+ `assets/js/oa-admin.js`；
+  - 契约：`docs/contract-tcpc-oa.md` §UI-1。
+- **关键陷阱（本次实测）**：
+  1. **菜单 slug 不能跟着类名改**：主题 `inc/admin/org/org-permissions.php` 的 RBAC 功能 ID 形如
+     `sub:zw-doc:zw-doc-ledger`，权限配置存 DB ⇒ 改 slug 会造成既有角色权限静默丢失。页面类名走
+     `*_page_classes()`（发文/收文）与 `*_page_slug_map()`（收文 slug→类名）映射，slug 保持稳定。
+  2. 机械替换**不能**用 `bulk-replace.py --map` 传含 `=` 的旧串（如 `class="wrap X"`）——它按第一个
+     `=` 切分，会把 old 截成 `class`，造成全仓 `class` 被替换成新值的灾难（本次已回滚重来）。
+     正确写法：旧串用 `"wrap X"`（不含 `=`）或纯 token/选择器形态。
+  3. `zw-adm-org-X` 与 `zw-org-X` 原本双写在同一元素 ⇒ 同映射后会得到重复 class（无害但不美观）；
+     新写标记只用一个 `tco-org-*`。
+- **门禁**：主题 `scripts/satellite-ui-gate.py` 对 `dev-tcpc-oa` 跑 R1–R4（自带资源 / 零主题耦合 /
+  令牌可追溯 / 差异登记）；本仓 `bash scripts/ci-check.sh` 七项必须全绿。

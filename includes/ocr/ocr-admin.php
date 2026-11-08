@@ -158,7 +158,7 @@ if (!function_exists('zw_ocr_render_settings_body')) {
             }
         }
 
-        echo '<div class="zw-adm-card" style="margin:0 0 16px">';
+        echo '<div class="tco-card" style="margin:0 0 16px">';
         echo '<h2>开关与端点</h2>';
         if (!zw_ocr_schema_ready()) {
             echo '<div class="notice notice-warning inline"><p>OCR 数据列尚未迁移：先执行 '
@@ -169,37 +169,37 @@ if (!function_exists('zw_ocr_render_settings_body')) {
         if (function_exists('wp_nonce_field')) {
             wp_nonce_field(ZW_OCR_SAVE_NONCE, 'zw_ocr_settings_nonce');
         }
-        echo '<div class="zw-adm-grid is-2">';
-        echo '<div class="zw-adm-field"><label for="zw-ocr-enabled">启用 OCR</label>'
+        echo '<div class="tco-grid is-2">';
+        echo '<div class="tco-field"><label for="zw-ocr-enabled">启用 OCR</label>'
             . '<label style="display:flex;gap:8px;align-items:center;font-size:14px">'
             . '<input type="checkbox" id="zw-ocr-enabled" name="zw_ocr_enabled" value="1"'
             . ($enabled ? ' checked' : '') . '> 开启后，收文登记成功即排队识别</label></div>';
-        echo '<div class="zw-adm-field"><label for="zw-ocr-endpoint">服务端点</label>'
+        echo '<div class="tco-field"><label for="zw-ocr-endpoint">服务端点</label>'
             . '<input type="text" id="zw-ocr-endpoint" name="zw_ocr_endpoint" value="' . esc_attr($endpoint) . '">'
             . '<p class="description">只允许 <code>127.0.0.1</code> / <code>localhost</code> / 内网地址（公文不出服务器）。</p></div>';
-        echo '<div class="zw-adm-field"><label for="zw-ocr-token">共享令牌（可选）</label>'
+        echo '<div class="tco-field"><label for="zw-ocr-token">共享令牌（可选）</label>'
             . '<input type="password" id="zw-ocr-token" name="zw_ocr_token" value="" placeholder="' . esc_attr($masked) . '" autocomplete="new-password">'
             . '<p class="description">留空 = 不修改；当前：' . esc_html($token_on ? '已设置（' . $masked . '）' : '未设置')
             . ' <label style="margin-left:8px"><input type="checkbox" name="zw_ocr_clear_token" value="1"> 清除</label></p></div>';
-        echo '<div class="zw-adm-field"><label for="zw-ocr-engine">引擎标识</label>'
+        echo '<div class="tco-field"><label for="zw-ocr-engine">引擎标识</label>'
             . '<input type="text" id="zw-ocr-engine" name="zw_ocr_engine_name" value="' . esc_attr($engine) . '">'
             . '<p class="description">写进 <code>extraction_method</code>（如 <code>ocr:rapidocr@1.4.4</code>），换引擎后仍可区分来源。</p></div>';
-        echo '<div class="zw-adm-field"><label for="zw-ocr-timeout">单次超时（秒）</label>'
+        echo '<div class="tco-field"><label for="zw-ocr-timeout">单次超时（秒）</label>'
             . '<input type="number" id="zw-ocr-timeout" name="zw_ocr_timeout" min="5" max="120" value="' . esc_attr((string) $timeout) . '"></div>';
         echo '</div>';
-        echo '<div class="zw-adm-foot">'
+        echo '<div class="tco-foot">'
             . '<a class="button" href="' . esc_url(add_query_arg(array('zw_ocr_check' => '1'), zw_ocr_settings_url())) . '">测试连接</a>'
             . '<button type="submit" class="button button-primary">保存设置</button>'
             . '</div>';
         echo '</form>';
         echo '</div>';
 
-        echo '<div class="zw-adm-card" style="margin:0 0 16px">';
+        echo '<div class="tco-card" style="margin:0 0 16px">';
         echo '<h2>识别概览</h2>';
         if (!$counts) {
-            echo '<p class="zw-doc-muted">暂无识别记录（或数据列未迁移）。</p>';
+            echo '<p class="tco-doc-muted">暂无识别记录（或数据列未迁移）。</p>';
         } else {
-            echo '<div class="zw-adm-grid is-2">';
+            echo '<div class="tco-grid is-2">';
             foreach ($counts as $status => $count) {
                 echo zw_receipt_ledger_detail_field(
                     zw_ocr_status_label((string) $status),
@@ -208,7 +208,7 @@ if (!function_exists('zw_ocr_render_settings_body')) {
             }
             echo '</div>';
         }
-        echo '<p class="zw-doc-muted">部署与运维见 <code>scripts/ocr-service/README.md</code>：'
+        echo '<p class="tco-doc-muted">部署与运维见 <code>scripts/ocr-service/README.md</code>：'
             . '本机常驻服务 + 回环端口 + 私有存储路径白名单；识别结果只落 OCR 专用列，**不改进来文正文**。</p>';
         echo '</div>';
     }

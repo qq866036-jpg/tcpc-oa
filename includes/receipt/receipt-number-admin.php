@@ -208,12 +208,12 @@ if (!function_exists('zw_receipt_number_page')) {
             }
         }
         ?>
-        <div class="wrap zw-receipt-number-wrap zw-receipt-number">
+        <div class="wrap tco-receipt-number-wrap tco-receipt-number">
             <h1>收文编号设置</h1>
             <?php
             // TASK-1633（TASK-1579 P1-6 第四批）：收文管理域不在会员域外壳作用域内
-            // （slug 前缀 `zw-receipt` 不命中 `zw_mc_adm_is_screen()`）⇒ 本页须自带 canonical 规则输出点。
-            // 唯一出处仍是 canonical `zw_adm_ui_table_wrap_css()`；本处只透传，不复制第二套声明。
+            // （slug 前缀 `zw-receipt` 不命中 `会员域后台壳判定()`）⇒ 本页须自带 canonical 规则输出点。
+            // 唯一出处仍是 canonical `tco_ui_table_wrap_css()`；本处只透传，不复制第二套声明。
             echo function_exists('zw_receipt_admin_ui_table_wrap_style') ? zw_receipt_admin_ui_table_wrap_style() : '';
             // OA-2462：共享卡片 / 字段 / 页脚令牌（与发文管理同一套；唯一出处 `includes/oa/admin-ui.php`）。
             echo function_exists('zw_receipt_admin_ui_style') ? zw_receipt_admin_ui_style() : '';
@@ -239,7 +239,7 @@ if (!function_exists('zw_receipt_number_page')) {
                 <?php if (function_exists('wp_nonce_field')) { wp_nonce_field(ZW_RECEIPT_NUMBER_NONCE_ACTION); } ?>
 
                 <h2>一、部委编号码</h2>
-                <div class="zw-adm-table-wrap">
+                <div class="tco-table-wrap">
                 <table class="widefat striped" style="max-width:900px">
                     <thead>
                         <tr><th style="width:200px">部委</th><th style="width:120px">编号码</th><th>样例（本年第 1 号）</th></tr>
@@ -271,7 +271,7 @@ if (!function_exists('zw_receipt_number_page')) {
                 <p class="description">编号码 1~2 个字符；留空表示该部委编号不带部委段（退化为 <code>中传收〔年〕N号</code>）。</p>
 
                 <h2>二、序号规则</h2>
-                <div class="zw-adm-table-wrap">
+                <div class="tco-table-wrap">
                 <table class="form-table" role="presentation">
                     <tr>
                         <th scope="row"><label for="zw-receipt-start-seq">起始序号</label></th>
@@ -284,7 +284,7 @@ if (!function_exists('zw_receipt_number_page')) {
                     <tr>
                         <th scope="row">每部委独立序号域</th>
                         <td>
-                            <label class="zw-adm-touch">
+                            <label class="tco-touch">
                                 <input type="checkbox" name="per_org_seq" value="1" <?php checked(!empty($settings['per_org_seq'])); ?> />
                                 勾选＝各部委各自从起始序号计数（推荐）；不勾＝全部部委共用同一序号域。
                             </label>
@@ -322,7 +322,7 @@ if (!function_exists('zw_receipt_number_page')) {
             </form>
 
             <h2>三、编号样例（<?php echo esc_html((string) $current_yr); ?> 年，起始序号起算）</h2>
-            <div class="zw-adm-table-wrap">
+            <div class="tco-table-wrap">
             <table class="widefat striped" style="max-width:700px">
                 <thead><tr><th style="width:220px">部委</th><th>样例编号</th></tr></thead>
                 <tbody>

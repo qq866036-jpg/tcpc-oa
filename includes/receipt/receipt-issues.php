@@ -1627,7 +1627,7 @@ if (!function_exists('zw_receipt_issue_render_filters')) {
         echo '</select> ';
         echo '<input type="search" name="zw_receipt_kw" value="' . zw_receipt_admin_ui_attr($filters['kw'])
             . '" placeholder="办理事项标题"> ';
-        echo '<label class="zw-adm-touch"><input type="checkbox" name="zw_receipt_overdue" value="1"'
+        echo '<label class="tco-touch"><input type="checkbox" name="zw_receipt_overdue" value="1"'
             . ($filters['overdue'] ? ' checked' : '') . '> 仅看逾期（派生）</label> ';
         echo '<button type="submit" class="button">筛选</button>';
         echo '</form>';
@@ -1738,8 +1738,8 @@ if (!function_exists('zw_receipt_issue_render_table')) {
         }
         // TASK-1633（TASK-1579 P1-6 第四批）：宽表落 canonical 横滑包裹。
         // 规则由本域唯一输出点 zw_receipt_admin_ui_page_open()（本页 :1787 调用）透传 canonical
-        // `zw_adm_ui_table_wrap_css()` ⇒ 本函数不新增 <style>、不复制第二套声明。
-        echo '<div class="zw-adm-table-wrap">';
+        // `tco_ui_table_wrap_css()` ⇒ 本函数不新增 <style>、不复制第二套声明。
+        echo '<div class="tco-table-wrap">';
         echo '<table class="widefat striped"><thead><tr>'
             . '<th>状态</th><th>办理事项</th><th>来源收文</th><th>承办部门</th><th>承办人</th>'
             . '<th>办理时限</th><th>紧急程度</th><th>更新时间</th><th>操作</th>'

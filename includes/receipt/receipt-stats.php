@@ -270,17 +270,17 @@ if (!function_exists('zw_receipt_stats_bars')) {
     function zw_receipt_stats_bars($data, $max = 0) {
         $data = is_array($data) ? $data : array();
         if (!$data) {
-            return '<p class="zw-doc-muted">（无数据）</p>';
+            return '<p class="tco-doc-muted">（无数据）</p>';
         }
         $max = $max > 0 ? $max : max(array_map('intval', array_values($data)));
         $max = $max > 0 ? $max : 1;
         // OA-2485：canonical 横滑包裹（规则由收文台账页 `zw_receipt_admin_ui_page_open()` 透传）。
-        $html = '<div class="zw-adm-table-wrap"><table class="widefat striped"><tbody>';
+        $html = '<div class="tco-table-wrap"><table class="widefat striped"><tbody>';
         foreach ($data as $label => $count) {
             $pct  = (int) round(((int) $count / $max) * 100);
             $html .= '<tr><td style="width:26%">' . zw_receipt_print_esc((string) $label) . '</td>'
                 . '<td style="width:58%"><span style="display:inline-block;height:10px;border-radius:3px;'
-                . 'background:var(--zw-adm-accent,#2271b1);width:' . $pct . '%"></span></td>'
+                . 'background:var(--tco-accent,#2271b1);width:' . $pct . '%"></span></td>'
                 . '<td style="width:16%;text-align:right">' . (int) $count . '</td></tr>';
         }
         return $html . '</tbody></table></div>';
@@ -303,8 +303,8 @@ if (!function_exists('zw_receipt_stats_render')) {
         $years   = array_keys((array) $stats['by_year']);
         sort($years);
 
-        echo '<form method="get" action="' . esc_url(function_exists('admin_url') ? admin_url('admin.php') : 'admin.php') . '" class="zw-adm-filters">';
-        echo '<input type="hidden" name="page" value="zw-receipt-ledger"><input type="hidden" name="view" value="stats">';
+        echo '<form method="get" action="' . esc_url(function_exists('admin_url') ? admin_url('admin.php') : 'admin.php') . '" class="tco-filters">';
+        echo '<input type="hidden" name="page" value="tco-receipt-ledger"><input type="hidden" name="view" value="stats">';
         echo '<label>年度 <select name="zw_stats_year"><option value="">全部</option>';
         foreach ($years as $y) {
             if (!preg_match('/^\d{4}$/', (string) $y)) {
@@ -323,27 +323,27 @@ if (!function_exists('zw_receipt_stats_render')) {
         echo '</form>';
 
         $rate = $stats['total'] > 0 ? round($stats['archived'] * 100 / $stats['total'], 1) : 0;
-        echo '<div class="zw-adm-grid is-4" style="margin:12px 0 16px">';
+        echo '<div class="tco-grid is-4" style="margin:12px 0 16px">';
         foreach (array(
             array('收文总量', (string) $stats['total']),
             array('已归档（归档率）', $stats['archived'] . '（' . $rate . '%）'),
             array('逾期办理单', (string) $stats['overdue']),
             array('待批示', (string) $stats['pending']),
         ) as $card) {
-            echo '<div class="zw-adm-card" style="margin:0"><div class="zw-doc-muted">' . esc_html($card[0]) . '</div>'
+            echo '<div class="tco-card" style="margin:0"><div class="tco-doc-muted">' . esc_html($card[0]) . '</div>'
                 . '<div style="font-size:26px;font-weight:700;margin-top:6px">' . esc_html($card[1]) . '</div></div>';
         }
         echo '</div>';
 
-        echo '<div class="zw-adm-card" style="margin:0 0 16px"><h2>按来文单位</h2>' . zw_receipt_stats_bars($stats['by_org']) . '</div>';
-        echo '<div class="zw-adm-card" style="margin:0 0 16px"><h2>按年度</h2>' . zw_receipt_stats_bars($stats['by_year']) . '</div>';
-        echo '<div class="zw-adm-grid is-2">';
-        echo '<div class="zw-adm-card" style="margin:0"><h2>按密级</h2>' . zw_receipt_stats_bars($stats['by_conf']) . '</div>';
-        echo '<div class="zw-adm-card" style="margin:0"><h2>办理单状态分布</h2>' . zw_receipt_stats_bars($stats['by_status']) . '</div>';
+        echo '<div class="tco-card" style="margin:0 0 16px"><h2>按来文单位</h2>' . zw_receipt_stats_bars($stats['by_org']) . '</div>';
+        echo '<div class="tco-card" style="margin:0 0 16px"><h2>按年度</h2>' . zw_receipt_stats_bars($stats['by_year']) . '</div>';
+        echo '<div class="tco-grid is-2">';
+        echo '<div class="tco-card" style="margin:0"><h2>按密级</h2>' . zw_receipt_stats_bars($stats['by_conf']) . '</div>';
+        echo '<div class="tco-card" style="margin:0"><h2>办理单状态分布</h2>' . zw_receipt_stats_bars($stats['by_status']) . '</div>';
         echo '</div>';
-        echo '<p class="zw-doc-muted" style="margin-top:14px">口径：逾期=未收口且时限早于今天；待批示=有拟办无批示；'
+        echo '<p class="tco-doc-muted" style="margin-top:14px">口径：逾期=未收口且时限早于今天；待批示=有拟办无批示；'
             . '归档率=已写归档盒号的收文 ÷ 收文总量。数据实时读取，不做缓存。</p>';
-        echo '<p class="zw-doc-muted">显示为「未登记单位（key）」的，说明该来文单位还没在字典里填中文名 —— '
+        echo '<p class="tco-doc-muted">显示为「未登记单位（key）」的，说明该来文单位还没在字典里填中文名 —— '
             . '去「收文管理 → 来文单位」补一个名称即可自动恢复。</p>';
     }
 }

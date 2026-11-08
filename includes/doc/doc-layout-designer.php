@@ -615,19 +615,19 @@ if (!function_exists('zw_doc_layout_render_page')) {
         // 页面专属样式按项目口径写在本模板内（不新增全局 CSS 文件）。
         ?>
         <style>
-        body.zw-doc-layout-screen #wpfooter{display:none}
-        body.zw-doc-layout-screen #wpbody-content{padding-bottom:0}
-        body.zw-doc-layout-screen .zw-doc-layout-row{height:var(--zw-doc-row-h, calc(100vh - 200px))}
+        body.tco-doc-layout-screen #wpfooter{display:none}
+        body.tco-doc-layout-screen #wpbody-content{padding-bottom:0}
+        body.tco-doc-layout-screen .tco-doc-layout-row{height:var(--tco-doc-row-h, calc(100vh - 200px))}
         /* TASK-2012：可拖拽分隔条（视觉上是一条 1px 竖线 + 8px 抓取区）。 */
-        .zw-doc-layout-splitter{flex:0 0 8px;align-self:stretch;cursor:col-resize;position:relative;background:transparent;outline:none}
-        .zw-doc-layout-splitter::before{content:"";position:absolute;top:0;bottom:0;left:50%;width:1px;transform:translateX(-50%);background:#dcdcde}
-        .zw-doc-layout-splitter::after{content:"";position:absolute;top:50%;left:50%;width:4px;height:34px;transform:translate(-50%,-50%);border-radius:2px;background:#c3c4c7}
+        .tco-doc-layout-splitter{flex:0 0 8px;align-self:stretch;cursor:col-resize;position:relative;background:transparent;outline:none}
+        .tco-doc-layout-splitter::before{content:"";position:absolute;top:0;bottom:0;left:50%;width:1px;transform:translateX(-50%);background:#dcdcde}
+        .tco-doc-layout-splitter::after{content:"";position:absolute;top:50%;left:50%;width:4px;height:34px;transform:translate(-50%,-50%);border-radius:2px;background:#c3c4c7}
         /* TASK-2006 代修：`:hover` 按 SPEC-10 §4.4 必须包在 `@media(hover:hover)` 内（TASK-2015 引入的 S4b 回归，
            原先与 `:focus` / `.is-dragging` 同行裸写）。拆成两条：键盘与拖拽态照旧即时生效，悬停态仅在支持 hover 的设备上生效。 */
-        .zw-doc-layout-splitter:focus::after,.zw-doc-layout-splitter.is-dragging::after{background:#2271b1}
-        @media(hover:hover){.zw-doc-layout-splitter:hover::after{background:#2271b1}}
-        .zw-doc-layout-splitter:focus-visible{box-shadow:0 0 0 2px #2271b1;border-radius:2px}
-        .zw-doc-layout-splitter.is-dragging+.zw-doc-layout-params{pointer-events:none}
+        .tco-doc-layout-splitter:focus::after,.tco-doc-layout-splitter.is-dragging::after{background:#2271b1}
+        @media(hover:hover){.tco-doc-layout-splitter:hover::after{background:#2271b1}}
+        .tco-doc-layout-splitter:focus-visible{box-shadow:0 0 0 2px #2271b1;border-radius:2px}
+        .tco-doc-layout-splitter.is-dragging+.tco-doc-layout-params{pointer-events:none}
         /* TASK-2024：胶囊开关（.zw-pill-switch）—— 纯 CSS，无 JS 依赖，键盘可用（原生 checkbox）。 */
         .zw-pill-switch{display:inline-flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
         .zw-pill-switch input{position:absolute;opacity:0;width:0;height:0}
@@ -642,13 +642,13 @@ if (!function_exists('zw_doc_layout_render_page')) {
         .zw-color-field input[type=color]{width:34px;height:26px;padding:0;border:1px solid #8c8f94;border-radius:3px;background:#fff;cursor:pointer}
         .zw-color-chip{display:inline-block;width:18px;height:18px;border:1px solid #8c8f94;border-radius:3px}
         @media (max-width:1099px){
-            body.zw-doc-layout-screen .zw-doc-layout-row{flex-wrap:wrap;height:auto}
-            .zw-doc-layout-splitter{display:none}
-            .zw-doc-layout-preview{flex:0 0 100%!important;max-width:100%!important;height:60vh!important}
+            body.tco-doc-layout-screen .tco-doc-layout-row{flex-wrap:wrap;height:auto}
+            .tco-doc-layout-splitter{display:none}
+            .tco-doc-layout-preview{flex:0 0 100%!important;max-width:100%!important;height:60vh!important}
         }
         </style>
-        <script>document.body.classList.add('zw-doc-layout-screen');</script>
-        <div class="wrap zw-doc-layout-designer">
+        <script>document.body.classList.add('tco-doc-layout-screen');</script>
+        <div class="wrap tco-doc-layout-designer">
             <h1>公文版式</h1>
             <?php /* TASK-1999 发版门禁修复：说明性文字块的行宽上限改用 `width:min(100%,900px)`（等价视觉），
                      避免 S1b 把「说明文字块」误计为「容器 max-width」（SPEC-10 §1.9.2 第 4 条只约束容器）。 */ ?>
@@ -676,20 +676,20 @@ if (!function_exists('zw_doc_layout_render_page')) {
             // 窄屏（< 1100px）降级为上下堆叠。
             // 与 TASK-2002 的差异：此前靠 `sticky` 且整页可滚 ⇒ 实测预览仍会跟页脚一起移动（用户反馈「为什么也跟着动」）。
             ?>
-            <div class="zw-doc-layout-row" style="display:flex;gap:0;align-items:stretch;flex-wrap:nowrap;height:calc(100vh - 200px);min-height:420px;--zw-doc-split:50%">
+            <div class="tco-doc-layout-row" style="display:flex;gap:0;align-items:stretch;flex-wrap:nowrap;height:calc(100vh - 200px);min-height:420px;--tco-doc-split:50%">
                 <?php /* TASK-2004：**不靠 sticky** —— 行容器固定为视口高，左列 `height:100%`，
                         右列内部滚动 ⇒ 整页不滚、预览物理上不可能跟着移动。 */ ?>
-                <div class="zw-doc-layout-preview" style="flex:0 0 calc(var(--zw-doc-split, 50%) - 4px);max-width:calc(var(--zw-doc-split, 50%) - 4px);height:100%;display:flex;min-width:280px">
+                <div class="tco-doc-layout-preview" style="flex:0 0 calc(var(--tco-doc-split, 50%) - 4px);max-width:calc(var(--tco-doc-split, 50%) - 4px);height:100%;display:flex;min-width:280px">
                     <div class="card" style="max-width:none;padding:10px;margin:0;display:flex;flex-direction:column;width:100%">
                         <div style="display:flex;justify-content:space-between;align-items:center;margin:0 0 8px">
                             <h2 style="margin:0;font-size:15px">版式预览（当前保存值 · 等比缩放）</h2>
                             <span>
-                                <button type="button" class="button button-small" id="zw-doc-layout-refresh">刷新预览</button>
+                                <button type="button" class="button button-small" id="tco-doc-layout-refresh">刷新预览</button>
                                 <a href="<?php echo esc_url($preview_u); ?>" target="_blank" rel="noopener" style="font-size:12px;margin-left:8px">新窗口打开</a>
                             </span>
                         </div>
-                        <div id="zw-doc-layout-preview-box" style="width:100%;flex:1 1 auto;min-height:320px;overflow:hidden;background:#f0f0f1;border:1px solid #dcdcde;border-radius:4px">
-                            <iframe id="zw-doc-layout-preview-frame" src="<?php echo esc_url($preview_u); ?>" style="width:100%;height:100%;border:0;background:#fff" title="版式预览"></iframe>
+                        <div id="tco-doc-layout-preview-box" style="width:100%;flex:1 1 auto;min-height:320px;overflow:hidden;background:#f0f0f1;border:1px solid #dcdcde;border-radius:4px">
+                            <iframe id="tco-doc-layout-preview-frame" src="<?php echo esc_url($preview_u); ?>" style="width:100%;height:100%;border:0;background:#fff" title="版式预览"></iframe>
                         </div>
                         <p style="color:#646970;font-size:12px;margin:8px 0 0">
                             样例文书含主送机关 / 落款 / 印章 / 版记；保存参数后点「刷新预览」即可看到新口径。
@@ -698,14 +698,14 @@ if (!function_exists('zw_doc_layout_render_page')) {
                 </div>
                 <?php /* TASK-2002 修正：60% + 40% + gap(18px) > 100% 会触发 flex 换行（实测参数列被挤到下一行） ⇒ 两列各自再减去半个间距，合计正好 100%。 */ ?>
                 <?php /* TASK-2012：预览与参数之间的**可拖拽分隔条**（鼠标/触摸/键盘 ←→；30%~70% 夹紧，比例记在 localStorage）。 */ ?>
-                <div id="zw-doc-layout-splitter" class="zw-doc-layout-splitter" role="separator" aria-orientation="vertical"
+                <div id="tco-doc-layout-splitter" class="tco-doc-layout-splitter" role="separator" aria-orientation="vertical"
                      aria-label="拖拽调整左右布局占比" aria-valuemin="30" aria-valuemax="70" aria-valuenow="50" tabindex="0"
                      title="拖拽调整左右占比（也可聚焦后用 ← → 微调）"></div>
-                <div class="zw-doc-layout-params" style="flex:1 1 auto;min-width:320px;height:100%;display:flex;flex-direction:column;min-height:0;padding-left:12px">
+                <div class="tco-doc-layout-params" style="flex:1 1 auto;min-width:320px;height:100%;display:flex;flex-direction:column;min-height:0;padding-left:12px">
                     <?php /* 固定操作条：滚动时也始终可点（按钮用 HTML5 `form=` 关联到下面两个表单）。 */ ?>
-                    <div class="zw-doc-layout-actions" style="flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:6px 0 8px;border-bottom:1px solid #dcdcde;margin-bottom:8px;position:relative;z-index:2;background:#f0f0f1">
-                        <button type="submit" form="zw-doc-layout-save-form" class="button button-primary button-small">保存版式</button>
-                        <button type="submit" form="zw-doc-layout-reset-form" class="button button-small" onclick="return confirm('确定恢复为国标默认版式？（覆盖项将全部清空）');">恢复国标默认</button>
+                    <div class="tco-doc-layout-actions" style="flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:6px 0 8px;border-bottom:1px solid #dcdcde;margin-bottom:8px;position:relative;z-index:2;background:#f0f0f1">
+                        <button type="submit" form="tco-doc-layout-save-form" class="button button-primary button-small">保存版式</button>
+                        <button type="submit" form="tco-doc-layout-reset-form" class="button button-small" onclick="return confirm('确定恢复为国标默认版式？（覆盖项将全部清空）');">恢复国标默认</button>
                         <span style="color:#646970;font-size:12px;margin-left:auto">
                             <?php if (!empty($hist)) : ?>
                                 最近变更 <?php echo esc_html((string) (isset($hist[0]['at']) ? $hist[0]['at'] : '')); ?>
@@ -715,7 +715,7 @@ if (!function_exists('zw_doc_layout_render_page')) {
                             <?php endif; ?>
                         </span>
                     </div>
-                    <div class="zw-doc-layout-params-scroll" style="flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-right:6px">
+                    <div class="tco-doc-layout-params-scroll" style="flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-right:6px">
             <?php
             // TASK-2009：**落款几何读数** —— 用户「现有配置无法判断署名长度」：这里直接把「算出来的结果」摊开，
             // 用 9 / 15 / 20 字三种署名长度，显示 署名宽、行数、中轴、署名中心与日期中心的偏移、是否越界。
@@ -748,7 +748,7 @@ if (!function_exists('zw_doc_layout_render_page')) {
                         <strong>Δ = 署名中心 − 日期中心</strong>，国标口径下无论署名多长都应为 <strong>0.00mm</strong>。
                     </p>
                     <?php /* TASK-1999 发版门禁（三轮）：TASK-2009 新增「落款几何读数」宽表，补 canonical 横滑包裹（SPEC-10 §1.9.2 第 4/5 条）。 */ ?>
-                    <div class="zw-adm-table-wrap">
+                    <div class="tco-table-wrap">
                     <table class="widefat striped" style="border:0">
                         <thead><tr>
                             <th style="width:12%">署名长度</th><th>估算宽度</th><th>行数</th><th>中轴</th>
@@ -787,7 +787,7 @@ if (!function_exists('zw_doc_layout_render_page')) {
                         <?php endforeach; ?>
                         </tbody>
                     </table>
-                    </div><?php /* /.zw-adm-table-wrap */ ?>
+                    </div><?php /* /.tco-table-wrap */ ?>
                     <?php
                     // TASK-2010：标题折行读数（短/中/长三档样例），断行结果与各行字数一并给出。
                     $zw_ld_titles = array(
@@ -801,7 +801,7 @@ if (!function_exists('zw_doc_layout_render_page')) {
                         每行最多字数：<?php echo (int) (function_exists('zw_doc_gb9704_get') ? zw_doc_gb9704_get('title.wrap_chars', 0) : 0); ?>（0 = 按版心自动）；
                         折行方式：<?php echo esc_html((string) (function_exists('zw_doc_gb9704_get') ? zw_doc_gb9704_get('title.wrap_mode', 'balanced') : 'balanced')); ?>
                     </p>
-                    <div class="zw-adm-table-wrap">
+                    <div class="tco-table-wrap">
                     <table class="widefat striped" style="border:0">
                         <thead><tr><th style="width:14%">样例</th><th style="width:8%">行数</th><th>断行结果</th></tr></thead>
                         <tbody>
@@ -824,14 +824,14 @@ if (!function_exists('zw_doc_layout_render_page')) {
                 </div>
             <?php endif; ?>
 
-                    <form id="zw-doc-layout-save-form" method="post">
+                    <form id="tco-doc-layout-save-form" method="post">
                         <?php wp_nonce_field('zw_doc_layout_save'); ?>
                         <input type="hidden" name="zw_doc_layout_action" value="save">
                         <?php foreach ($groups as $gkey => $glabel) : ?>
                             <div class="card" style="max-width:none;padding:8px 14px 14px;margin-bottom:12px">
                                 <h2 style="margin:8px 0 4px;font-size:15px"><?php echo esc_html($glabel); ?></h2>
                                 <?php /* TASK-1999 发版门禁修复：宽表落 canonical 横滑包裹（SPEC-10 §1.9.2 第 4/5 条「溢出内容可达」）。 */ ?>
-                                <div class="zw-adm-table-wrap">
+                                <div class="tco-table-wrap">
                                 <table class="widefat striped" style="border:0">
                                     <thead>
                                         <tr>
@@ -940,12 +940,12 @@ if (!function_exists('zw_doc_layout_render_page')) {
                                     <?php endforeach; ?>
                                     </tbody>
                                 </table>
-                                </div><?php /* /.zw-adm-table-wrap */ ?>
+                                </div><?php /* /.tco-table-wrap */ ?>
                             </div>
                         <?php endforeach; ?>
                     </form>
-                    </div><?php /* /.zw-doc-layout-params-scroll */ ?>
-                    <form id="zw-doc-layout-reset-form" method="post" style="display:none">
+                    </div><?php /* /.tco-doc-layout-params-scroll */ ?>
+                    <form id="tco-doc-layout-reset-form" method="post" style="display:none">
                         <?php wp_nonce_field('zw_doc_layout_save'); ?>
                         <input type="hidden" name="zw_doc_layout_action" value="reset">
                     </form>
@@ -954,8 +954,8 @@ if (!function_exists('zw_doc_layout_render_page')) {
             </div>
             <script>
             (function(){
-                var btn = document.getElementById('zw-doc-layout-refresh');
-                var frame = document.getElementById('zw-doc-layout-preview-frame');
+                var btn = document.getElementById('tco-doc-layout-refresh');
+                var frame = document.getElementById('tco-doc-layout-preview-frame');
                 if (btn && frame) {
                     btn.addEventListener('click', function(){
                         var u = frame.getAttribute('src').split('&zw_t=')[0];
@@ -964,22 +964,22 @@ if (!function_exists('zw_doc_layout_render_page')) {
                 }
                 // TASK-2004：行高按「行容器顶边 → 视口底」实测计算 ⇒ 整页不产生纵向滚动，
                 // 参数列在自己的滚动区里滚，预览永远不会跟着页面移动（不依赖 magic 数字，也不依赖 sticky）。
-                var row = document.querySelector('.zw-doc-layout-row');
+                var row = document.querySelector('.tco-doc-layout-row');
                 function fitRow(){
                     if (!row) { return; }
                     var top = row.getBoundingClientRect().top + (window.pageYOffset || 0);
                     // −24px：扣除 .wrap 的下外边距与浏览器取整，确保页面**不产生纵向滚动**（实测 −8 时仍溢出 15px）。
                     var h = Math.max(360, Math.floor(window.innerHeight - top - 24));
-                    row.style.setProperty('--zw-doc-row-h', h + 'px');
+                    row.style.setProperty('--tco-doc-row-h', h + 'px');
                     row.style.height = h + 'px';
                 }
                 // TASK-2012：左右分栏**可拖拽**（鼠标/触摸；聚焦后 ←→ 微调 2%），30%~70% 夹紧，
                 // 比例写入 localStorage（下次进来保持）。拖拽只改分栏比例，不改行高 ⇒ 预览位置依旧固定。
-                var splitter = document.getElementById('zw-doc-layout-splitter');
+                var splitter = document.getElementById('tco-doc-layout-splitter');
                 var SPLIT_KEY = 'zwDocLayoutSplitPct';
                 function applySplit(pct, persist){
                     pct = Math.max(30, Math.min(70, pct));
-                    row.style.setProperty('--zw-doc-split', pct.toFixed(2) + '%');
+                    row.style.setProperty('--tco-doc-split', pct.toFixed(2) + '%');
                     if (splitter) { splitter.setAttribute('aria-valuenow', String(Math.round(pct))); }
                     if (persist) { try { localStorage.setItem(SPLIT_KEY, pct.toFixed(2)); } catch (e) {} }
                 }
@@ -1011,7 +1011,7 @@ if (!function_exists('zw_doc_layout_render_page')) {
                         splitter.classList.remove('is-dragging');
                         document.body.style.cursor = '';
                         document.body.style.userSelect = '';
-                        var cur = parseFloat(getComputedStyle(row).getPropertyValue('--zw-doc-split')) || 50;
+                        var cur = parseFloat(getComputedStyle(row).getPropertyValue('--tco-doc-split')) || 50;
                         applySplit(cur, true);
                     }
                     splitter.addEventListener('mousedown', onDown);
@@ -1021,7 +1021,7 @@ if (!function_exists('zw_doc_layout_render_page')) {
                     window.addEventListener('mouseup', onUp);
                     window.addEventListener('touchend', onUp);
                     splitter.addEventListener('keydown', function (e) {
-                        var cur = parseFloat(getComputedStyle(row).getPropertyValue('--zw-doc-split')) || 50;
+                        var cur = parseFloat(getComputedStyle(row).getPropertyValue('--tco-doc-split')) || 50;
                         if (e.key === 'ArrowLeft') { applySplit(cur - 2, true); e.preventDefault(); }
                         if (e.key === 'ArrowRight') { applySplit(cur + 2, true); e.preventDefault(); }
                         if (e.key === 'Home') { applySplit(50, true); e.preventDefault(); }

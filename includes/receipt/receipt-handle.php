@@ -711,7 +711,7 @@ if (!function_exists('zw_receipt_handle_render_cards')) {
         $notices = zw_receipt_handle_notice_map();
 
         if ($missing['tables'] !== array() || $missing['columns'] !== array()) {
-            echo '<div class="zw-adm-card" style="margin:0 0 16px"><h2>拟办 / 批示 / 传阅 / 归档</h2>';
+            echo '<div class="tco-card" style="margin:0 0 16px"><h2>拟办 / 批示 / 传阅 / 归档</h2>';
             echo '<div class="notice notice-warning inline"><p>相关表或列尚未迁移：请执行 '
                 . '<code>wp eval-file scripts/migrate-receipt-handle.php execute</code> 后再用。'
                 . '（缺表：' . esc_html(implode('、', $missing['tables']) ?: '无')
@@ -727,7 +727,7 @@ if (!function_exists('zw_receipt_handle_render_cards')) {
         $pending  = zw_receipt_handle_pending_instruction();
 
         // ————— 卡片 A：拟办 / 批示 / 催办（append-only 时间线）—————
-        echo '<div class="zw-adm-card" style="margin:0 0 16px">';
+        echo '<div class="tco-card" style="margin:0 0 16px">';
         echo '<h2>拟办与批示</h2>';
         if (isset($notices[$msg])) {
             echo '<div class="notice notice-' . esc_attr($notices[$msg][0]) . ' inline"><p>'
@@ -741,14 +741,14 @@ if (!function_exists('zw_receipt_handle_render_cards')) {
                 break;
             }
         }
-        echo '<p class="zw-doc-muted">拟办 / 批示 / 催办 / 签阅一律**追加留痕**（只增不改）；'
+        echo '<p class="tco-doc-muted">拟办 / 批示 / 催办 / 签阅一律**追加留痕**（只增不改）；'
             . '它们不改变办理状态机（状态仍在「收文办理」里维护）。'
             . ' 签名时间戳：<strong>' . ($signed_at !== '' ? esc_html($signed_at) : '未签阅') . '</strong></p>';
 
         if (!$logs) {
             echo '<p>还没有拟办：登记来文后，先由办公室填「拟办意见」，再走领导批示。</p>';
         } else {
-            echo '<div class="zw-adm-table-wrap"><table class="widefat striped"><thead><tr>'
+            echo '<div class="tco-table-wrap"><table class="widefat striped"><thead><tr>'
                 . '<th style="width:100px">类型</th><th style="width:120px">人</th>'
                 . '<th style="width:150px">时间</th><th>内容</th>'
                 . '</tr></thead><tbody>';
@@ -761,7 +761,7 @@ if (!function_exists('zw_receipt_handle_render_cards')) {
                 echo '<td>' . esc_html(isset($actions[$action]) ? $actions[$action] : $action) . '</td>';
                 echo '<td>' . esc_html($who);
                 if ($is_auto) {
-                    echo ' <span class="zw-adm-badge" style="margin-left:6px">系统自动</span>';
+                    echo ' <span class="tco-badge" style="margin-left:6px">系统自动</span>';
                 }
                 echo '</td>';
                 echo '<td>' . esc_html((string) (isset($log['created_at']) ? $log['created_at'] : '')) . '</td>';
@@ -777,13 +777,13 @@ if (!function_exists('zw_receipt_handle_render_cards')) {
         if (function_exists('wp_nonce_field')) {
             wp_nonce_field(zw_receipt_handle_nonce('handle_add', $receipt_id), 'zw_receipt_handle_nonce');
         }
-        echo '<div class="zw-adm-grid is-2">';
-        echo '<div class="zw-adm-field"><label for="zw-rh-action">类型</label><select id="zw-rh-action" name="handle_action">';
+        echo '<div class="tco-grid is-2">';
+        echo '<div class="tco-field"><label for="zw-rh-action">类型</label><select id="zw-rh-action" name="handle_action">';
         foreach ($actions as $key => $label) {
             echo '<option value="' . esc_attr($key) . '">' . esc_html($label) . '</option>';
         }
         echo '</select></div>';
-        echo '<div class="zw-adm-field"><label for="zw-rh-content">内容 <span style="color:#b30404">*</span></label>'
+        echo '<div class="tco-field"><label for="zw-rh-content">内容 <span style="color:#b30404">*</span></label>'
             . '<textarea id="zw-rh-content" name="content" rows="3" required placeholder="拟办：请××处阅办；批示：同意，请按拟办意见办理。"></textarea></div>';
         echo '</div>';
         echo '<button type="submit" class="button button-primary">追加留痕</button>';
@@ -791,14 +791,14 @@ if (!function_exists('zw_receipt_handle_render_cards')) {
         echo '</div>';
 
         // ————— 卡片 B：传阅与签阅 —————
-        echo '<div class="zw-adm-card" style="margin:0 0 16px">';
+        echo '<div class="tco-card" style="margin:0 0 16px">';
         echo '<h2>传阅与签阅</h2>';
-        echo '<p class="zw-doc-muted">一人一行（同一对象只登记一次）；「签阅」只写签阅时间，不改登记内容。'
+        echo '<p class="tco-doc-muted">一人一行（同一对象只登记一次）；「签阅」只写签阅时间，不改登记内容。'
             . '待批示收文：<strong>' . (int) $pending . '</strong> 件（有拟办、无批示）。</p>';
         if (!$circ) {
             echo '<p>还没有传阅登记：可在下方把这份来文传阅给相关人员或部门。</p>';
         } else {
-            echo '<div class="zw-adm-table-wrap"><table class="widefat striped"><thead><tr>'
+            echo '<div class="tco-table-wrap"><table class="widefat striped"><thead><tr>'
                 . '<th style="width:90px">类型</th><th style="width:180px">对象</th>'
                 . '<th style="width:150px">登记时间</th><th style="width:150px">签阅时间</th>'
                 . '<th>备注</th><th style="width:100px">操作</th>'
@@ -837,16 +837,16 @@ if (!function_exists('zw_receipt_handle_render_cards')) {
         if (function_exists('wp_nonce_field')) {
             wp_nonce_field(zw_receipt_handle_nonce('circ_add', $receipt_id), 'zw_receipt_circ_nonce');
         }
-        echo '<div class="zw-adm-grid is-2">';
-        echo '<div class="zw-adm-field"><label for="zw-rc-type">对象类型</label><select id="zw-rc-type" name="target_type">';
+        echo '<div class="tco-grid is-2">';
+        echo '<div class="tco-field"><label for="zw-rc-type">对象类型</label><select id="zw-rc-type" name="target_type">';
         foreach (zw_receipt_circ_targets() as $key => $label) {
             echo '<option value="' . esc_attr($key) . '">' . esc_html($label) . '</option>';
         }
         echo '</select></div>';
-        echo '<div class="zw-adm-field"><label for="zw-rc-target">对象标识 <span style="color:#b30404">*</span></label>'
+        echo '<div class="tco-field"><label for="zw-rc-target">对象标识 <span style="color:#b30404">*</span></label>'
             . '<input type="text" id="zw-rc-target" name="target_id" required placeholder="人员填登录名；部门填部门 key">'
             . '<p class="description">人员：WordPress 登录名；部门：组织架构部门 key（如 <code>office</code>）。</p></div>';
-        echo '<div class="zw-adm-field"><label for="zw-rc-note">备注</label>'
+        echo '<div class="tco-field"><label for="zw-rc-note">备注</label>'
             . '<input type="text" id="zw-rc-note" name="note" maxlength="250"></div>';
         echo '</div>';
         echo '<button type="submit" class="button button-primary">登记传阅</button>';
@@ -854,9 +854,9 @@ if (!function_exists('zw_receipt_handle_render_cards')) {
         echo '</div>';
 
         // ————— 卡片 C：归档（页数 / 盒号 / 年度）—————
-        echo '<div class="zw-adm-card" style="margin:0 0 16px">';
+        echo '<div class="tco-card" style="margin:0 0 16px">';
         echo '<h2>归档信息</h2>';
-        echo '<p class="zw-doc-muted">归档盒号 / 年度是**纸质归档**标识，与私有存储目录（部委/年份）互不影响；'
+        echo '<p class="tco-doc-muted">归档盒号 / 年度是**纸质归档**标识，与私有存储目录（部委/年份）互不影响；'
             . '页数用于纸质件核对。</p>';
         echo '<form method="post" action="' . esc_url($post_url) . '">';
         echo '<input type="hidden" name="action" value="zw_receipt_archive">';
@@ -864,14 +864,14 @@ if (!function_exists('zw_receipt_handle_render_cards')) {
         if (function_exists('wp_nonce_field')) {
             wp_nonce_field(zw_receipt_handle_nonce('archive', $receipt_id), 'zw_receipt_archive_nonce');
         }
-        echo '<div class="zw-adm-grid is-2">';
-        echo '<div class="zw-adm-field"><label for="zw-ra-box">归档盒号</label>'
+        echo '<div class="tco-grid is-2">';
+        echo '<div class="tco-field"><label for="zw-ra-box">归档盒号</label>'
             . '<input type="text" id="zw-ra-box" name="archive_box_no" maxlength="64" value="'
             . esc_attr($archive['archive_box_no']) . '" placeholder="如 收-2026-03"></div>';
-        echo '<div class="zw-adm-field"><label for="zw-ra-year">归档年度</label>'
+        echo '<div class="tco-field"><label for="zw-ra-year">归档年度</label>'
             . '<input type="number" id="zw-ra-year" name="archive_year" min="1900" max="2999" value="'
             . ($archive['archive_year'] > 0 ? (int) $archive['archive_year'] : '') . '" placeholder="如 2026"></div>';
-        echo '<div class="zw-adm-field"><label for="zw-ra-pages">页数</label>'
+        echo '<div class="tco-field"><label for="zw-ra-pages">页数</label>'
             . '<input type="number" id="zw-ra-pages" name="page_count" min="1" max="65535" value="'
             . ($archive['page_count'] > 0 ? (int) $archive['page_count'] : '') . '"></div>';
         echo '</div>';

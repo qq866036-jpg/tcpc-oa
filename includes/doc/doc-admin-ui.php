@@ -12,7 +12,7 @@
  *
  * 类族约定：
  * - `zw-adm-*` 为 §1.9 规定的 canonical 类族（新建标记优先使用）；
- * - `zw-doc-card` 等既有类保留为**兼容别名**，由同一条规则一并覆盖，避免为改样式而重写全部标记。
+ * - `tco-doc-card` 等既有类保留为**兼容别名**，由同一条规则一并覆盖，避免为改样式而重写全部标记。
  *
  * @package tcpc
  */
@@ -43,16 +43,16 @@ if (!function_exists('zw_doc_admin_page_classes')) {
      */
     function zw_doc_admin_page_classes() {
         return array(
-            'zw-doc-list',
-            'zw-doc-create',
-            'zw-doc-detail',
-            'zw-doc-composer',
-            'zw-doc-numbers',
-            'zw-doc-flow',
+            'tco-doc-list',
+            'tco-doc-create',
+            'tco-doc-detail',
+            'tco-doc-composer',
+            'tco-doc-numbers',
+            'tco-doc-flow',
             // TASK-1396：数据字典页（与文号管理 / 公文流转配置并列）。
-            'zw-doc-dict',
-            'zw-doc-assets',
-            'zw-doc-legal',
+            'tco-doc-dict',
+            'tco-doc-assets',
+            'tco-doc-legal',
         );
     }
 }
@@ -94,7 +94,7 @@ if (!function_exists('zw_doc_admin_page_head')) {
     function zw_doc_admin_page_head($title, $sub = '') {
         $html = '<h1>' . esc_html((string) $title) . '</h1>';
         if ($sub !== '') {
-            $html .= '<p class="zw-doc-sub">' . esc_html((string) $sub) . '</p>';
+            $html .= '<p class="tco-doc-sub">' . esc_html((string) $sub) . '</p>';
         }
 
         return $html;
@@ -112,13 +112,13 @@ if (!function_exists('zw_doc_admin_card_head')) {
      * @return string
      */
     function zw_doc_admin_card_head($name, $badge = '', $badge_on = true, $icon = '') {
-        $html = '<div class="zw-adm-card-head">';
+        $html = '<div class="tco-card-head">';
         if ($icon !== '') {
-            $html .= '<span class="zw-adm-ico ' . esc_attr($icon) . '" aria-hidden="true"></span>';
+            $html .= '<span class="tco-ico ' . esc_attr($icon) . '" aria-hidden="true"></span>';
         }
         $html .= '<span>' . esc_html((string) $name) . '</span>';
         if ($badge !== '') {
-            $html .= '<span class="zw-adm-badge' . ($badge_on ? ' is-on' : '') . '">' . esc_html((string) $badge) . '</span>';
+            $html .= '<span class="tco-badge' . ($badge_on ? ' is-on' : '') . '">' . esc_html((string) $badge) . '</span>';
         }
         $html .= '</div>';
 

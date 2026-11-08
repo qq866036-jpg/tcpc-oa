@@ -591,22 +591,22 @@ if (!function_exists('zw_doc_page_legal')) {
         $can    = zw_doc_legal_can_review();
         $labels = zw_doc_legal_statuses();
         ?>
-        <div class="wrap zw-doc-legal">
+        <div class="wrap tco-doc-legal">
             <?php echo zw_doc_admin_ui_style(); // 唯一出处：SPEC-10 §1.9 卡片范式（TASK-778） ?>
             <style>
-            .zw-doc-legal .zw-doc-kpi{display:flex;gap:18px;flex-wrap:wrap}
-            .zw-doc-legal .zw-doc-kpi div{min-width:110px}
-            .zw-doc-legal .zw-doc-kpi strong{display:block;font-size:20px}
+            .tco-doc-legal .tco-doc-kpi{display:flex;gap:18px;flex-wrap:wrap}
+            .tco-doc-legal .tco-doc-kpi div{min-width:110px}
+            .tco-doc-legal .tco-doc-kpi strong{display:block;font-size:20px}
             </style>
             <h1>公文法务</h1>
             <?php if ($notice !== '') { zw_doc_admin_notice($notice, (stripos($notice, '无权限') !== false || stripos($notice, '必须') !== false || stripos($notice, '失败') !== false) ? 'error' : 'success'); } ?>
-            <p class="zw-doc-muted">
+            <p class="tco-doc-muted">
                 复用 AI 法务部既有审核引擎（本机网关）；**失败一律转人工且不自动放行**；本页只保存结论与问题摘要，<strong>不保存正文全文</strong>。
             </p>
 
-            <div class="zw-doc-card">
+            <div class="tco-doc-card">
                 <h2>概览</h2>
-                <div class="zw-doc-kpi">
+                <div class="tco-doc-kpi">
                     <?php foreach ($labels as $key => $label) : ?>
                         <div>
                             <strong><?php echo (int) (isset($result['counts'][$key]) ? $result['counts'][$key] : 0); ?></strong>
@@ -614,17 +614,17 @@ if (!function_exists('zw_doc_page_legal')) {
                         </div>
                     <?php endforeach; ?>
                 </div>
-                <p class="zw-doc-muted">
+                <p class="tco-doc-muted">
                     当前筛选：<?php echo $status !== '' ? esc_html(zw_doc_legal_status_label($status)) : '全部'; ?>（共 <?php echo (int) $result['total']; ?> 篇）
                     <?php if ($status !== '') : ?>｜<a href="<?php echo esc_url(zw_doc_legal_admin_url()); ?>">清除筛选</a><?php endif; ?>
                 </p>
             </div>
 
-            <div class="zw-doc-card">
+            <div class="tco-doc-card">
                 <h2>列表</h2>
                 <!-- TASK-1633（TASK-1579 P1-6 第四批）：宽表落 canonical 横滑包裹。
                      规则由本模块唯一出处 zw_doc_admin_ui_style()（本页 :549 输出）提供 ⇒ 本页不新增 <style>。 -->
-                <div class="zw-adm-table-wrap">
+                <div class="tco-table-wrap">
                 <table class="widefat striped">
                     <thead><tr><th>文号</th><th>标题</th><th>状态</th><th>结论 / 问题</th><th>时间</th><th>操作</th></tr></thead>
                     <tbody>
@@ -636,11 +636,11 @@ if (!function_exists('zw_doc_page_legal')) {
                             <tr>
                                 <td><?php echo esc_html((string) $doc['number']); ?></td>
                                 <td><a href="<?php echo esc_url(zw_doc_admin_url(array('view' => 'detail', 'doc_id' => $doc['id']))); ?>"><?php echo esc_html((string) $doc['title']); ?></a></td>
-                                <td><span class="zw-doc-badge"><?php echo esc_html(zw_doc_legal_status_label($legal['status'])); ?></span></td>
+                                <td><span class="tco-doc-badge"><?php echo esc_html(zw_doc_legal_status_label($legal['status'])); ?></span></td>
                                 <td>
                                     <?php if ($legal['summary'] !== '') : ?><?php echo esc_html($legal['summary']); ?><?php endif; ?>
                                     <?php if (!empty($legal['issues'])) : ?>
-                                        <div class="zw-doc-muted">
+                                        <div class="tco-doc-muted">
                                             <?php foreach (array_slice($legal['issues'], 0, 3) as $issue) : ?>
                                                 · [<?php echo esc_html((string) $issue['severity']); ?>] <?php echo esc_html((string) $issue['message']); ?><br>
                                             <?php endforeach; ?>
@@ -648,10 +648,10 @@ if (!function_exists('zw_doc_page_legal')) {
                                         </div>
                                     <?php endif; ?>
                                     <?php if ($legal['clause_total'] > 0) : ?>
-                                        <div class="zw-doc-muted">参与判定条款：<?php echo (int) $legal['clause_sent']; ?> / <?php echo (int) $legal['clause_total']; ?></div>
+                                        <div class="tco-doc-muted">参与判定条款：<?php echo (int) $legal['clause_sent']; ?> / <?php echo (int) $legal['clause_total']; ?></div>
                                     <?php endif; ?>
                                 </td>
-                                <td class="zw-doc-muted"><?php echo esc_html($legal['reviewed_at'] !== '' ? $legal['reviewed_at'] : $legal['submitted_at']); ?></td>
+                                <td class="tco-doc-muted"><?php echo esc_html($legal['reviewed_at'] !== '' ? $legal['reviewed_at'] : $legal['submitted_at']); ?></td>
                                 <td>
                                     <?php if ($can) : ?>
                                         <form method="post" style="display:inline">
@@ -676,7 +676,7 @@ if (!function_exists('zw_doc_page_legal')) {
                                             <button class="button button-small" type="submit">人工驳回</button>
                                         </form>
                                     <?php else : ?>
-                                        <span class="zw-doc-muted">无判定权限</span>
+                                        <span class="tco-doc-muted">无判定权限</span>
                                     <?php endif; ?>
                                 </td>
                             </tr>

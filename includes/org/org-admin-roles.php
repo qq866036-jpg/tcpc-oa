@@ -58,30 +58,30 @@ if (!function_exists('zw_org_role_edit_form')) {
         $front_caps      = isset($role['front_caps']) && is_array($role['front_caps']) ? array_values($role['front_caps']) : array();
         $front_options   = function_exists('zw_branch_front_capabilities') ? zw_branch_front_capabilities() : array();
         ?>
-        <div class="zw-org-card" id="zw-org-role-edit">
-            <div class="zw-org-card-head"><span class="ct">编辑角色：<?php echo esc_html($role['name']); ?></span><span class="desc"><?php echo $is_front_role ? '纯前端分支机构角色（仅在被绑定的机构内生效）' : '可修改角色字段与权限模块'; ?></span></div>
-            <div class="zw-org-card-body">
+        <div class="tco-org-card" id="tco-org-role-edit">
+            <div class="tco-org-card-head"><span class="ct">编辑角色：<?php echo esc_html($role['name']); ?></span><span class="desc"><?php echo $is_front_role ? '纯前端分支机构角色（仅在被绑定的机构内生效）' : '可修改角色字段与权限模块'; ?></span></div>
+            <div class="tco-org-card-body">
                 <form method="post" action="<?php echo esc_url(add_query_arg('page', 'zw-org-roles', admin_url('admin.php'))); ?>">
                     <?php wp_nonce_field('zw_org_update_role'); ?>
                     <input type="hidden" name="zw_org_action" value="update_role">
                     <input type="hidden" name="role_key" value="<?php echo esc_attr($role['key']); ?>">
-                    <div class="zw-org-grid">
-                        <div class="zw-adm-org-field zw-org-field">
-                            <label for="zw-org-role-edit-name">角色名称</label>
-                            <input type="text" id="zw-org-role-edit-name" name="role_name" value="<?php echo esc_attr($role['name']); ?>" required>
+                    <div class="tco-org-grid">
+                        <div class="tco-org-field tco-org-field">
+                            <label for="tco-org-role-edit-name">角色名称</label>
+                            <input type="text" id="tco-org-role-edit-name" name="role_name" value="<?php echo esc_attr($role['name']); ?>" required>
                         </div>
                         <input type="hidden" name="role_wp_role" value="<?php echo esc_attr($role['wp_role'] ?? ''); ?>">
-                        <div class="zw-adm-org-field zw-org-field">
-                            <label for="zw-org-role-edit-order">排序</label>
-                            <input type="number" id="zw-org-role-edit-order" name="role_order" value="<?php echo (int) $role['order']; ?>" step="1">
+                        <div class="tco-org-field tco-org-field">
+                            <label for="tco-org-role-edit-order">排序</label>
+                            <input type="number" id="tco-org-role-edit-order" name="role_order" value="<?php echo (int) $role['order']; ?>" step="1">
                         </div>
-                        <div class="zw-adm-org-field zw-org-field">
-                            <label for="zw-org-role-edit-desc">权限说明</label>
-                            <input type="text" id="zw-org-role-edit-desc" name="role_description" value="<?php echo esc_attr($role['description']); ?>">
+                        <div class="tco-org-field tco-org-field">
+                            <label for="tco-org-role-edit-desc">权限说明</label>
+                            <input type="text" id="tco-org-role-edit-desc" name="role_description" value="<?php echo esc_attr($role['description']); ?>">
                         </div>
                     </div>
                     <?php if ($is_front_role) : ?>
-                        <div class="zw-adm-org-field zw-org-field">
+                        <div class="tco-org-field tco-org-field">
                             <label>前端机构授权项（功能类目 · 只读）</label>
                             <?php
                             // TASK-1481（用户 2026-10-12 拍板）：两个机构前端角色**能力位同步**，
@@ -89,19 +89,19 @@ if (!function_exists('zw_org_role_edit_form')) {
                             // 在机构前台「权限管理」逐项收回，因此本页不再提供角色级勾选（避免无效入口）。
                             $front_items = function_exists('zw_branch_authorization_items') ? zw_branch_authorization_items() : array();
                             ?>
-                            <ul class="zw-adm-org-hint zw-org-hint" style="margin:0;padding-left:18px;line-height:1.9">
+                            <ul class="tco-org-hint tco-org-hint" style="margin:0;padding-left:18px;line-height:1.9">
                                 <?php foreach ($front_items as $front_item) : ?>
                                     <li><?php echo esc_html((string) $front_item['label']); ?> <span style="color:#999">（<?php echo esc_html((string) $front_item['key']); ?>）</span></li>
                                 <?php endforeach; ?>
                             </ul>
                             <?php if (!$front_items && $front_options) : ?>
-                                <div class="zw-adm-org-check-grid zw-org-check-grid">
+                                <div class="tco-org-check-grid tco-org-check-grid">
                                     <?php foreach ($front_options as $cap_key => $cap_label) : ?>
-                                        <label class="zw-adm-org-check zw-org-check zw-adm-touch"><input type="checkbox" checked disabled> <?php echo esc_html($cap_label); ?></label>
+                                        <label class="tco-org-check tco-org-check tco-touch"><input type="checkbox" checked disabled> <?php echo esc_html($cap_label); ?></label>
                                     <?php endforeach; ?>
                                 </div>
                             <?php endif; ?>
-                            <p class="zw-adm-org-hint zw-org-hint">
+                            <p class="tco-org-hint tco-org-hint">
                                 「分支机构总管理员」与「分支机构管理员」默认拥有同样的全部授权项；授权项来自功能类目注册表，
                                 以后新开发的功能会**自动**出现在这里与机构前台「权限管理」中。<br>
                                 具体到每位管理员的开放 / 收回，由该机构**总管理员**在机构前台「权限管理」逐项操作（留痕见「分支机构 → 机构角色授权」）。
@@ -109,22 +109,22 @@ if (!function_exists('zw_org_role_edit_form')) {
                             </p>
                         </div>
                     <?php else : ?>
-                        <div class="zw-adm-org-field zw-org-field">
+                        <div class="tco-org-field tco-org-field">
                             <label>权限模块</label>
-                            <div class="zw-adm-org-check-grid zw-org-check-grid">
+                            <div class="tco-org-check-grid tco-org-check-grid">
                                 <?php foreach ($permission_modules as $module) : ?>
-                                    <label class="zw-adm-org-check zw-org-check zw-adm-touch"><input type="checkbox" name="role_permissions[]" value="<?php echo esc_attr($module['key']); ?>" <?php checked(in_array($module['key'], $permissions, true)); ?>> <?php echo esc_html($module['label']); ?></label>
+                                    <label class="tco-org-check tco-org-check tco-touch"><input type="checkbox" name="role_permissions[]" value="<?php echo esc_attr($module['key']); ?>" <?php checked(in_array($module['key'], $permissions, true)); ?>> <?php echo esc_html($module['label']); ?></label>
                                 <?php endforeach; ?>
                             </div>
                         </div>
                     <?php endif; ?>
                     <?php if ($is_front_role) : ?>
-                        <p class="zw-adm-org-hint zw-org-hint">纯前端角色的授权对象在「分支机构 → 机构列表 → 管理员」页按机构绑定（总管理员每机构 1 人、管理员可多人），不在此处关联人员。</p>
+                        <p class="tco-org-hint tco-org-hint">纯前端角色的授权对象在「分支机构 → 机构列表 → 管理员」页按机构绑定（总管理员每机构 1 人、管理员可多人），不在此处关联人员。</p>
                     <?php else : ?>
-                    <div class="zw-adm-org-field zw-org-field">
-                        <label for="zw-org-role-people-search">关联人员姓名</label>
-                        <input type="search" class="zw-adm-org-user-search zw-org-user-search" id="zw-org-role-people-search" placeholder="输入姓名或部门筛选">
-                        <select class="zw-adm-org-user-select zw-org-user-select" id="zw-org-role-people" name="role_people[]" multiple size="8">
+                    <div class="tco-org-field tco-org-field">
+                        <label for="tco-org-role-people-search">关联人员姓名</label>
+                        <input type="search" class="tco-org-user-search tco-org-user-search" id="tco-org-role-people-search" placeholder="输入姓名或部门筛选">
+                        <select class="tco-org-user-select tco-org-user-select" id="tco-org-role-people" name="role_people[]" multiple size="8">
                             <?php foreach ($all_people as $person) :
                                 $person_id = (int) $person->ID;
                                 $person_uid = (int) get_post_meta($person_id, 'zw_person_user_id', true);
@@ -135,12 +135,12 @@ if (!function_exists('zw_org_role_edit_form')) {
                                 </option>
                             <?php endforeach; ?>
                         </select>
-                        <p class="zw-adm-org-hint zw-org-hint">按住 Ctrl / Command 可多选；保存后会同步到人员多角色关系。</p>
+                        <p class="tco-org-hint tco-org-hint">按住 Ctrl / Command 可多选；保存后会同步到人员多角色关系。</p>
                     </div>
                     <?php endif; ?>
-                    <div class="zw-adm-org-form-actions zw-org-form-actions">
-                        <button type="submit" class="zw-adm-org-btn zw-org-btn zw-adm-org-btn-primary zw-org-btn-primary">保存角色</button>
-                        <a class="zw-adm-org-btn zw-org-btn" href="<?php echo esc_url(add_query_arg('page', 'zw-org-roles', admin_url('admin.php'))); ?>">取消</a>
+                    <div class="tco-org-form-actions tco-org-form-actions">
+                        <button type="submit" class="tco-org-btn tco-org-btn tco-org-btn-primary tco-org-btn-primary">保存角色</button>
+                        <a class="tco-org-btn tco-org-btn" href="<?php echo esc_url(add_query_arg('page', 'zw-org-roles', admin_url('admin.php'))); ?>">取消</a>
                     </div>
                 </form>
             </div>
@@ -160,39 +160,39 @@ if (!function_exists('zw_org_module_edit_form')) {
     function zw_org_module_edit_form($module, $tree) {
         $selected = zw_org_module_selected_functions($module, $tree);
         ?>
-        <div class="zw-org-card" id="zw-org-module-edit">
-            <div class="zw-org-card-head"><span class="ct">编辑权限模块：<?php echo esc_html($module['label']); ?></span><span class="desc">勾选该模块可访问的一级/二级后台功能</span></div>
-            <div class="zw-org-card-body">
+        <div class="tco-org-card" id="tco-org-module-edit">
+            <div class="tco-org-card-head"><span class="ct">编辑权限模块：<?php echo esc_html($module['label']); ?></span><span class="desc">勾选该模块可访问的一级/二级后台功能</span></div>
+            <div class="tco-org-card-body">
                 <form method="post" action="<?php echo esc_url(add_query_arg('page', 'zw-org-roles', admin_url('admin.php'))); ?>">
                     <?php wp_nonce_field('zw_org_update_permission_module'); ?>
                     <input type="hidden" name="zw_org_action" value="update_permission_module">
                     <input type="hidden" name="module_key" value="<?php echo esc_attr($module['key']); ?>">
-                    <div class="zw-org-grid">
-                        <div class="zw-adm-org-field zw-org-field">
-                            <label for="zw-org-module-edit-label">模块名称</label>
-                            <input type="text" id="zw-org-module-edit-label" name="module_label" value="<?php echo esc_attr($module['label']); ?>" required>
+                    <div class="tco-org-grid">
+                        <div class="tco-org-field tco-org-field">
+                            <label for="tco-org-module-edit-label">模块名称</label>
+                            <input type="text" id="tco-org-module-edit-label" name="module_label" value="<?php echo esc_attr($module['label']); ?>" required>
                         </div>
-                        <div class="zw-adm-org-field zw-org-field">
-                            <label for="zw-org-module-edit-desc">模块说明</label>
-                            <input type="text" id="zw-org-module-edit-desc" name="module_description" value="<?php echo esc_attr($module['description']); ?>">
+                        <div class="tco-org-field tco-org-field">
+                            <label for="tco-org-module-edit-desc">模块说明</label>
+                            <input type="text" id="tco-org-module-edit-desc" name="module_description" value="<?php echo esc_attr($module['description']); ?>">
                         </div>
                     </div>
-                    <div class="zw-adm-org-field zw-org-field">
+                    <div class="tco-org-field tco-org-field">
                         <label>后台功能</label>
-                        <div class="zw-adm-org-perm-tree zw-org-perm-tree">
+                        <div class="tco-org-perm-tree tco-org-perm-tree">
                             <?php if (empty($tree)) : ?>
-                                <p class="zw-adm-org-hint zw-org-hint">当前上下文未读取到后台菜单树，请在后台页面刷新后重试。</p>
+                                <p class="tco-org-hint tco-org-hint">当前上下文未读取到后台菜单树，请在后台页面刷新后重试。</p>
                             <?php else : ?>
                                 <?php foreach ($tree as $top) : ?>
-                                    <div class="zw-adm-org-perm-tree-top zw-org-perm-tree-top">
-                                        <label class="zw-adm-org-check zw-org-check zw-adm-org-check-top zw-org-check-top zw-adm-touch">
+                                    <div class="tco-org-perm-tree-top tco-org-perm-tree-top">
+                                        <label class="tco-org-check tco-org-check tco-org-check-top tco-org-check-top tco-touch">
                                             <input type="checkbox" name="module_functions[]" value="<?php echo esc_attr($top['id']); ?>" data-perm-parent="<?php echo esc_attr($top['id']); ?>" <?php checked(in_array($top['id'], $selected, true)); ?>>
                                             <strong><?php echo esc_html($top['title']); ?></strong>
                                         </label>
                                         <?php if (!empty($top['children'])) : ?>
-                                            <div class="zw-adm-org-perm-tree-children zw-org-perm-tree-children">
+                                            <div class="tco-org-perm-tree-children tco-org-perm-tree-children">
                                                 <?php foreach ($top['children'] as $child) : ?>
-                                                    <label class="zw-adm-org-check zw-org-check zw-adm-touch">
+                                                    <label class="tco-org-check tco-org-check tco-touch">
                                                         <input type="checkbox" name="module_functions[]" value="<?php echo esc_attr($child['id']); ?>" data-perm-child="<?php echo esc_attr($top['id']); ?>" <?php checked(in_array($child['id'], $selected, true)); ?>>
                                                         <?php echo esc_html($child['title']); ?>
                                                     </label>
@@ -216,26 +216,26 @@ if (!function_exists('zw_org_module_edit_form')) {
                     }
                     ?>
                     <?php if (!empty($vf_rows)) : ?>
-                    <div class="zw-adm-org-field zw-org-field">
+                    <div class="tco-org-field tco-org-field">
                         <label>细粒度权限（不在后台菜单中）</label>
-                        <div class="zw-adm-org-perm-tree zw-org-perm-tree">
+                        <div class="tco-org-perm-tree tco-org-perm-tree">
                             <?php foreach ($vf_rows as $vf_id => $vf_spec) : ?>
-                                <div class="zw-adm-org-perm-tree-top zw-org-perm-tree-top">
-                                    <label class="zw-adm-org-check zw-org-check zw-adm-org-check-top zw-org-check-top zw-adm-touch">
+                                <div class="tco-org-perm-tree-top tco-org-perm-tree-top">
+                                    <label class="tco-org-check tco-org-check tco-org-check-top tco-org-check-top tco-touch">
                                         <input type="checkbox" name="module_functions[]" value="<?php echo esc_attr($vf_id); ?>" <?php checked(in_array($vf_id, $selected, true)); ?>>
                                         <strong><?php echo esc_html((string) ($vf_spec['title'] ?? $vf_id)); ?></strong>
                                     </label>
                                     <?php if (!empty($vf_spec['description'])) : ?>
-                                        <p class="zw-adm-org-hint zw-org-hint"><?php echo esc_html((string) $vf_spec['description']); ?></p>
+                                        <p class="tco-org-hint tco-org-hint"><?php echo esc_html((string) $vf_spec['description']); ?></p>
                                     <?php endif; ?>
                                 </div>
                             <?php endforeach; ?>
                         </div>
                     </div>
                     <?php endif; ?>
-                    <div class="zw-adm-org-form-actions zw-org-form-actions">
-                        <button type="submit" class="zw-adm-org-btn zw-org-btn zw-adm-org-btn-primary zw-org-btn-primary">保存权限模块</button>
-                        <a class="zw-adm-org-btn zw-org-btn" href="<?php echo esc_url(add_query_arg('page', 'zw-org-roles', admin_url('admin.php'))); ?>">取消</a>
+                    <div class="tco-org-form-actions tco-org-form-actions">
+                        <button type="submit" class="tco-org-btn tco-org-btn tco-org-btn-primary tco-org-btn-primary">保存权限模块</button>
+                        <a class="tco-org-btn tco-org-btn" href="<?php echo esc_url(add_query_arg('page', 'zw-org-roles', admin_url('admin.php'))); ?>">取消</a>
                     </div>
                 </form>
             </div>
@@ -275,20 +275,20 @@ if (!function_exists('zw_org_page_roles')) {
         $module_edit   = $module_edit_key !== '' && isset($permission_modules[$module_edit_key]) ? $permission_modules[$module_edit_key] : null;
         $function_tree = $module_edit ? zw_org_admin_function_tree() : array();
 
-        // TASK-2166：本页标记使用 `.zw-adm-touch` ⇒ 由本文件生成 canonical 触屏热区 CSS
+        // TASK-2166：本页标记使用 `.tco-touch` ⇒ 由本文件生成 canonical 触屏热区 CSS
         // 并交给模块唯一 `<style>` 输出点（SPEC-10-B §3；输出仍只有一次）。
         zw_org_admin_styles(array(
-            'touch_css' => function_exists('zw_adm_ui_touch_css') ? zw_adm_ui_touch_css('body') : '',
+            'touch_css' => function_exists('tco_ui_touch_css') ? tco_ui_touch_css('body') : '',
         ));
         ?>
-        <div class="wrap zw-adm-org-wrap zw-org-wrap">
-            <div class="zw-adm-org-head zw-org-head">
+        <div class="wrap tco-org-wrap tco-org-wrap">
+            <div class="tco-org-head tco-org-head">
                 <h1>角色与权限</h1>
                 <p>维护职务、角色与权限模块；可编辑角色关联人员与模块对应的后台功能。</p>
             </div>
 
             <?php if ($notice) : ?>
-                <div class="zw-adm-org-notice zw-org-notice <?php echo esc_attr($notice['type']); ?>"><?php echo esc_html($notice['text']); ?></div>
+                <div class="tco-org-notice tco-org-notice <?php echo esc_attr($notice['type']); ?>"><?php echo esc_html($notice['text']); ?></div>
             <?php endif; ?>
 
             <?php if ($role_edit) : ?>
@@ -298,79 +298,79 @@ if (!function_exists('zw_org_page_roles')) {
                 <?php zw_org_module_edit_form($module_edit, $function_tree); ?>
             <?php endif; ?>
 
-            <div class="zw-adm-org-kpis zw-org-kpis">
-                <div class="zw-adm-org-kpi zw-org-kpi"><div class="l">职务</div><div class="n"><?php echo (int) count($duties); ?></div><div class="d">原角色字典已迁移为职务</div></div>
-                <div class="zw-adm-org-kpi zw-org-kpi"><div class="l">角色</div><div class="n"><?php echo (int) count($roles); ?></div><div class="d">附件角色已导入</div></div>
-                <div class="zw-adm-org-kpi zw-org-kpi"><div class="l">未指定职务</div><div class="n"><?php echo (int) ($duty_counts['__none__'] ?? 0); ?></div><div class="d">可在组织与人员中补充</div></div>
-                <div class="zw-adm-org-kpi zw-org-kpi"><div class="l">权限模块</div><div class="n"><?php echo (int) count($permission_modules); ?></div><div class="d">维护后台功能范围</div></div>
+            <div class="tco-org-kpis tco-org-kpis">
+                <div class="tco-org-kpi tco-org-kpi"><div class="l">职务</div><div class="n"><?php echo (int) count($duties); ?></div><div class="d">原角色字典已迁移为职务</div></div>
+                <div class="tco-org-kpi tco-org-kpi"><div class="l">角色</div><div class="n"><?php echo (int) count($roles); ?></div><div class="d">附件角色已导入</div></div>
+                <div class="tco-org-kpi tco-org-kpi"><div class="l">未指定职务</div><div class="n"><?php echo (int) ($duty_counts['__none__'] ?? 0); ?></div><div class="d">可在组织与人员中补充</div></div>
+                <div class="tco-org-kpi tco-org-kpi"><div class="l">权限模块</div><div class="n"><?php echo (int) count($permission_modules); ?></div><div class="d">维护后台功能范围</div></div>
             </div>
 
-            <div class="zw-org-card zw-adm-org-hidden zw-org-hidden" id="zw-org-duty-panel">
-                <div class="zw-org-card-head"><span class="ct">增加职务</span><span class="desc">职务名称不可重复</span></div>
-                <div class="zw-org-card-body">
+            <div class="tco-org-card tco-org-hidden tco-org-hidden" id="tco-org-duty-panel">
+                <div class="tco-org-card-head"><span class="ct">增加职务</span><span class="desc">职务名称不可重复</span></div>
+                <div class="tco-org-card-body">
                     <form method="post" action="<?php echo esc_url(add_query_arg('page', 'zw-org-roles', admin_url('admin.php'))); ?>">
                         <?php wp_nonce_field('zw_org_add_duty'); ?>
                         <input type="hidden" name="zw_org_action" value="add_duty">
-                        <div class="zw-org-grid">
-                            <div class="zw-adm-org-field zw-org-field">
-                                <label for="zw-org-duty-name">职务名称</label>
-                                <input type="text" id="zw-org-duty-name" name="duty_name" required placeholder="例如：监事">
+                        <div class="tco-org-grid">
+                            <div class="tco-org-field tco-org-field">
+                                <label for="tco-org-duty-name">职务名称</label>
+                                <input type="text" id="tco-org-duty-name" name="duty_name" required placeholder="例如：监事">
                             </div>
-                            <div class="zw-adm-org-field zw-org-field">
-                                <label for="zw-org-duty-order">排序</label>
-                                <input type="number" id="zw-org-duty-order" name="duty_order" value="<?php echo (int) (count($duties) * 10 + 10); ?>" step="1">
-                                <p class="zw-adm-org-hint zw-org-hint">数字越小越靠前。</p>
+                            <div class="tco-org-field tco-org-field">
+                                <label for="tco-org-duty-order">排序</label>
+                                <input type="number" id="tco-org-duty-order" name="duty_order" value="<?php echo (int) (count($duties) * 10 + 10); ?>" step="1">
+                                <p class="tco-org-hint tco-org-hint">数字越小越靠前。</p>
                             </div>
                         </div>
-                        <div class="zw-adm-org-field zw-org-field">
-                            <label for="zw-org-duty-desc">职务说明</label>
-                            <textarea id="zw-org-duty-desc" name="duty_description" placeholder="用于备注该职务的职责范围，本阶段不接管后台权限。"></textarea>
+                        <div class="tco-org-field tco-org-field">
+                            <label for="tco-org-duty-desc">职务说明</label>
+                            <textarea id="tco-org-duty-desc" name="duty_description" placeholder="用于备注该职务的职责范围，本阶段不接管后台权限。"></textarea>
                         </div>
-                        <div class="zw-adm-org-form-actions zw-org-form-actions">
-                            <button type="submit" class="zw-adm-org-btn zw-org-btn zw-adm-org-btn-primary zw-org-btn-primary">保存职务</button>
-                            <button type="button" class="zw-adm-org-btn zw-org-btn" data-org-close="zw-org-duty-panel">取消</button>
+                        <div class="tco-org-form-actions tco-org-form-actions">
+                            <button type="submit" class="tco-org-btn tco-org-btn tco-org-btn-primary tco-org-btn-primary">保存职务</button>
+                            <button type="button" class="tco-org-btn tco-org-btn" data-org-close="tco-org-duty-panel">取消</button>
                         </div>
                     </form>
                 </div>
             </div>
 
-            <div class="zw-org-card zw-adm-org-hidden zw-org-hidden" id="zw-org-role-panel">
-                <div class="zw-org-card-head"><span class="ct">增加角色</span><span class="desc">角色名称不可重复；附件角色已导入，可继续扩展</span></div>
-                <div class="zw-org-card-body">
+            <div class="tco-org-card tco-org-hidden tco-org-hidden" id="tco-org-role-panel">
+                <div class="tco-org-card-head"><span class="ct">增加角色</span><span class="desc">角色名称不可重复；附件角色已导入，可继续扩展</span></div>
+                <div class="tco-org-card-body">
                     <form method="post" action="<?php echo esc_url(add_query_arg('page', 'zw-org-roles', admin_url('admin.php'))); ?>">
                         <?php wp_nonce_field('zw_org_add_role'); ?>
                         <input type="hidden" name="zw_org_action" value="add_role">
-                        <div class="zw-org-grid">
-                            <div class="zw-adm-org-field zw-org-field">
-                                <label for="zw-org-role-name">角色名称</label>
-                                <input type="text" id="zw-org-role-name" name="role_name" required placeholder="例如：费用审批人">
+                        <div class="tco-org-grid">
+                            <div class="tco-org-field tco-org-field">
+                                <label for="tco-org-role-name">角色名称</label>
+                                <input type="text" id="tco-org-role-name" name="role_name" required placeholder="例如：费用审批人">
                             </div>
-                            <div class="zw-adm-org-field zw-org-field">
-                                <label for="zw-org-role-order">排序</label>
-                                <input type="number" id="zw-org-role-order" name="role_order" value="<?php echo (int) (count($roles) * 10 + 10); ?>" step="1">
-                                <p class="zw-adm-org-hint zw-org-hint">数字越小越靠前。</p>
+                            <div class="tco-org-field tco-org-field">
+                                <label for="tco-org-role-order">排序</label>
+                                <input type="number" id="tco-org-role-order" name="role_order" value="<?php echo (int) (count($roles) * 10 + 10); ?>" step="1">
+                                <p class="tco-org-hint tco-org-hint">数字越小越靠前。</p>
                             </div>
                         </div>
-                        <div class="zw-adm-org-field zw-org-field">
-                            <label for="zw-org-role-desc">权限说明</label>
-                            <textarea id="zw-org-role-desc" name="role_description" placeholder="用于备注该角色的职责或权限范围，本阶段不接管后台权限。"></textarea>
+                        <div class="tco-org-field tco-org-field">
+                            <label for="tco-org-role-desc">权限说明</label>
+                            <textarea id="tco-org-role-desc" name="role_description" placeholder="用于备注该角色的职责或权限范围，本阶段不接管后台权限。"></textarea>
                         </div>
-                        <div class="zw-adm-org-form-actions zw-org-form-actions">
-                            <button type="submit" class="zw-adm-org-btn zw-org-btn zw-adm-org-btn-primary zw-org-btn-primary">保存角色</button>
-                            <button type="button" class="zw-adm-org-btn zw-org-btn" data-org-close="zw-org-role-panel">取消</button>
+                        <div class="tco-org-form-actions tco-org-form-actions">
+                            <button type="submit" class="tco-org-btn tco-org-btn tco-org-btn-primary tco-org-btn-primary">保存角色</button>
+                            <button type="button" class="tco-org-btn tco-org-btn" data-org-close="tco-org-role-panel">取消</button>
                         </div>
                     </form>
                 </div>
             </div>
 
-            <div class="zw-org-card">
-                <div class="zw-org-card-head"><span class="ct">职务列表</span><span class="desc">共 <?php echo (int) count($duties); ?> 个职务</span><button type="button" class="zw-adm-org-btn zw-org-btn zw-adm-org-btn-primary zw-org-btn-primary" data-org-panel="zw-org-duty-panel" style="margin-left:10px">+ 增加职务</button></div>
-                <div class="zw-org-card-body" style="padding:0">
+            <div class="tco-org-card">
+                <div class="tco-org-card-head"><span class="ct">职务列表</span><span class="desc">共 <?php echo (int) count($duties); ?> 个职务</span><button type="button" class="tco-org-btn tco-org-btn tco-org-btn-primary tco-org-btn-primary" data-org-panel="tco-org-duty-panel" style="margin-left:10px">+ 增加职务</button></div>
+                <div class="tco-org-card-body" style="padding:0">
                     <?php if (empty($duties)) : ?>
-                        <div class="zw-org-empty">暂无职务。</div>
+                        <div class="tco-org-empty">暂无职务。</div>
                     <?php else : ?>
-                        <div class="zw-org-tbl-wrap zw-adm-table-wrap">
-                            <table class="zw-adm-org-tbl zw-org-tbl">
+                        <div class="tco-org-tbl-wrap tco-table-wrap">
+                            <table class="tco-org-tbl tco-org-tbl">
                                 <thead><tr><th>职务名称</th><th>排序</th><th>关联人员</th><th>职务说明</th></tr></thead>
                                 <tbody>
                                 <?php foreach ($duties as $duty) :
@@ -380,7 +380,7 @@ if (!function_exists('zw_org_page_roles')) {
                                         <td><strong><?php echo esc_html($duty['name']); ?></strong></td>
                                         <td><?php echo (int) $duty['order']; ?></td>
                                         <td><?php echo $duty_count; ?></td>
-                                        <td><?php echo $duty['description'] !== '' ? esc_html($duty['description']) : '<span class="zw-adm-org-muted zw-org-muted">—</span>'; ?></td>
+                                        <td><?php echo $duty['description'] !== '' ? esc_html($duty['description']) : '<span class="tco-org-muted tco-org-muted">—</span>'; ?></td>
                                     </tr>
                                 <?php endforeach; ?>
                                 </tbody>
@@ -390,14 +390,14 @@ if (!function_exists('zw_org_page_roles')) {
                 </div>
             </div>
 
-            <div class="zw-org-card">
-                <div class="zw-org-card-head"><span class="ct">角色列表</span><span class="desc">共 <?php echo (int) count($roles); ?> 个角色</span><button type="button" class="zw-adm-org-btn zw-org-btn" data-org-panel="zw-org-role-panel" style="margin-left:10px">+ 增加角色</button></div>
-                <div class="zw-org-card-body" style="padding:0">
+            <div class="tco-org-card">
+                <div class="tco-org-card-head"><span class="ct">角色列表</span><span class="desc">共 <?php echo (int) count($roles); ?> 个角色</span><button type="button" class="tco-org-btn tco-org-btn" data-org-panel="tco-org-role-panel" style="margin-left:10px">+ 增加角色</button></div>
+                <div class="tco-org-card-body" style="padding:0">
                     <?php if (empty($roles)) : ?>
-                        <div class="zw-org-empty">角色列表暂为空，等待下一步指示。</div>
+                        <div class="tco-org-empty">角色列表暂为空，等待下一步指示。</div>
                     <?php else : ?>
-                        <div class="zw-org-tbl-wrap zw-adm-table-wrap">
-                            <table class="zw-adm-org-tbl zw-org-tbl">
+                        <div class="tco-org-tbl-wrap tco-table-wrap">
+                            <table class="tco-org-tbl tco-org-tbl">
                                 <thead><tr><th>角色名称</th><th>权限范围</th><th>排序</th><th>关联人员</th><th>权限说明</th><th>操作</th></tr></thead>
                                 <tbody>
                                 <?php foreach ($roles as $role) :
@@ -428,14 +428,14 @@ if (!function_exists('zw_org_page_roles')) {
                                         <td>
                                             <strong><?php echo esc_html($role['name']); ?></strong>
                                             <?php if ($wp_role_missing) : ?>
-                                                <span class="zw-org-warn" style="color:#b32d2e;margin-left:6px;white-space:nowrap;">⚠ 未绑定 WP 角色 · 权限不生效</span>
+                                                <span class="tco-org-warn" style="color:#b32d2e;margin-left:6px;white-space:nowrap;">⚠ 未绑定 WP 角色 · 权限不生效</span>
                                             <?php endif; ?>
                                         </td>
-                                        <td><?php echo !empty($permission_labels) ? esc_html(implode('、', $permission_labels)) : '<span class="zw-adm-org-muted zw-org-muted">—</span>'; ?></td>
+                                        <td><?php echo !empty($permission_labels) ? esc_html(implode('、', $permission_labels)) : '<span class="tco-org-muted tco-org-muted">—</span>'; ?></td>
                                         <td><?php echo (int) $role['order']; ?></td>
-                                        <td><?php echo !empty($people_names) ? esc_html(implode('、', $people_names)) : '<span class="zw-adm-org-muted zw-org-muted">—</span>'; ?></td>
-                                        <td><?php echo $role['description'] !== '' ? esc_html($role['description']) : '<span class="zw-adm-org-muted zw-org-muted">—</span>'; ?></td>
-                                        <td><a class="zw-adm-org-btn zw-org-btn" href="<?php echo esc_url(add_query_arg(array('page' => 'zw-org-roles', 'role' => $role['key']), admin_url('admin.php'))); ?>">编辑</a></td>
+                                        <td><?php echo !empty($people_names) ? esc_html(implode('、', $people_names)) : '<span class="tco-org-muted tco-org-muted">—</span>'; ?></td>
+                                        <td><?php echo $role['description'] !== '' ? esc_html($role['description']) : '<span class="tco-org-muted tco-org-muted">—</span>'; ?></td>
+                                        <td><a class="tco-org-btn tco-org-btn" href="<?php echo esc_url(add_query_arg(array('page' => 'zw-org-roles', 'role' => $role['key']), admin_url('admin.php'))); ?>">编辑</a></td>
                                     </tr>
                                 <?php endforeach; ?>
                                 </tbody>
@@ -445,11 +445,11 @@ if (!function_exists('zw_org_page_roles')) {
                 </div>
             </div>
 
-            <div class="zw-org-card">
-                <div class="zw-org-card-head"><span class="ct">权限模块</span><span class="desc">维护模块可访问的后台功能</span></div>
-                <div class="zw-org-card-body" style="padding:0">
-                    <div class="zw-org-tbl-wrap zw-adm-table-wrap">
-                        <table class="zw-adm-org-tbl zw-org-tbl">
+            <div class="tco-org-card">
+                <div class="tco-org-card-head"><span class="ct">权限模块</span><span class="desc">维护模块可访问的后台功能</span></div>
+                <div class="tco-org-card-body" style="padding:0">
+                    <div class="tco-org-tbl-wrap tco-table-wrap">
+                        <table class="tco-org-tbl tco-org-tbl">
                             <thead><tr><th>模块</th><th>功能数</th><th>说明</th><th>操作</th></tr></thead>
                             <tbody>
                             <?php foreach ($permission_modules as $module) : ?>
@@ -463,7 +463,7 @@ if (!function_exists('zw_org_page_roles')) {
                                     <td><strong><?php echo esc_html($module['label']); ?></strong></td>
                                     <td><?php echo (int) count($module_functions); ?></td>
                                     <td><?php echo esc_html($module['description']); ?></td>
-                                    <td><a class="zw-adm-org-btn zw-org-btn" href="<?php echo esc_url(add_query_arg(array('page' => 'zw-org-roles', 'module' => $module['key']), admin_url('admin.php'))); ?>">编辑</a></td>
+                                    <td><a class="tco-org-btn tco-org-btn" href="<?php echo esc_url(add_query_arg(array('page' => 'zw-org-roles', 'module' => $module['key']), admin_url('admin.php'))); ?>">编辑</a></td>
                                 </tr>
                             <?php endforeach; ?>
                             </tbody>
@@ -477,18 +477,18 @@ if (!function_exists('zw_org_page_roles')) {
         <script>
         (function () {
             // TASK-2166（回归修复）：双写期（SPEC-10 §1.9.3 阶段 ①）面板标记同时带
-            // canonical `.zw-adm-org-hidden` 与兼容别名 `.zw-org-hidden`，样式对两者都
+            // canonical `.tco-org-hidden` 与兼容别名 `.tco-org-hidden`，样式对两者都
             // `display:none` ⇒ 只翻旧类会让「增加职务 / 增加角色」面板打不开。
             function setPanelHidden(panel, hidden) {
                 if (!panel) { return; }
                 hidden = !!hidden;
-                panel.classList.toggle('zw-adm-org-hidden', hidden);
-                panel.classList.toggle('zw-org-hidden', hidden);
+                panel.classList.toggle('tco-org-hidden', hidden);
+                panel.classList.toggle('tco-org-hidden', hidden);
             }
             function panelIsHidden(panel) {
                 return !panel
-                    || panel.classList.contains('zw-adm-org-hidden')
-                    || panel.classList.contains('zw-org-hidden');
+                    || panel.classList.contains('tco-org-hidden')
+                    || panel.classList.contains('tco-org-hidden');
             }
             document.querySelectorAll('[data-org-panel]').forEach(function (btn) {
                 btn.addEventListener('click', function () {
@@ -507,16 +507,16 @@ if (!function_exists('zw_org_page_roles')) {
                     setPanelHidden(document.getElementById(btn.getAttribute('data-org-close')), true);
                 });
             });
-            document.querySelectorAll('.zw-org-perm-tree input[type=checkbox][data-perm-parent]').forEach(function (topCheckbox) {
+            document.querySelectorAll('.tco-org-perm-tree input[type=checkbox][data-perm-parent]').forEach(function (topCheckbox) {
                 topCheckbox.addEventListener('change', function () {
                     var parentId = topCheckbox.getAttribute('data-perm-parent');
-                    document.querySelectorAll('.zw-org-perm-tree input[type=checkbox][data-perm-child="' + parentId + '"]').forEach(function (childCheckbox) {
+                    document.querySelectorAll('.tco-org-perm-tree input[type=checkbox][data-perm-child="' + parentId + '"]').forEach(function (childCheckbox) {
                         childCheckbox.checked = topCheckbox.checked;
                     });
                 });
             });
-            var rolePeopleSearch = document.getElementById('zw-org-role-people-search');
-            var rolePeopleSelect = document.getElementById('zw-org-role-people');
+            var rolePeopleSearch = document.getElementById('tco-org-role-people-search');
+            var rolePeopleSelect = document.getElementById('tco-org-role-people');
             if (rolePeopleSearch && rolePeopleSelect) {
                 rolePeopleSearch.addEventListener('input', function () {
                     var q = rolePeopleSearch.value.toLowerCase().trim();

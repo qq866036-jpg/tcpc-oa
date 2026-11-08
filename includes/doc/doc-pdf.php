@@ -613,7 +613,7 @@ if (!function_exists('zw_doc_pdf_read_barrier')) {
     /**
      * 产物可读性守卫 —— **唯一出处**（TASK-1429 事故防复发）。
      *
-     * 背景（已发生线上事故）：`/opt/zw-doc-render/out/zw-doc-27735-….pdf` 确实存在
+     * 背景（已发生线上事故）：`/opt/zw-doc-renderout/zw-doc-27735-….pdf` 确实存在
      * （694311 字节），但属主是 `root:root 0640`，而站点以 `www` 运行、目录 `750 www:www`
      * ⇒ Web 侧读不到；旧实现用 `!is_file()` 一把判定，于是把「读不到」误报为「文件不存在」，
      * 掩盖了真正的**权限**原因。

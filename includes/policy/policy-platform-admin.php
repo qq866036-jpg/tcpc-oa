@@ -78,7 +78,7 @@ function zw_policy_platform_missing_notice() {
 
 if (!function_exists('zw_policy_platform_page_header')) {
 function zw_policy_platform_page_header($title, $desc = '') {
-    echo '<div class="wrap"><div class="zw-adm-page-head"><h1>' . esc_html($title) . '</h1>';
+    echo '<div class="wrap"><div class="tco-page-head"><h1>' . esc_html($title) . '</h1>';
     if ($desc !== '') echo '<p>' . esc_html($desc) . '</p>';
     echo '</div>';
 }
@@ -99,7 +99,7 @@ function zw_policy_platform_esc($value) {
 if (!function_exists('zw_policy_platform_badge')) {
 function zw_policy_platform_badge($type, $label) {
     $type = in_array($type, array('on', 'wait', 'err', 'info', 'off'), true) ? $type : 'off';
-    return '<span class="zw-adm-badge ' . esc_attr($type) . '">' . esc_html((string) $label) . '</span>';
+    return '<span class="tco-badge ' . esc_attr($type) . '">' . esc_html((string) $label) . '</span>';
 }
 }
 
@@ -198,8 +198,8 @@ function zw_policy_platform_pager($total, $per_page, $paged, $base_url, $args = 
 if (!function_exists('zw_policy_platform_render_table')) {
 function zw_policy_platform_render_table($headers, $rows) {
     // TASK-1633（TASK-1579 P1-6 第四批）：宽表落 canonical 横滑包裹。
-    // 本助手自身不输出 <style>（横滑规则由 ai法务部外壳下沉：slug 前缀 zw-policy ⇒ 命中 zw_mc_adm_is_screen()）。
-    echo '<div class="zw-adm-card" style="overflow-x:auto"><div class="zw-adm-table-wrap"><table class="zw-adm-tbl"><thead><tr>';
+    // 本助手自身不输出 <style>（横滑规则由 ai法务部外壳下沉：slug 前缀 zw-policy ⇒ 命中 会员域后台壳判定()）。
+    echo '<div class="tco-card" style="overflow-x:auto"><div class="tco-table-wrap"><table class="tco-tbl"><thead><tr>';
     foreach ($headers as $h) {
         if (is_array($h) && isset($h['raw'])) { echo '<th>' . $h['raw'] . '</th>'; }
         elseif (is_array($h) && isset($h['html'])) { echo '<th>' . wp_kses_post($h['html']) . '</th>'; }
@@ -545,22 +545,22 @@ function zw_policy_platform_page_overview() {
     $audit = zw_policy_platform_exists('policy_audit_log') ? (int) $wpdb->get_var('SELECT COUNT(*) FROM ' . zw_policy_platform_table('policy_audit_log')) : 0;
     $control = zw_policy_platform_exists('policy_control_log') ? (int) $wpdb->get_var('SELECT COUNT(*) FROM ' . zw_policy_platform_table('policy_control_log')) : 0;
     ?>
-    <div class="zw-adm-grid zw-adm-g4" style="margin:16px 0 18px">
-        <div class="zw-adm-kpi red"><div class="l">政策源文件</div><div class="n"><?php echo esc_html($sources); ?></div></div>
-        <div class="zw-adm-kpi blue"><div class="l">政策条款</div><div class="n"><?php echo esc_html($clauses); ?><small style="font-size:13px;color:#646970"> / 已确认 <?php echo esc_html($confirmed); ?></small></div></div>
-        <div class="zw-adm-kpi green"><div class="l">执行规则</div><div class="n"><?php echo esc_html($rules); ?><small style="font-size:13px;color:#646970"> / 已启用 <?php echo esc_html($enabled); ?></small></div></div>
-        <div class="zw-adm-kpi warn"><div class="l">整改工单</div><div class="n"><?php echo esc_html($issues); ?><small style="font-size:13px;color:#646970"> / 未关闭 <?php echo esc_html($openIssues); ?></small></div></div>
-        <div class="zw-adm-kpi"><div class="l">审计日志</div><div class="n"><?php echo esc_html($audit); ?></div></div>
-        <div class="zw-adm-kpi"><div class="l">控制点日志</div><div class="n"><?php echo esc_html($control); ?></div></div>
+    <div class="tco-grid tco-g4" style="margin:16px 0 18px">
+        <div class="tco-kpi red"><div class="l">政策源文件</div><div class="n"><?php echo esc_html($sources); ?></div></div>
+        <div class="tco-kpi blue"><div class="l">政策条款</div><div class="n"><?php echo esc_html($clauses); ?><small style="font-size:13px;color:#646970"> / 已确认 <?php echo esc_html($confirmed); ?></small></div></div>
+        <div class="tco-kpi green"><div class="l">执行规则</div><div class="n"><?php echo esc_html($rules); ?><small style="font-size:13px;color:#646970"> / 已启用 <?php echo esc_html($enabled); ?></small></div></div>
+        <div class="tco-kpi warn"><div class="l">整改工单</div><div class="n"><?php echo esc_html($issues); ?><small style="font-size:13px;color:#646970"> / 未关闭 <?php echo esc_html($openIssues); ?></small></div></div>
+        <div class="tco-kpi"><div class="l">审计日志</div><div class="n"><?php echo esc_html($audit); ?></div></div>
+        <div class="tco-kpi"><div class="l">控制点日志</div><div class="n"><?php echo esc_html($control); ?></div></div>
     </div>
     <?php
     $risk = $wpdb->get_results('SELECT risk_level, redline_flag, COUNT(*) AS c FROM ' . zw_policy_platform_table('policy_clause') . ' GROUP BY risk_level, redline_flag ORDER BY c DESC', ARRAY_A);
     $recent = $wpdb->get_results('SELECT action, target_type, operator, create_time FROM ' . zw_policy_platform_table('policy_audit_log') . ' ORDER BY create_time DESC LIMIT 10', ARRAY_A);
-    echo '<div class="zw-adm-sec">风险 / 红线分布</div>';
+    echo '<div class="tco-sec">风险 / 红线分布</div>';
     zw_policy_platform_render_table(array('风险等级', '红线', '数量'), array_map(function ($r) {
         return array($r['risk_level'], $r['redline_flag'], $r['c']);
     }, $risk));
-    echo '<div class="zw-adm-sec" style="margin-top:22px">最近操作审计</div>';
+    echo '<div class="tco-sec" style="margin-top:22px">最近操作审计</div>';
     zw_policy_platform_render_table(array('动作', '对象', '操作人', '时间'), array_map(function ($r) {
         return array($r['action'], $r['target_type'], $r['operator'], $r['create_time']);
     }, $recent));
@@ -592,7 +592,7 @@ function zw_policy_platform_page_sources() {
 
     $types = array('' => '全部类型', '公开法规' => '公开法规', '内部文件' => '内部文件', '内部制度' => '内部制度');
     $statuses = array('' => '全部状态', '已生效' => '已生效', '已废止' => '已废止', '草案' => '草案');
-    echo '<form method="get" class="zw-adm-card" style="padding:12px 14px;margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">';
+    echo '<form method="get" class="tco-card" style="padding:12px 14px;margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">';
     echo '<input type="hidden" name="page" value="zw-policy-sources">';
     echo '<label style="font-size:12px;color:#666">类型<br><select name="source_type">';
     foreach ($types as $k => $v) echo '<option value="' . esc_attr($k) . '"' . selected($f_type, $k, false) . '>' . esc_html($v) . '</option>';
@@ -628,8 +628,8 @@ function zw_policy_platform_page_clauses() {
     $table = zw_policy_platform_table('policy_clause');
     zw_policy_platform_page_header('政策条款库', '政策条款列表（写操作第一阶段：单条确认/退回；最多显示 300 条）。');
     if (!zw_policy_platform_exists('policy_clause')) { zw_policy_platform_missing_notice(); zw_policy_platform_page_footer(); return; }
-    // TASK-1019：条款表已降级为「生效正文的派生视图」，本页提示口径（样式用既有 zw-adm-card，不新增全局 CSS）。
-    echo '<div class="zw-adm-card" style="padding:12px 14px;margin-bottom:14px;border-left:3px solid var(--primary-color,#d80505)">'
+    // TASK-1019：条款表已降级为「生效正文的派生视图」，本页提示口径（样式用既有 tco-card，不新增全局 CSS）。
+    echo '<div class="tco-card" style="padding:12px 14px;margin-bottom:14px;border-left:3px solid var(--primary-color,#d80505)">'
         . '<p style="margin:0 0 6px"><strong>条款为派生视图</strong>：正文以 <strong>AI 法务部 → 文档中心</strong> 的<b>生效版本</b>为准；'
         . '如需修改正文，请在文档中心<strong>新建版本</strong>并<strong>确认生效</strong>，生效后条款会自动派生同步。</p>'
         . '<p style="margin:0;color:#666">本页的「确认 / 退回」仅用于 T1b 登记入口（条款初稿评审），<strong>不会改变已生效正文</strong>；'
@@ -708,14 +708,14 @@ function zw_policy_platform_page_clauses() {
                 $verdict,
             );
         }
-        echo '<div class="zw-adm-sec" style="margin:18px 0 8px">派生对账（解析 N / 已确认 M / 差异 K）</div>';
+        echo '<div class="tco-sec" style="margin:18px 0 8px">派生对账（解析 N / 已确认 M / 差异 K）</div>';
         // TASK-1559：只读筛选 tab + 只读差异清单（可整段复制贴工单）；不新增写端点、不改对账判定。
         $recon_base = admin_url('admin.php?page=zw-policy-clauses');
-        echo '<div class="zw-adm-tabbar" style="margin:0 0 10px">'
+        echo '<div class="tco-tabbar" style="margin:0 0 10px">'
             . '<a' . ($recon_filter === '' ? ' class="on"' : '') . ' href="' . esc_url($recon_base) . '">全部 (' . (int) $recon_all . ')</a>'
             . '<a' . ($recon_filter === 'diff' ? ' class="on"' : '') . ' href="' . esc_url(add_query_arg('recon', 'diff', $recon_base)) . '">仅有差异 (' . (int) $recon_diff_docs . ')</a>'
             . '</div>';
-        echo '<div class="zw-adm-card" style="padding:12px 14px;margin-bottom:16px;overflow-x:auto">';
+        echo '<div class="tco-card" style="padding:12px 14px;margin-bottom:16px;overflow-x:auto">';
         echo '<p style="margin:0 0 8px;color:#666;font-size:12.5px">口径：对账 = 生效正文解析条数 vs 条款表「已确认」条数（同一稳定主键逐条比对文本与版本号）；'
             . '《章程》按铁律 19 显式排除（显示「不适用」）。合计：正文解析 <strong>' . (int) $sum_parsed . '</strong> 条 · 已确认 <strong>'
             . (int) $sum_confirmed . '</strong> 条 · 差异 <strong>' . (int) $sum_diff . '</strong> 项。</p>';
@@ -767,7 +767,7 @@ function zw_policy_platform_page_clauses() {
     $per = 20;
     $offset = ($paged - 1) * $per;
 
-    echo '<div class="zw-adm-tabbar">';
+    echo '<div class="tco-tabbar">';
     foreach (array('' => '全部', '已确认' => '已确认', '待复核' => '待复核') as $k => $label) {
         $url = $k === '' ? $base : add_query_arg('status', $k, $base);
         echo '<a' . ((string) $f_status === (string) $k ? ' class="on"' : '') . ' href="' . esc_url($url) . '">' . esc_html($label) . '</a>';
@@ -788,7 +788,7 @@ function zw_policy_platform_page_clauses() {
 
     $riskOptions = array('' => '全部风险', '重大' => '重大', '高' => '高', '中' => '中', '低' => '低');
     $redOptions = array('' => '全部红线', '是' => '是', '否' => '否');
-    echo '<form method="get" class="zw-adm-card" style="padding:12px 14px;margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">';
+    echo '<form method="get" class="tco-card" style="padding:12px 14px;margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">';
     echo '<input type="hidden" name="page" value="zw-policy-clauses">';
     echo '<label style="font-size:12px;color:#666">风险等级<br><select name="risk">';
     foreach ($riskOptions as $k => $v) echo '<option value="' . esc_attr($k) . '"' . selected($f_risk, $k, false) . '>' . esc_html($v) . '</option>';
@@ -805,14 +805,14 @@ function zw_policy_platform_page_clauses() {
     echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
     echo '<input type="hidden" name="action" value="zw_policy_clause_batch_review">';
     echo '<input type="hidden" name="_wpnonce" value="' . esc_attr($nonce) . '">';
-    echo '<div class="zw-adm-card" style="padding:12px 14px;margin-bottom:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">';
+    echo '<div class="tco-card" style="padding:12px 14px;margin-bottom:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">';
     echo '<select name="decision"><option value="">批量动作</option><option value="CONFIRMED">批量确认</option><option value="REJECTED">批量退回</option></select>';
     echo '<button class="button button-primary">执行</button>';
     echo '<span style="font-size:12px;color:#999">勾选下方条款后执行批量复核</span>';
     echo '</div>';
-    $check_all = '<label class="zw-adm-touch"><input type="checkbox" onclick="var c=this;document.querySelectorAll(\'.zw-policy-cb\').forEach(function(x){x.checked=c.checked;})"></label>';
+    $check_all = '<label class="tco-touch"><input type="checkbox" onclick="var c=this;document.querySelectorAll(\'.tco-policy-cb\').forEach(function(x){x.checked=c.checked;})"></label>';
     zw_policy_platform_render_table(array(array('raw' => $check_all), 'ID', '来源', '条号', '业务领域', '风险', '红线', '责任部门', '状态', '摘要', '操作'), array_map(function ($r) {
-        $cb = '<label class="zw-adm-touch"><input type="checkbox" class="zw-policy-cb" name="ids[]" value="' . esc_attr($r['id']) . '"></label>';
+        $cb = '<label class="tco-touch"><input type="checkbox" class="tco-policy-cb" name="ids[]" value="' . esc_attr($r['id']) . '"></label>';
         return array(
             array('raw' => $cb), $r['id'], $r['source_id'], $r['article_no'], $r['business_area'],
             zw_policy_platform_badge_cell(zw_policy_platform_status_type($r['risk_level']), $r['risk_level']),
@@ -835,11 +835,11 @@ function zw_policy_platform_page_topics() {
     if (!zw_policy_platform_exists('policy_topic') || !zw_policy_platform_exists('policy_relation')) { zw_policy_platform_missing_notice(); zw_policy_platform_page_footer(); return; }
     $topics = $wpdb->get_results('SELECT id, name, parent_id, status, update_time FROM ' . zw_policy_platform_table('policy_topic') . ' ORDER BY update_time DESC LIMIT 200', ARRAY_A);
     $relations = $wpdb->get_results('SELECT id, from_type, from_id, to_type, to_id, relation_type, status FROM ' . zw_policy_platform_table('policy_relation') . ' ORDER BY update_time DESC LIMIT 200', ARRAY_A);
-    echo '<div class="zw-adm-sec">政策主题</div>';
+    echo '<div class="tco-sec">政策主题</div>';
     zw_policy_platform_render_table(array('ID', '主题名称', '父级', '状态', '更新时间'), array_map(function ($r) {
         return array($r['id'], $r['name'], $r['parent_id'], $r['status'], $r['update_time']);
     }, $topics));
-    echo '<div class="zw-adm-sec" style="margin-top:22px">政策关系</div>';
+    echo '<div class="tco-sec" style="margin-top:22px">政策关系</div>';
     zw_policy_platform_render_table(array('ID', '起点', '终点', '关系', '状态'), array_map(function ($r) {
         return array($r['id'], $r['from_type'] . ':' . $r['from_id'], $r['to_type'] . ':' . $r['to_id'], $r['relation_type'], $r['status']);
     }, $relations));
@@ -1495,7 +1495,7 @@ if (!function_exists('zw_policy_applicability_scope_open')) {
      * @return string
      */
     function zw_policy_applicability_scope_open() {
-        return '<div id="zw-adm-policy-scope" class="zw-adm-scope">';
+        return '<div id="tco-policy-scope" class="tco-scope">';
     }
 }
 
@@ -1556,20 +1556,20 @@ function zw_policy_platform_page_applicability() {
 
     /* D：高级模式作用域（键名默认隐藏，只显示中文名）。 */
     echo zw_policy_applicability_scope_open();
-    echo '<div class="zw-adm-mode-bar"><label class="zw-adm-mode-toggle zw-adm-touch"><input type="checkbox" id="zw-adm-advanced-mode" value="1"> '
+    echo '<div class="tco-mode-bar"><label class="tco-mode-toggle tco-touch"><input type="checkbox" id="tco-advanced-mode" value="1"> '
         . '<strong>高级模式</strong>（显示内部键名与原始值）</label>'
-        . '<span class="zw-adm-mode-hint">默认只显示中文名；把鼠标停在选项上可看到对应键名，需要成片查看时打开高级模式。</span></div>';
+        . '<span class="tco-mode-hint">默认只显示中文名；把鼠标停在选项上可看到对应键名，需要成片查看时打开高级模式。</span></div>';
 
     /* ── 总开关与灰度（TASK-1655 · E） ── */
-    echo '<div class="zw-adm-sec" title="zw_policy_gate_enabled()">总开关与灰度（判定唯一出处：SPEC-93 §十四）</div>';
+    echo '<div class="tco-sec" title="zw_policy_gate_enabled()">总开关与灰度（判定唯一出处：SPEC-93 §十四）</div>';
     if (!$gate_ready) {
-        echo '<div class="zw-adm-card zw-adm-gate-panel" style="padding:12px 14px;margin-bottom:14px">'
+        echo '<div class="tco-card tco-gate-panel" style="padding:12px 14px;margin-bottom:14px">'
             . '<p style="margin:0"><strong>域键 / 功能点键注册表未加载</strong>：<code>inc/policy-platform/policy-module-map.php</code> 未加载 ⇒ '
             . '总开关区 fail-closed 为<strong>只读</strong>，保存入口已禁用（绝不写入来源不明的键）。</p></div>';
     } else {
-        echo '<div class="zw-adm-card zw-adm-gate-panel">';
-        echo '<div class="zw-adm-gate-level">当前灰度层级：' . zw_policy_platform_badge('info', (string) $gate_state['level']['label'])
-            . '<span class="zw-adm-gate-level-detail">' . esc_html((string) $gate_state['level']['detail']) . '</span></div>';
+        echo '<div class="tco-card tco-gate-panel">';
+        echo '<div class="tco-gate-level">当前灰度层级：' . zw_policy_platform_badge('info', (string) $gate_state['level']['label'])
+            . '<span class="tco-gate-level-detail">' . esc_html((string) $gate_state['level']['detail']) . '</span></div>';
 
         /* 每个开关键的当前 ON/off + 人话摘要（原始键名收进 title / 高级模式，D：默认不留空白列） */
         $gate_opt_labels = array(
@@ -1586,55 +1586,55 @@ function zw_policy_platform_page_applicability() {
             $summary = $count > 0 ? ('已选 ' . $count . ' 项') : ($cell['on'] ? '已开' : '（空 / 未设置）');
             $gate_opt_rows[] = array(
                 array('html' => '<span title="' . esc_attr($gate_opt) . '">' . esc_html($gate_opt_label) . '</span> '
-                    . '<code class="zw-adm-keychip">' . esc_html($gate_opt) . '</code>'),
+                    . '<code class="tco-keychip">' . esc_html($gate_opt) . '</code>'),
                 array('html' => zw_policy_platform_badge($cell['on'] ? 'on' : 'off', (string) $cell['label'])),
-                array('html' => esc_html($summary) . ' <code class="zw-adm-keychip">' . esc_html((string) $cell['value']) . '</code>'),
+                array('html' => esc_html($summary) . ' <code class="tco-keychip">' . esc_html((string) $cell['value']) . '</code>'),
             );
         }
         zw_policy_platform_render_table(array('开关键', '当前', '当前值'), $gate_opt_rows);
 
-        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="zw-adm-gate-form">';
+        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="tco-gate-form">';
         echo '<input type="hidden" name="action" value="zw_policy_gate_save">';
         echo '<input type="hidden" name="_wpnonce" value="' . esc_attr(wp_create_nonce('zw_policy_gate_save')) . '">';
 
-        echo '<div class="zw-adm-gate-opts zw-adm-gate-opts-lg">';
-        echo '<label class="zw-adm-gate-opt zw-adm-touch" title="zw_policy_gate_enabled"><input type="checkbox" name="zw_gate_enabled" value="1"'
+        echo '<div class="tco-gate-opts tco-gate-opts-lg">';
+        echo '<label class="tco-gate-opt tco-touch" title="zw_policy_gate_enabled"><input type="checkbox" name="zw_gate_enabled" value="1"'
             . ($gate_state['enabled'] ? ' checked' : '') . '> <strong>全局开关</strong> '
             . zw_policy_platform_badge($gate_state['enabled'] ? 'on' : 'off', $gate_state['enabled'] ? 'ON' : 'off')
-            . '<code class="zw-adm-keychip">zw_policy_gate_enabled</code></label>';
-        echo '<label class="zw-adm-gate-opt zw-adm-touch" title="zw_policy_age_retire_scan"><input type="checkbox" name="zw_gate_age_scan" value="1"'
+            . '<code class="tco-keychip">zw_policy_gate_enabled</code></label>';
+        echo '<label class="tco-gate-opt tco-touch" title="zw_policy_age_retire_scan"><input type="checkbox" name="zw_gate_age_scan" value="1"'
             . ($gate_state['age_scan'] ? ' checked' : '') . '> <strong>到龄扫描</strong>（R-13 到龄派生标记） '
             . zw_policy_platform_badge($gate_state['age_scan'] ? 'on' : 'off', $gate_state['age_scan'] ? 'ON' : 'off')
-            . '<code class="zw-adm-keychip">zw_policy_age_retire_scan</code></label>';
+            . '<code class="tco-keychip">zw_policy_age_retire_scan</code></label>';
         echo '</div>';
-        echo '<p class="zw-adm-gate-note">默认 <strong>off</strong>：未勾选即关闭；本页任何操作都<strong>不写入「默认开」</strong>的开关值，也不改动判定语义。</p>';
+        echo '<p class="tco-gate-note">默认 <strong>off</strong>：未勾选即关闭；本页任何操作都<strong>不写入「默认开」</strong>的开关值，也不改动判定语义。</p>';
 
-        echo '<div class="zw-adm-gate-group"><div class="zw-adm-gate-group-title" title="zw_policy_gate_modules">域白名单（全不勾 = 不按域收窄）'
-            . '<code class="zw-adm-keychip">zw_policy_gate_modules</code></div><div class="zw-adm-gate-opts">';
+        echo '<div class="tco-gate-group"><div class="tco-gate-group-title" title="zw_policy_gate_modules">域白名单（全不勾 = 不按域收窄）'
+            . '<code class="tco-keychip">zw_policy_gate_modules</code></div><div class="tco-gate-opts">';
         foreach ((array) $gate_keys['modules'] as $gate_key => $gate_label) {
             $gate_on = in_array(strtolower((string) $gate_key), (array) $gate_state['modules'], true);
-            echo '<label class="zw-adm-gate-opt zw-adm-touch" title="' . esc_attr((string) $gate_key) . '">'
+            echo '<label class="tco-gate-opt tco-touch" title="' . esc_attr((string) $gate_key) . '">'
                 . '<input type="checkbox" name="zw_gate_modules[]" value="' . esc_attr((string) $gate_key) . '"' . ($gate_on ? ' checked' : '') . '> '
                 . esc_html((string) $gate_label) . ' '
                 . zw_policy_platform_badge($gate_on ? 'on' : 'off', $gate_on ? 'ON' : 'off')
-                . '<code class="zw-adm-keychip">' . esc_html((string) $gate_key) . '</code></label>';
+                . '<code class="tco-keychip">' . esc_html((string) $gate_key) . '</code></label>';
         }
         echo '</div></div>';
 
-        echo '<div class="zw-adm-gate-group"><div class="zw-adm-gate-group-title" title="zw_policy_gate_features">功能点白名单（全不勾 = 不按功能点收窄）'
-            . '<code class="zw-adm-keychip">zw_policy_gate_features</code></div><div class="zw-adm-gate-opts">';
+        echo '<div class="tco-gate-group"><div class="tco-gate-group-title" title="zw_policy_gate_features">功能点白名单（全不勾 = 不按功能点收窄）'
+            . '<code class="tco-keychip">zw_policy_gate_features</code></div><div class="tco-gate-opts">';
         foreach ((array) $gate_keys['features'] as $gate_key => $gate_label) {
             $gate_on = in_array(strtolower((string) $gate_key), (array) $gate_state['features'], true);
-            echo '<label class="zw-adm-gate-opt zw-adm-touch" title="' . esc_attr((string) $gate_key) . '">'
+            echo '<label class="tco-gate-opt tco-touch" title="' . esc_attr((string) $gate_key) . '">'
                 . '<input type="checkbox" name="zw_gate_features[]" value="' . esc_attr((string) $gate_key) . '"' . ($gate_on ? ' checked' : '') . '> '
                 . esc_html((string) $gate_label) . ' '
                 . zw_policy_platform_badge($gate_on ? 'on' : 'off', $gate_on ? 'ON' : 'off')
-                . '<code class="zw-adm-keychip">' . esc_html((string) $gate_key) . '</code></label>';
+                . '<code class="tco-keychip">' . esc_html((string) $gate_key) . '</code></label>';
         }
         echo '</div></div>';
 
-        echo '<p><button class="button button-primary zw-adm-gate-save">保存总开关与灰度</button> '
-            . '<span class="zw-adm-gate-note">白名单键<strong>只从注册表取</strong>（越界键静默丢弃）；保存后立即影响运行时判定。</span></p>';
+        echo '<p><button class="button button-primary tco-gate-save">保存总开关与灰度</button> '
+            . '<span class="tco-gate-note">白名单键<strong>只从注册表取</strong>（越界键静默丢弃）；保存后立即影响运行时判定。</span></p>';
         echo '</form>';
         echo '</div>';
     }
@@ -1642,12 +1642,12 @@ function zw_policy_platform_page_applicability() {
     /* ── 键表（唯一出处 T2 注册表；D：默认隐藏，高级模式才显示） ── */
     $groups = $lib_ready ? zw_policy_applicability_registry_groups() : array();
     if ($groups) {
-        echo '<div class="zw-adm-advanced-block">';
-        echo '<div class="zw-adm-sec">可选键（唯一出处：T2 注册表）</div>';
+        echo '<div class="tco-advanced-block">';
+        echo '<div class="tco-sec">可选键（唯一出处：T2 注册表）</div>';
         $key_rows = array();
         foreach ($groups as $domain => $group) {
             $key_rows[] = array(
-                array('html' => '<code class="zw-adm-keychip">' . esc_html($domain) . '</code>'),
+                array('html' => '<code class="tco-keychip">' . esc_html($domain) . '</code>'),
                 (string) $group['label'],
                 $group['features']
                     ? implode('、', array_map(function ($k, $v) { return $k . '（' . $v . '）'; }, array_keys($group['features']), $group['features']))
@@ -1671,25 +1671,25 @@ function zw_policy_platform_page_applicability() {
     $unconf = $sum['unconfigured'];
 
     /* ── 首屏聚焦（C）：默认只展开「未配置适用模块」的待办规则；已配置规则收起，可一键全部展开 ── */
-    echo '<div class="zw-adm-sec" style="margin-top:22px">未配置适用模块的规则（待办 N=' . count($unconf) . ' / 共 ' . (int) $sum['total'] . ' 条）</div>';
+    echo '<div class="tco-sec" style="margin-top:22px">未配置适用模块的规则（待办 N=' . count($unconf) . ' / 共 ' . (int) $sum['total'] . ' 条）</div>';
     if ($unconf) {
         zw_policy_platform_render_table(array('规则编号', '规则名称', '当前值（未命中任何合法键）'), array_map(function ($r) {
             return array($r['rule_code'], $r['rule_name'], $r['raw'] !== '' ? $r['raw'] : '（空）');
         }, $unconf));
     } else {
-        echo '<div class="zw-adm-card" style="padding:12px 14px;margin-bottom:14px;border-left:3px solid var(--primary-color,#d80505)">'
+        echo '<div class="tco-card" style="padding:12px 14px;margin-bottom:14px;border-left:3px solid var(--primary-color,#d80505)">'
             . '<p style="margin:0">全部规则均已配置适用模块（待办 N=0）。</p></div>';
     }
 
     /* ── 逐规则配置（A 折叠卡片 / B 一键推荐 / D 只说人话） ── */
-    echo '<div class="zw-adm-sec" style="margin-top:22px">逐规则配置（每张卡片默认收起；待办规则默认展开）</div>';
+    echo '<div class="tco-sec" style="margin-top:22px">逐规则配置（每张卡片默认收起；待办规则默认展开）</div>';
     if (!$lib_ready) {
-        echo '<div class="zw-adm-card" style="padding:12px 14px;color:#666">键校验模块不可用，保存入口已禁用。</div>';
+        echo '<div class="tco-card" style="padding:12px 14px;color:#666">键校验模块不可用，保存入口已禁用。</div>';
     } else {
-        echo '<div class="zw-adm-toolbar">'
+        echo '<div class="tco-toolbar">'
             . '<button type="button" class="button" data-zw-expand="all">全部展开</button>'
             . '<button type="button" class="button" data-zw-expand="none">全部收起</button>'
-            . '<span class="zw-adm-toolbar-note">共 ' . count($rows) . ' 条规则；键名默认隐藏（鼠标悬停可看，或用上方「高级模式」）。</span>'
+            . '<span class="tco-toolbar-note">共 ' . count($rows) . ' 条规则；键名默认隐藏（鼠标悬停可看，或用上方「高级模式」）。</span>'
             . '</div>';
 
         $nonce = wp_create_nonce('zw_policy_applicability_save');
@@ -1704,53 +1704,53 @@ function zw_policy_platform_page_applicability() {
             $rec      = zw_policy_applicability_recommendation($row);
             $raw      = (string) ($row['business_module'] ?? '');
 
-            // A：既有契约（测试断言）<details class="zw-adm-card zw-adm-rule-card"...>；待办规则默认展开（C）。
-            $card_class = 'zw-adm-card zw-adm-rule-card' . ($is_todo ? ' is-todo' : '');
+            // A：既有契约（测试断言）<details class="tco-card tco-rule-card"...>；待办规则默认展开（C）。
+            $card_class = 'tco-card tco-rule-card' . ($is_todo ? ' is-todo' : '');
             echo '<details class="' . esc_attr($card_class) . '"' . ($is_todo ? ' open' : '') . '>';
-            echo '<summary class="zw-adm-rule-summary">';
-            echo '<span class="zw-adm-rule-code">' . esc_html((string) ($row['rule_code'] ?? '')) . '</span>';
-            echo '<span class="zw-adm-rule-name">' . esc_html((string) ($row['rule_name'] ?? '')) . '</span>';
-            echo '<span class="zw-adm-rule-status">'
+            echo '<summary class="tco-rule-summary">';
+            echo '<span class="tco-rule-code">' . esc_html((string) ($row['rule_code'] ?? '')) . '</span>';
+            echo '<span class="tco-rule-name">' . esc_html((string) ($row['rule_name'] ?? '')) . '</span>';
+            echo '<span class="tco-rule-status">'
                 . ((int) ($row['enabled'] ?? 0) === 1
                     ? zw_policy_platform_badge('on', '已启用')
                     : zw_policy_platform_badge('off', '未启用'))
                 . ($is_todo ? zw_policy_platform_badge('wait', '待配置') : '')
                 . '</span>';
-            echo '<span class="zw-adm-rule-scope" title="' . esc_attr(implode('、', $keys)) . '">当前生效范围：<strong>'
+            echo '<span class="tco-rule-scope" title="' . esc_attr(implode('、', $keys)) . '">当前生效范围：<strong>'
                 . esc_html($scope) . '</strong></span>';
             echo '</summary>';
 
-            echo '<div class="zw-adm-rule-body">';
+            echo '<div class="tco-rule-body">';
             /* B：一键推荐（只填表单、不提交）。
                已配置且推荐未核实的规则**不显示噪声提示**（只在待办规则或推荐注册表不可用时提示）。 */
             if ($rec['state'] === 'ready') {
-                echo '<div class="zw-adm-rule-recommend">'
-                    . '<button type="button" class="button zw-adm-recommend-btn" data-zw-recommend="'
+                echo '<div class="tco-rule-recommend">'
+                    . '<button type="button" class="button tco-recommend-btn" data-zw-recommend="'
                     . esc_attr((string) wp_json_encode(array_values($rec['keys']))) . '">应用推荐配置</button>'
-                    . '<span class="zw-adm-rule-recommend-hint">推荐：' . esc_html(zw_policy_applicability_scope_label($rec['keys']))
+                    . '<span class="tco-rule-recommend-hint">推荐：' . esc_html(zw_policy_applicability_scope_label($rec['keys']))
                     . '（<strong>只填表单、不提交</strong>，可再微调后点「保存全部改动」）</span>'
-                    . '<span class="zw-adm-recommend-state" role="status" aria-live="polite"></span></div>';
+                    . '<span class="tco-recommend-state" role="status" aria-live="polite"></span></div>';
             } elseif ($is_todo || $rec['state'] === 'unavailable') {
                 // 待办规则（占位 / 未核实）与推荐注册表不可用 ⇒ 明确提示；已配置 + 未核实不提示（避免噪声）。
-                echo '<div class="zw-adm-rule-recommend"><span class="zw-adm-rule-recommend-hint zw-adm-rule-recommend-empty">'
+                echo '<div class="tco-rule-recommend"><span class="tco-rule-recommend-hint tco-rule-recommend-empty">'
                     . esc_html((string) $rec['hint']) . '</span></div>';
             }
             /* 当前值：默认模式给人话（中文范围），原始值收进高级模式（D）。 */
-            echo '<p class="zw-adm-rule-raw">当前值：' . ($keys
-                    ? '<strong>' . esc_html($scope) . '</strong><span class="zw-adm-rule-raw-note">（合法键 ' . count($keys) . ' 个）</span>'
+            echo '<p class="tco-rule-raw">当前值：' . ($keys
+                    ? '<strong>' . esc_html($scope) . '</strong><span class="tco-rule-raw-note">（合法键 ' . count($keys) . ' 个）</span>'
                     : '<strong>（未配置 ⇒ 不触发）</strong>')
-                . ' <code class="zw-adm-keychip">' . esc_html($raw) . '</code></p>';
+                . ' <code class="tco-keychip">' . esc_html($raw) . '</code></p>';
 
             foreach ($groups as $domain => $group) {
-                echo '<div class="zw-adm-rule-group">';
-                echo '<div class="zw-adm-rule-group-title" title="' . esc_attr((string) $domain) . '">'
-                    . esc_html((string) $group['label']) . '</div><div class="zw-adm-rule-opts">';
+                echo '<div class="tco-rule-group">';
+                echo '<div class="tco-rule-group-title" title="' . esc_attr((string) $domain) . '">'
+                    . esc_html((string) $group['label']) . '</div><div class="tco-rule-opts">';
                 $cb = function ($key, $label) use ($rid, $keys) {
                     $checked = in_array((string) $key, $keys, true) ? ' checked' : '';
-                    return '<label class="zw-adm-rule-opt zw-adm-touch" title="' . esc_attr((string) $key) . '">'
+                    return '<label class="tco-rule-opt tco-touch" title="' . esc_attr((string) $key) . '">'
                         . '<input type="checkbox" name="modules[' . esc_attr($rid) . '][]" value="' . esc_attr((string) $key) . '"' . $checked . '> '
-                        . '<span class="zw-adm-rule-opt-label">' . esc_html((string) $label) . '</span>'
-                        . '<code class="zw-adm-keychip">' . esc_html((string) $key) . '</code></label>';
+                        . '<span class="tco-rule-opt-label">' . esc_html((string) $label) . '</span>'
+                        . '<code class="tco-keychip">' . esc_html((string) $key) . '</code></label>';
                 };
                 echo $cb($domain, (string) $group['label'] . '（整个域）');
                 foreach ($group['features'] as $fkey => $flabel) {
@@ -1768,12 +1768,12 @@ function zw_policy_platform_page_applicability() {
         echo '</form>';
     }
 
-    zw_policy_applicability_scope_close();   /* /#zw-adm-policy-scope */
+    zw_policy_applicability_scope_close();   /* /#tco-policy-scope */
 
     /* ── 只读聚合：条款业务领域分布（原只读视图保留） ── */
     if (zw_policy_platform_exists('policy_clause')) {
         $rows2 = $wpdb->get_results('SELECT business_area, COUNT(*) AS c FROM ' . zw_policy_platform_table('policy_clause') . ' GROUP BY business_area ORDER BY c DESC', ARRAY_A);
-        echo '<div class="zw-adm-sec" style="margin-top:22px">条款业务领域分布（只读）</div>';
+        echo '<div class="tco-sec" style="margin-top:22px">条款业务领域分布（只读）</div>';
         zw_policy_platform_render_table(array('业务领域', '条款数'), array_map(function ($r) {
             return array($r['business_area'], $r['c']);
         }, is_array($rows2) ? $rows2 : array()));
@@ -1797,59 +1797,59 @@ if (!function_exists('zw_policy_platform_applicability_assets')) {
     function zw_policy_platform_applicability_assets() {
         ?>
 <style>
-#zw-adm-policy-scope .zw-adm-keychip{display:none}
-#zw-adm-policy-scope.zw-adm-advanced .zw-adm-keychip{display:inline;font-size:11px;background:#f0f0f1;border-radius:3px;padding:0 4px}
-#zw-adm-policy-scope .zw-adm-advanced-block{display:none}
-#zw-adm-policy-scope.zw-adm-advanced .zw-adm-advanced-block{display:block}
-.zw-adm-mode-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;background:#fff;border:1px solid #dcdfe3;border-left:3px solid var(--primary-color,#d80505);border-radius:4px;padding:10px 14px;margin:0 0 14px}
-.zw-adm-mode-toggle{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
-.zw-adm-mode-hint,.zw-adm-toolbar-note,.zw-adm-gate-note{color:#666;font-size:12px}
-.zw-adm-gate-panel{padding:14px;margin-bottom:16px}
-.zw-adm-gate-level{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 10px;font-size:13px}
-.zw-adm-gate-level-detail{color:#555;font-size:12.5px}
-.zw-adm-gate-form{margin-top:12px;border-top:1px solid #ececec;padding-top:12px}
-.zw-adm-gate-opts{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center}
-.zw-adm-gate-opts-lg{margin:0 0 6px}
-.zw-adm-gate-opt{display:inline-flex;align-items:center;gap:6px;min-height:32px;white-space:nowrap;cursor:pointer}
-.zw-adm-gate-group{margin:10px 0}
-.zw-adm-gate-group-title{font-weight:600;font-size:12.5px;margin:0 0 4px}
-.zw-adm-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 12px}
-.zw-adm-rule-card{margin:0 0 12px;padding:0}
-.zw-adm-rule-summary{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px 14px;cursor:pointer;list-style:none}
-.zw-adm-rule-summary::-webkit-details-marker{display:none}
-.zw-adm-rule-summary::marker{content:""}
-.zw-adm-rule-card.is-todo>.zw-adm-rule-summary{border-left:3px solid var(--primary-color,#d80505)}
-.zw-adm-rule-card[open]>.zw-adm-rule-summary{border-bottom:1px solid #ececec}
-.zw-adm-rule-code{font-family:Menlo,Consolas,monospace;font-size:11.5px;color:#777}
-.zw-adm-rule-name{font-weight:600}
-.zw-adm-rule-scope{margin-left:auto;color:#555;font-size:12.5px}
-.zw-adm-rule-body{padding:12px 14px}
-.zw-adm-rule-recommend{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 8px}
-.zw-adm-rule-recommend-hint{color:#555;font-size:12.5px}
-.zw-adm-rule-recommend-empty{color:#8a6d00}
-.zw-adm-recommend-state{color:var(--primary-color,#d80505);font-size:12.5px}
-.zw-adm-rule-raw{margin:0 0 8px;color:#666;font-size:12px}
-.zw-adm-rule-group{margin:0 0 8px}
-.zw-adm-rule-group-title{font-weight:600;font-size:12.5px;margin:0 0 2px}
-.zw-adm-rule-opts{display:flex;flex-wrap:wrap;align-items:center}
-.zw-adm-rule-opt{display:inline-flex;align-items:center;gap:5px;min-height:32px;margin:0 14px 2px 0;white-space:nowrap;cursor:pointer}
-.zw-adm-gate-save{min-height:32px}
-@media(hover:hover){.zw-adm-recommend-btn:hover,.zw-adm-gate-save:hover{border-color:var(--primary-color,#d80505);color:var(--primary-color,#d80505)}}
-.zw-adm-recommend-btn:active,.zw-adm-gate-save:active{transform:translateY(1px)}
-.zw-adm-recommend-btn{transition:color .15s ease,border-color .15s ease,transform .1s ease}
-.zw-adm-gate-save{transition:color .15s ease,border-color .15s ease,transform .1s ease}
-@media(prefers-reduced-motion:reduce){.zw-adm-recommend-btn,.zw-adm-gate-save{transition:none}}
+#tco-policy-scope .tco-keychip{display:none}
+#tco-policy-scope.tco-advanced .tco-keychip{display:inline;font-size:11px;background:#f0f0f1;border-radius:3px;padding:0 4px}
+#tco-policy-scope .tco-advanced-block{display:none}
+#tco-policy-scope.tco-advanced .tco-advanced-block{display:block}
+.tco-mode-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;background:#fff;border:1px solid #dcdfe3;border-left:3px solid var(--primary-color,#d80505);border-radius:4px;padding:10px 14px;margin:0 0 14px}
+.tco-mode-toggle{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.tco-mode-hint,.tco-toolbar-note,.tco-gate-note{color:#666;font-size:12px}
+.tco-gate-panel{padding:14px;margin-bottom:16px}
+.tco-gate-level{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 10px;font-size:13px}
+.tco-gate-level-detail{color:#555;font-size:12.5px}
+.tco-gate-form{margin-top:12px;border-top:1px solid #ececec;padding-top:12px}
+.tco-gate-opts{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center}
+.tco-gate-opts-lg{margin:0 0 6px}
+.tco-gate-opt{display:inline-flex;align-items:center;gap:6px;min-height:32px;white-space:nowrap;cursor:pointer}
+.tco-gate-group{margin:10px 0}
+.tco-gate-group-title{font-weight:600;font-size:12.5px;margin:0 0 4px}
+.tco-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 12px}
+.tco-rule-card{margin:0 0 12px;padding:0}
+.tco-rule-summary{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px 14px;cursor:pointer;list-style:none}
+.tco-rule-summary::-webkit-details-marker{display:none}
+.tco-rule-summary::marker{content:""}
+.tco-rule-card.is-todo>.tco-rule-summary{border-left:3px solid var(--primary-color,#d80505)}
+.tco-rule-card[open]>.tco-rule-summary{border-bottom:1px solid #ececec}
+.tco-rule-code{font-family:Menlo,Consolas,monospace;font-size:11.5px;color:#777}
+.tco-rule-name{font-weight:600}
+.tco-rule-scope{margin-left:auto;color:#555;font-size:12.5px}
+.tco-rule-body{padding:12px 14px}
+.tco-rule-recommend{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 8px}
+.tco-rule-recommend-hint{color:#555;font-size:12.5px}
+.tco-rule-recommend-empty{color:#8a6d00}
+.tco-recommend-state{color:var(--primary-color,#d80505);font-size:12.5px}
+.tco-rule-raw{margin:0 0 8px;color:#666;font-size:12px}
+.tco-rule-group{margin:0 0 8px}
+.tco-rule-group-title{font-weight:600;font-size:12.5px;margin:0 0 2px}
+.tco-rule-opts{display:flex;flex-wrap:wrap;align-items:center}
+.tco-rule-opt{display:inline-flex;align-items:center;gap:5px;min-height:32px;margin:0 14px 2px 0;white-space:nowrap;cursor:pointer}
+.tco-gate-save{min-height:32px}
+@media(hover:hover){.tco-recommend-btn:hover,.tco-gate-save:hover{border-color:var(--primary-color,#d80505);color:var(--primary-color,#d80505)}}
+.tco-recommend-btn:active,.tco-gate-save:active{transform:translateY(1px)}
+.tco-recommend-btn{transition:color .15s ease,border-color .15s ease,transform .1s ease}
+.tco-gate-save{transition:color .15s ease,border-color .15s ease,transform .1s ease}
+@media(prefers-reduced-motion:reduce){.tco-recommend-btn,.tco-gate-save{transition:none}}
 </style>
 <script>
 (function () {
-    var scope = document.getElementById('zw-adm-policy-scope');
+    var scope = document.getElementById('tco-policy-scope');
     if (!scope) { return; }
 
-    var mode = document.getElementById('zw-adm-advanced-mode');
+    var mode = document.getElementById('tco-advanced-mode');
     if (mode) {
         mode.addEventListener('change', function () {
-            if (mode.checked) { scope.classList.add('zw-adm-advanced'); }
-            else { scope.classList.remove('zw-adm-advanced'); }
+            if (mode.checked) { scope.classList.add('tco-advanced'); }
+            else { scope.classList.remove('tco-advanced'); }
         });
     }
 
@@ -1860,7 +1860,7 @@ if (!function_exists('zw_policy_platform_applicability_assets')) {
         var btn = node.closest('[data-zw-recommend]');
         if (btn) {
             event.preventDefault();
-            var card = btn.closest('.zw-adm-rule-card');
+            var card = btn.closest('.tco-rule-card');
             var keys = [];
             try { keys = JSON.parse(btn.getAttribute('data-zw-recommend') || '[]'); } catch (err) { keys = []; }
             if (!keys.length) { return; }
@@ -1870,7 +1870,7 @@ if (!function_exists('zw_policy_platform_applicability_assets')) {
                     boxes[i].checked = keys.indexOf(boxes[i].value) !== -1;
                 }
                 if (card.tagName === 'DETAILS') { card.open = true; }
-                var state = card.querySelector('.zw-adm-recommend-state');
+                var state = card.querySelector('.tco-recommend-state');
                 if (state) { state.textContent = '已填入推荐配置（未提交），请复核后点「保存全部改动」。'; }
             }
             return;
@@ -1880,7 +1880,7 @@ if (!function_exists('zw_policy_platform_applicability_assets')) {
         if (tool) {
             event.preventDefault();
             var wantOpen = tool.getAttribute('data-zw-expand') === 'all';
-            var cards = scope.querySelectorAll('details.zw-adm-rule-card');
+            var cards = scope.querySelectorAll('details.tco-rule-card');
             for (var j = 0; j < cards.length; j++) {
                 if (wantOpen) { cards[j].setAttribute('open', 'open'); }
                 else { cards[j].removeAttribute('open'); }
@@ -1934,7 +1934,7 @@ function zw_policy_platform_page_rules() {
     $paged = isset($_GET['paged']) ? max(1, (int) $_GET['paged']) : 1;
     $per = 20;
     $offset = ($paged - 1) * $per;
-    echo '<div class="zw-adm-tabbar">';
+    echo '<div class="tco-tabbar">';
     foreach ($types as $key => $label) {
         $url = $key === '' ? $base : add_query_arg('rt', $key, $base);
         $on = ((string) $current === (string) $key) ? ' class="on"' : '';
@@ -1957,7 +1957,7 @@ function zw_policy_platform_page_rules() {
     $rows = $wpdb->get_results($wpdb->prepare($sql, ...array_merge($params, array($per, $offset))), ARRAY_A);
 
     $approvalOptions = array('' => '全部审批状态', '草稿' => '草稿', '待初审' => '待初审', '待终审' => '待终审', '已启用' => '已启用', '已驳回' => '已驳回', '已停用' => '已停用');
-    echo '<form method="get" class="zw-adm-card" style="padding:10px 14px;margin:0 0 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">';
+    echo '<form method="get" class="tco-card" style="padding:10px 14px;margin:0 0 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">';
     echo '<input type="hidden" name="page" value="zw-policy-rules">';
     if ($current !== '') echo '<input type="hidden" name="rt" value="' . esc_attr($current) . '">';
     echo '<label style="font-size:12px;color:#666">审批状态<br><select name="approval">';
@@ -1972,7 +1972,7 @@ function zw_policy_platform_page_rules() {
     echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
     echo '<input type="hidden" name="action" value="zw_policy_rule_batch">';
     echo '<input type="hidden" name="_wpnonce" value="' . esc_attr($nonce) . '">';
-    echo '<div class="zw-adm-card" style="padding:12px 14px;margin-bottom:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">';
+    echo '<div class="tco-card" style="padding:12px 14px;margin-bottom:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">';
     echo '<select name="batch_operation"><option value="">批量动作</option>'
        . '<option value="request_enable">批量申请启用</option>'
        . '<option value="first_review|APPROVE">批量初审通过</option>'
@@ -1983,7 +1983,7 @@ function zw_policy_platform_page_rules() {
     echo '<button class="button button-primary">执行</button>';
     echo '<span style="font-size:12px;color:#999">勾选下方规则后执行批量审批操作</span>';
     echo '</div>';
-    $check_all = '<label class="zw-adm-touch"><input type="checkbox" onclick="var c=this;document.querySelectorAll(\'.zw-policy-rule-cb\').forEach(function(x){x.checked=c.checked;})"></label>';
+    $check_all = '<label class="tco-touch"><input type="checkbox" onclick="var c=this;document.querySelectorAll(\'.tco-policy-rule-cb\').forEach(function(x){x.checked=c.checked;})"></label>';
     zw_policy_platform_render_table(array(array('raw' => $check_all), 'ID', '规则编号', '规则名称', '类型', '业务域', '模块', '触发事件', '审批状态', '启用', '更新时间', '操作'), array_map(function ($r) {
         $rule_status = !empty($r['approval_status']) ? $r['approval_status'] : ((int) $r['enabled'] ? '已启用' : '草稿');
         $actions = array();
@@ -1998,7 +1998,7 @@ function zw_policy_platform_page_rules() {
         } else {
             $actions[] = zw_policy_platform_rule_action_link($r['id'], 'zw_policy_rule_request_enable', '申请启用');
         }
-        $cb = '<label class="zw-adm-touch"><input type="checkbox" class="zw-policy-rule-cb" name="ids[]" value="' . esc_attr($r['id']) . '"></label>';
+        $cb = '<label class="tco-touch"><input type="checkbox" class="tco-policy-rule-cb" name="ids[]" value="' . esc_attr($r['id']) . '"></label>';
         return array(
             array('raw' => $cb), $r['id'], $r['rule_code'], $r['rule_name'], $r['rule_type'], $r['domain_type'], $r['business_module'], $r['trigger_event'],
             zw_policy_platform_badge_cell(zw_policy_platform_status_type($rule_status), $rule_status),
@@ -2020,8 +2020,8 @@ function zw_policy_platform_page_assets() {
     $table = zw_policy_platform_table('policy_spec');
     $total = (int) $wpdb->get_var('SELECT COUNT(*) FROM ' . $table);
     // TASK-1022：`policy_spec` 已归并（正文 → 文档中心版本链；规则 → 执行规则库），本页仅历史只读。
-    // 样式沿用既有 zw-adm-card + 内联 style，不新增全局 CSS；不新增任何写入口。
-    echo '<div class="zw-adm-card" style="padding:12px 14px;margin-bottom:14px;border-left:3px solid var(--primary-color,#d80505)">'
+    // 样式沿用既有 tco-card + 内联 style，不新增全局 CSS；不新增任何写入口。
+    echo '<div class="tco-card" style="padding:12px 14px;margin-bottom:14px;border-left:3px solid var(--primary-color,#d80505)">'
         . '<p style="margin:0 0 6px"><strong>`policy_spec` 已归并</strong>：规范类<strong>正文</strong>请在 '
         . '<strong>AI 法务部 → 文档中心</strong> 管理（版本链 / 生效 / 回退 / 派生），<strong>规则定义</strong>在 '
         . '<strong>执行规则库</strong>；本页仅保留<strong>历史只读列表</strong>（当前 ' . $total . ' 行）。</p>'
@@ -2059,7 +2059,7 @@ function zw_policy_platform_page_issues() {
 
     $statuses = array('' => '全部状态', '未开始' => '未开始', '整改中' => '整改中', '待复核' => '待复核', '逾期' => '逾期', '已关闭' => '已关闭');
     $risks = array('' => '全部风险', '重大' => '重大', '高' => '高', '中' => '中', '低' => '低');
-    echo '<form method="get" class="zw-adm-card" style="padding:12px 14px;margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">';
+    echo '<form method="get" class="tco-card" style="padding:12px 14px;margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">';
     echo '<input type="hidden" name="page" value="zw-policy-issues">';
     echo '<label style="font-size:12px;color:#666">状态<br><select name="status">';
     foreach ($statuses as $k => $v) echo '<option value="' . esc_attr($k) . '"' . selected($f_status, $k, false) . '>' . esc_html($v) . '</option>';

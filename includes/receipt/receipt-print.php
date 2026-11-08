@@ -151,8 +151,8 @@ if (!function_exists('zw_receipt_print_css')) {
      */
     function zw_receipt_print_css() {
         // 打印页不在后台外壳作用域内 ⇒ 自带 canonical 横滑规则（唯一出处仍是主题
-        // `zw_adm_ui_table_wrap_css()`；本文件只做透传，不复制第二套声明）。
-        $canonical_wrap = function_exists('zw_adm_ui_table_wrap_css') ? zw_adm_ui_table_wrap_css() : '';
+        // `tco_ui_table_wrap_css()`；本文件只做透传，不复制第二套声明）。
+        $canonical_wrap = function_exists('tco_ui_table_wrap_css') ? tco_ui_table_wrap_css() : '';
         return '<style>'
             . $canonical_wrap
             . '@page{size:A4 portrait;margin:15mm 14mm}'
@@ -209,7 +209,7 @@ if (!function_exists('zw_receipt_print_render')) {
             . '<span>打印时间：' . $e(function_exists('current_time') ? current_time('mysql') : date('Y-m-d H:i:s')) . '</span></div>';
 
         // 来文要素（OA-2485：canonical 横滑包裹）
-        $html .= '<div class="zw-adm-table-wrap"><table><tbody>';
+        $html .= '<div class="tco-table-wrap"><table><tbody>';
         $html .= '<tr><td class="label">来文单位</td><td>' . $val('org_label') . '</td>'
             . '<td class="label">来文字号</td><td>' . $val('doc_no') . '</td></tr>';
         $html .= '<tr><td class="label">收文日期</td><td>' . $val('received_date') . '</td>'
@@ -252,7 +252,7 @@ if (!function_exists('zw_receipt_print_render')) {
 
             // 办理单
             $html .= '<div class="sec">承办与办理</div>';
-            $html .= '<div class="zw-adm-table-wrap"><table><thead><tr><th style="width:18%">承办部门</th><th style="width:16%">承办人</th>'
+            $html .= '<div class="tco-table-wrap"><table><thead><tr><th style="width:18%">承办部门</th><th style="width:16%">承办人</th>'
                 . '<th style="width:14%">办理时限</th><th style="width:14%">状态</th><th>办理事项</th></tr></thead><tbody>';
             if (!empty($data['issues'])) {
                 foreach ($data['issues'] as $one) {
@@ -271,7 +271,7 @@ if (!function_exists('zw_receipt_print_render')) {
 
         // 传阅（两种单据都带，呈批单作附页信息）
         $html .= '<div class="sec">传阅与签阅</div>';
-        $html .= '<div class="zw-adm-table-wrap"><table><thead><tr><th style="width:14%">类型</th><th style="width:24%">传阅对象</th>'
+        $html .= '<div class="tco-table-wrap"><table><thead><tr><th style="width:14%">类型</th><th style="width:24%">传阅对象</th>'
             . '<th style="width:20%">登记时间</th><th style="width:20%">签阅时间</th><th>备注</th></tr></thead><tbody>';
         if (!empty($data['circ'])) {
             $targets = function_exists('zw_receipt_circ_targets') ? zw_receipt_circ_targets() : array();
@@ -290,7 +290,7 @@ if (!function_exists('zw_receipt_print_render')) {
 
         if ($type === 'circulation') {
             $html .= '<div class="sec">签批栏</div>'
-                . '<div class="zw-adm-table-wrap"><table><tbody><tr><td class="label">阅办人签字</td><td class="sign-area"></td></tr>'
+                . '<div class="tco-table-wrap"><table><tbody><tr><td class="label">阅办人签字</td><td class="sign-area"></td></tr>'
                 . '<tr><td class="label">日期</td><td class="sign-area"></td></tr></tbody></table></div>';
         }
 

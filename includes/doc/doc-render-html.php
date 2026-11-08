@@ -161,24 +161,24 @@ if (!function_exists('zw_doc_render_style_block')) {
 
         $css  = '<style>';
         $css .= zw_doc_render_font_face_css((string) $base_url);
-        $css .= '.zw-doc-sheet{position:relative;box-sizing:border-box;background:#fff;color:#000;'
+        $css .= '.tco-doc-sheet{position:relative;box-sizing:border-box;background:#fff;color:#000;'
               . 'width:' . (float) $paper['w_mm'] . 'mm;min-height:' . (float) $paper['h_mm'] . 'mm;'
               . 'padding:' . (float) $margin['top_mm'] . 'mm ' . (float) $margin['right_mm'] . 'mm '
               . (float) $margin['bottom_mm'] . 'mm ' . (float) $margin['left_mm'] . 'mm;'
               . 'margin:0 auto 6mm;}';
         // TASK-1338 批次二 ⑤：版记锚定最后一面版心**下边缘** —— 版心容器改纵向弹性布局，
         // 版记块以自动上边距撑到底部；正文超高时自动退化为紧随正文之后（不重叠、不裁切）。
-        $css .= '.zw-doc-flow{width:' . (float) $box['w_mm'] . 'mm;min-height:' . (float) $box['h_mm'] . 'mm;'
+        $css .= '.tco-doc-flow{width:' . (float) $box['w_mm'] . 'mm;min-height:' . (float) $box['h_mm'] . 'mm;'
               . ($record_anchor ? 'display:flex;flex-direction:column;' : '') . '}';
-        $css .= '.zw-doc-body{font-family:' . zw_doc_render_font_family('body') . ';'
+        $css .= '.tco-doc-body{font-family:' . zw_doc_render_font_family('body') . ';'
               . 'font-size:' . (float) $text['pt'] . 'pt;line-height:' . (float) $text['line_pt'] . 'pt;'
               . 'text-align:justify;color:' . esc_attr('#' . ltrim((string) $text['color'], '#')) . ';}';
-        $css .= '.zw-doc-body p{margin:0;}';
-        $css .= '.zw-doc-p{text-indent:' . (int) $text['indent_chars'] . 'em;}';
-        $css .= '.zw-doc-h1,.zw-doc-h2,.zw-doc-h3,.zw-doc-h4{text-indent:' . (int) $text['indent_chars'] . 'em;}';
-        $css .= '.zw-doc-h1{font-family:' . zw_doc_render_font_family('h1') . ';font-weight:bold;}';
-        $css .= '.zw-doc-h2{font-family:' . zw_doc_render_font_family('h2') . ';font-weight:normal;}';
-        $css .= '.zw-doc-h3,.zw-doc-h4{font-family:' . zw_doc_render_font_family('h3') . ';font-weight:normal;}';
+        $css .= '.tco-doc-body p{margin:0;}';
+        $css .= '.tco-doc-p{text-indent:' . (int) $text['indent_chars'] . 'em;}';
+        $css .= '.tco-doc-h1,.tco-doc-h2,.tco-doc-h3,.tco-doc-h4{text-indent:' . (int) $text['indent_chars'] . 'em;}';
+        $css .= '.tco-doc-h1{font-family:' . zw_doc_render_font_family('h1') . ';font-weight:bold;}';
+        $css .= '.tco-doc-h2{font-family:' . zw_doc_render_font_family('h2') . ';font-weight:normal;}';
+        $css .= '.tco-doc-h3,.tco-doc-h4{font-family:' . zw_doc_render_font_family('h3') . ';font-weight:normal;}';
         // TASK-1340 阶段三（用户口径）：「红线和公文标题 以及 公文标题和正文第一行 各留一行」⇒
         // 标题上间距 = 红线→标题 = **1 正文行**（`title.gap_below_rule_lines` 已由 2 改为 1）；
         // 标题下间距 = 标题→正文第一行 = **1 正文行**（新增 `title.gap_below_title_lines`）。
@@ -186,11 +186,11 @@ if (!function_exists('zw_doc_render_style_block')) {
         // 同级外边距**合并取 max** ⇒ 不会叠成 2 行（DOCX 通道为加法，故那边按"无主送机关才插空段"处理）。
         $title_below_lines = max(0, (int) zw_doc_gb9704_get('title.gap_below_title_lines', 1));
         $title_below_pt    = $body_line_pt * $title_below_lines;
-        $css .= '.zw-doc-title{font-family:' . zw_doc_render_font_family('title') . ';'
+        $css .= '.tco-doc-title{font-family:' . zw_doc_render_font_family('title') . ';'
               . 'font-size:' . (float) $title['pt'] . 'pt;line-height:' . (float) $title['line_pt'] . 'pt;'
               . 'font-weight:bold;text-align:center;text-indent:0;margin:' . $title_gap_pt . 'pt 0 ' . $title_below_pt . 'pt;}';
-        $css .= '.zw-doc-letterhead{position:relative;width:' . (float) $box['w_mm'] . 'mm;text-align:center;}';
-        $css .= '.zw-doc-letterhead img{display:block;width:' . (float) $box['w_mm'] . 'mm;height:auto;}';
+        $css .= '.tco-doc-letterhead{position:relative;width:' . (float) $box['w_mm'] . 'mm;text-align:center;}';
+        $css .= '.tco-doc-letterhead img{display:block;width:' . (float) $box['w_mm'] . 'mm;height:auto;}';
         // TASK-1276（CHG-155）：版头标记三要素（份号 / 密级和保密期限 / 紧急程度，GB/T 9704-2012 §7.2.1~7.2.3）。
         // 3 号（mark_pt）、黑体（mark_slot → fonts.h1）、行高 mark_line_pt、**顶格左对齐**（text-align:left;text-indent:0;margin:0）；
         // 标记块与发文机关标志之间留 `mark_gap_lines × mark_line_pt`（pt）空行；三者皆空时整块不输出（见渲染函数）。
@@ -198,11 +198,11 @@ if (!function_exists('zw_doc_render_style_block')) {
         $mark_slot  = (string) zw_doc_gb9704_get('header.mark_slot', 'h1');
         $mark_line  = (float) zw_doc_gb9704_get('header.mark_line_pt', 28.0);
         $mark_gap   = (float) $mark_line * max(0, (int) zw_doc_gb9704_get('header.mark_gap_lines', 1));
-        $css .= '.zw-doc-marks{margin:0 0 ' . $mark_gap . 'pt;}';
-        $css .= '.zw-doc-mark{font-family:' . zw_doc_render_font_family($mark_slot) . ';'
+        $css .= '.tco-doc-marks{margin:0 0 ' . $mark_gap . 'pt;}';
+        $css .= '.tco-doc-mark{font-family:' . zw_doc_render_font_family($mark_slot) . ';'
               . 'font-size:' . $mark_pt . 'pt;line-height:' . $mark_line . 'pt;'
               . 'font-weight:bold;text-align:left;text-indent:0;margin:0;}';
-        // TASK-1278（CHG-156）：`.zw-doc-org` 加 `white-space:nowrap` —— 无论红头多长都**不允许折行**
+        // TASK-1278（CHG-156）：`.tco-doc-org` 加 `white-space:nowrap` —— 无论红头多长都**不允许折行**
         // （硬保证；字号/字距的每篇适配见 `zw_doc_head_fit()`，以元素**内联样式**落到具体公文上）。
         // TASK-1282（CHG-158）：红头**垂直拉长**（只改高度、**宽度不变**）。
         // TASK-1287（CHG-159）：改为**全等高（方案 C）** —— `scaleY` **随文本变化**（9 字 ≈1.05 / 11 字 1.20 /
@@ -235,7 +235,7 @@ if (!function_exists('zw_doc_render_style_block')) {
         // 自 TASK-1863 起服务器已装**真小标宋**（GB/T 9704-2012 §7.2.4「推荐使用小标宋体字」）⇒ 合成加粗属**多余**：
         // 浏览器对已无 bold 字重的字体做 faux-bold（人工横竖加粗），笔画明显变粗并失真。
         // 现口径：`font-weight:normal`（显式写出，便于断言）+ 描边归 0（`header.org_stroke_px = 0`）⇒ 真字重上纸。
-        $css .= '.zw-doc-org{font-family:' . zw_doc_render_font_family('title') . ';'
+        $css .= '.tco-doc-org{font-family:' . zw_doc_render_font_family('title') . ';'
               . 'line-height:' . $org_ln_pt . 'pt;'
               . 'font-weight:normal;white-space:nowrap;color:' . esc_attr($red) . ';'
               . 'transform:scaleY(' . $org_scale . ');transform-origin:center center;'
@@ -248,7 +248,7 @@ if (!function_exists('zw_doc_render_style_block')) {
         $org_pt   = (float) zw_doc_gb9704_get('header.org_pt_max', (float) zw_doc_gb9704_get('header.org_pt', (float) $title['pt']));
         $org_ls   = (float) zw_doc_gb9704_get('header.org_letter_spacing_pt', 0.0);
         $org_stk  = (float) zw_doc_gb9704_get('header.org_stroke_px', 0.0);
-        $org_css  = '.zw-doc-org{font-size:' . $org_pt . 'pt;';
+        $org_css  = '.tco-doc-org{font-size:' . $org_pt . 'pt;';
         if ($org_ls > 0) {
             $org_css .= 'letter-spacing:' . $org_ls . 'pt;';
         }
@@ -261,22 +261,22 @@ if (!function_exists('zw_doc_render_style_block')) {
         // rule_style=single 时回退为原单线（border-bottom + margin-top）口径。
         $rule_style = (string) zw_doc_gb9704_get('header.rule_style', 'double');
         if ($rule_style === 'double') {
-            $css .= '.zw-doc-rule{height:' . (float) zw_doc_gb9704_get('header.rule_gap2_mm', 1.0) . 'mm;'
+            $css .= '.tco-doc-rule{height:' . (float) zw_doc_gb9704_get('header.rule_gap2_mm', 1.0) . 'mm;'
                   . 'border-top:' . (float) zw_doc_gb9704_get('header.rule_top_h_mm', 0.5) . 'mm solid ' . esc_attr($red) . ';'
                   . 'border-bottom:' . (float) zw_doc_gb9704_get('header.rule2_h_mm', 0.25) . 'mm solid ' . esc_attr($red) . ';'
                   . 'margin-top:' . (float) $header['rule_gap_mm'] . 'mm;}';
         } else {
-            $css .= '.zw-doc-rule{border-bottom:' . (float) $header['rule_h_mm'] . 'mm solid ' . esc_attr($red) . ';'
+            $css .= '.tco-doc-rule{border-bottom:' . (float) $header['rule_h_mm'] . 'mm solid ' . esc_attr($red) . ';'
                   . 'margin-top:' . (float) $header['rule_gap_mm'] . 'mm;}';
         }
         $number_align = (string) zw_doc_gb9704_get('header.number_align', 'right');
         if (!in_array($number_align, array('right', 'center', 'left'), true)) {
             $number_align = 'right';
         }
-        $css .= '.zw-doc-number{font-family:' . zw_doc_render_font_family('body') . ';'
+        $css .= '.tco-doc-number{font-family:' . zw_doc_render_font_family('body') . ';'
               . 'font-size:' . (float) $text['pt'] . 'pt;line-height:' . (float) $text['line_pt'] . 'pt;'
               . 'text-align:' . $number_align . ';text-indent:0;margin:0;}';
-        $css .= '.zw-doc-number-overlay{position:absolute;transform:translate(-50%,-50%);white-space:nowrap;}';
+        $css .= '.tco-doc-number-overlay{position:absolute;transform:translate(-50%,-50%);white-space:nowrap;}';
         // 常量回退模式：发文机关标志与发文字号之间空二行（2 × 正文行高）。
         // TASK-1274（用户指令「按国标调整文号位置」）：**国标口径**（above_rule，默认）下——
         // 发文机关标志 → 空二行 → **发文字号（居中）** → 4mm → 红色反线；空二行挂在**文号**上，反线只留 rule_gap_mm。
@@ -285,39 +285,39 @@ if (!function_exists('zw_doc_render_style_block')) {
         $number_position = (string) zw_doc_gb9704_get('header.number_position', 'above_rule');
         $number_above    = ($number_position !== 'below_rule');
         if ($number_above) {
-            $css .= '.zw-doc-number.is-above-rule{margin-top:' . ((float) $text['line_pt'] * $org_gap_lines) . 'pt;}';
+            $css .= '.tco-doc-number.is-above-rule{margin-top:' . ((float) $text['line_pt'] * $org_gap_lines) . 'pt;}';
         } else {
-            $css .= '.zw-doc-letterhead.is-constant .zw-doc-rule{margin-top:' . ((float) $text['line_pt'] * $org_gap_lines) . 'pt;}';
+            $css .= '.tco-doc-letterhead.is-constant .tco-doc-rule{margin-top:' . ((float) $text['line_pt'] * $org_gap_lines) . 'pt;}';
         }
-        $css .= '.zw-doc-number.is-below-letterhead{margin-top:4mm;}';
+        $css .= '.tco-doc-number.is-below-letterhead{margin-top:4mm;}';
         // TASK-1342（GB/T 9704-2012 §7.2.6 上行文签发人）：**发文字号居左空一字 + 签发人居右空一字，同一行**。
         // 「签发人：」用 3 号仿宋（正文体），姓名用 3 号楷体（`h2` 槽位）——与国标一致。
         // 该行仅在**有签发人**时启用（下行文/平行文不标注签发人，保持原居中/右对齐文号）。
         $signer_side = max(0, (int) zw_doc_gb9704_get('main.signer_side_indent_chars', 1));
-        $css .= '.zw-doc-number-row{display:flex;justify-content:space-between;align-items:baseline;'
+        $css .= '.tco-doc-number-row{display:flex;justify-content:space-between;align-items:baseline;'
               . 'padding-left:' . $signer_side . 'em;padding-right:' . $signer_side . 'em;}';
-        $css .= '.zw-doc-number-row .zw-doc-number{margin:0;}';
-        $css .= '.zw-doc-number-row.is-above-rule{margin-top:' . ((float) $text['line_pt'] * $org_gap_lines) . 'pt;}';
-        $css .= '.zw-doc-signer{font-family:' . zw_doc_render_font_family('body') . ';'
+        $css .= '.tco-doc-number-row .tco-doc-number{margin:0;}';
+        $css .= '.tco-doc-number-row.is-above-rule{margin-top:' . ((float) $text['line_pt'] * $org_gap_lines) . 'pt;}';
+        $css .= '.tco-doc-signer{font-family:' . zw_doc_render_font_family('body') . ';'
               . 'font-size:' . (float) $text['pt'] . 'pt;line-height:' . (float) $text['line_pt'] . 'pt;'
               . 'white-space:nowrap;text-align:right;}';
-        $css .= '.zw-doc-signer-name{font-family:' . zw_doc_render_font_family('h2') . ';}';
+        $css .= '.tco-doc-signer-name{font-family:' . zw_doc_render_font_family('h2') . ';}';
         // TASK-1333 ①：主送机关编排于标题下**空一行**（空行数 × 正文行高），仍左顶格。
-        // TASK-1990（用户报障「主送机关 字号字体不对」）：`.zw-doc-receiver` 是 `.zw-doc-flow` 的**直接子元素**、
-        // **不在** `.zw-doc-body` 内 ⇒ 只拿到浏览器默认字体与字号（默认 16px 的衬线/系统字体），
+        // TASK-1990（用户报障「主送机关 字号字体不对」）：`.tco-doc-receiver` 是 `.tco-doc-flow` 的**直接子元素**、
+        // **不在** `.tco-doc-body` 内 ⇒ 只拿到浏览器默认字体与字号（默认 16px 的衬线/系统字体），
         // 既不是 3 号仿宋、也不是 16pt。GB/T 9704-2012 §5.2.2/§7.3.2：主送机关用 **3 号仿宋**、左顶格、行距同正文。
         // ⇒ 显式补齐与正文**同源**的字体族/字号/行高（不再依赖外层继承；DOCX 通道本就按 3 号仿宋写入）。
-        $css .= '.zw-doc-receiver{font-family:' . zw_doc_render_font_family('body') . ';'
+        $css .= '.tco-doc-receiver{font-family:' . zw_doc_render_font_family('body') . ';'
               . 'font-size:' . (float) $text['pt'] . 'pt;line-height:' . (float) $text['line_pt'] . 'pt;'
               . 'text-indent:' . ($receiver_indent > 0 ? $receiver_indent . 'em' : '0') . ';'
               . 'margin-top:' . $receiver_gap_pt . 'pt;}';
-        $css .= '.zw-doc-sign{position:relative;margin-top:' . $sign_gap_pt . 'pt;text-align:right;}';
-        $css .= '.zw-doc-sign p{margin:0;font-family:' . zw_doc_render_font_family('h2') . ';}';
+        $css .= '.tco-doc-sign{position:relative;margin-top:' . $sign_gap_pt . 'pt;text-align:right;}';
+        $css .= '.tco-doc-sign p{margin:0;font-family:' . zw_doc_render_font_family('h2') . ';}';
         // TASK-1333 ③：署名与成文日期右空字距共用同一对参数（有印章时日期右空加大）；
         // 「字」按落款自身 3 号字宽折算，故用相对字号单位表达。
-        $css .= '.zw-doc-sign-org{padding-right:' . (int) $sign_indents['org_chars'] . 'em;}';
-        $css .= '.zw-doc-sign-date{padding-right:' . (int) $sign_indents['date_chars'] . 'em;}';
-        $css .= '.zw-doc-sign.is-sealed .zw-doc-sign-date{padding-right:' . (int) $sign_indents_sealed['date_chars'] . 'em;}';
+        $css .= '.tco-doc-sign-org{padding-right:' . (int) $sign_indents['org_chars'] . 'em;}';
+        $css .= '.tco-doc-sign-date{padding-right:' . (int) $sign_indents['date_chars'] . 'em;}';
+        $css .= '.tco-doc-sign.is-sealed .tco-doc-sign-date{padding-right:' . (int) $sign_indents_sealed['date_chars'] . 'em;}';
         // TASK-1985（GB/T 9704-2012 §7.3.5.1 逐字口径）：「成文日期一般**右空四字**编排……
         // 单一机关行文时，一般在成文日期之上、**以成文日期为准居中**编排发文机关署名，
         // 印章端正、**居中下压**发文机关署名和成文日期，使发文机关署名和成文日期居**印章中心偏下**位置，
@@ -325,60 +325,60 @@ if (!function_exists('zw_doc_render_style_block')) {
         //
         // 旧实现（TASK-1340）把**整块落款**改成 `text-align:center` 并把两条右空字距归零 ⇒
         // 成文日期落在版心中线上（实测右空 ≈14.6 字，不是 4 字），署名也只是跟着整块居中，
-        // **不是**「以成文日期为准居中」。本版按国标重排（`.zw-doc-sign-ref` = 以**成文日期**为宽度基准的参照盒）：
-        //   · `.zw-doc-sign-ref`：`width:max-content` + `margin-right` = 成文日期右空字数（4 字）⇒ 日期右空四字精确成立；
-        //   · `.zw-doc-sign-org`：绝对定位在参照盒上方、`left:50%` + `translateX(-50%)`
+        // **不是**「以成文日期为准居中」。本版按国标重排（`.tco-doc-sign-ref` = 以**成文日期**为宽度基准的参照盒）：
+        //   · `.tco-doc-sign-ref`：`width:max-content` + `margin-right` = 成文日期右空字数（4 字）⇒ 日期右空四字精确成立；
+        //   · `.tco-doc-sign-org`：绝对定位在参照盒上方、`left:50%` + `translateX(-50%)`
         //     ⇒ 署名水平中心恒等于成文日期中心（国标「以成文日期为准居中」），署名超长时对称外溢、不回卷；
-        //   · `.zw-doc-sign` 的 `padding-top` 预留署名那一行（署名脱流后由容器占位）；
+        //   · `.tco-doc-sign` 的 `padding-top` 预留署名那一行（署名脱流后由容器占位）；
         //   · 印章锚定在同一参照盒（水平中心 = 日期中心 = 署名中心），垂直量由 `zw_doc_gb9704_seal_geometry()` 给出。
         // 无印章时**完全不受影响**（仍走 TASK-1333 的右空二字口径，DOM 也不套参照盒）。
         // TASK-1993：'below' 口径（用户指令「印章 放到落款单位和日期之下」）—— 章整体在落款两行之下，
         // 因此必须在落款容器**下方预留章高空间**（`reserve_below_mm`），否则绝对定位的章会压住版记。
         // 'over' 口径（国标）该值为 0，逐字回到 TASK-1985 行为。
-        $css .= '.zw-doc-sign.is-sealed{text-align:right;padding-right:0;'
+        $css .= '.tco-doc-sign.is-sealed{text-align:right;padding-right:0;'
               . 'padding-top:' . (float) $text['line_pt'] . 'pt;'
               . 'margin-top:' . ((float) $text['line_pt'] * (int) $seal_geom['gap_lines']) . 'pt;'
               . 'padding-bottom:' . (float) $seal_geom['reserve_below_mm'] . 'mm;}';
-        $css .= '.zw-doc-sign.is-sealed .zw-doc-sign-ref{position:relative;width:max-content;'
+        $css .= '.tco-doc-sign.is-sealed .tco-doc-sign-ref{position:relative;width:max-content;'
               . 'margin-left:auto;margin-right:' . (int) $sign_indents_sealed['date_chars'] . 'em;text-align:center;}';
-        $css .= '.zw-doc-sign.is-sealed .zw-doc-sign-org{position:absolute;left:50%;bottom:100%;'
+        $css .= '.tco-doc-sign.is-sealed .tco-doc-sign-org{position:absolute;left:50%;bottom:100%;'
               . 'transform:translateX(-50%);white-space:nowrap;text-align:center;}';
         // TASK-2000：署名回行（长署名）—— 允许换行、按可用宽度收窄，各行以同一中轴居中（GB「回行时与上一行居中」）。
-        $css .= '.zw-doc-sign.is-sealed.is-wrapped .zw-doc-sign-org{white-space:normal;line-height:'
+        $css .= '.tco-doc-sign.is-sealed.is-wrapped .tco-doc-sign-org{white-space:normal;line-height:'
               . (float) $text['line_pt'] . 'pt;}';
         // TASK-2009：落款横向对齐口径（谁是中轴）——
         //   is-align-center_on_date（默认）：署名中心 = 日期中心（`left:50% + translateX(-50%)`，见上）；
         //   is-align-center_on_org：署名整块居中于版心（相对落款容器居中），日期改为居中于署名；
         //   is-align-right_align：两行右端对齐（日期右空 N 字不变，署名右端同对齐）。
-        $css .= '.zw-doc-sign.is-sealed.is-align-center_on_org .zw-doc-sign-org{left:50%;}';
-        $css .= '.zw-doc-sign.is-sealed.is-align-center_on_org .zw-doc-sign-ref{position:static;width:auto;margin:0;text-align:center;}';
-        $css .= '.zw-doc-sign.is-sealed.is-align-center_on_org .zw-doc-sign-date{display:inline-block;text-align:center;padding-right:0;}';
-        $css .= '.zw-doc-sign.is-sealed.is-align-right_align .zw-doc-sign-org{left:auto;right:' . (int) $sign_indents_sealed['date_chars'] . 'em;transform:none;text-align:right;}';
-        $css .= '.zw-doc-sign.is-sealed .zw-doc-sign-org,.zw-doc-sign.is-sealed .zw-doc-sign-date{padding-right:0;}';
+        $css .= '.tco-doc-sign.is-sealed.is-align-center_on_org .tco-doc-sign-org{left:50%;}';
+        $css .= '.tco-doc-sign.is-sealed.is-align-center_on_org .tco-doc-sign-ref{position:static;width:auto;margin:0;text-align:center;}';
+        $css .= '.tco-doc-sign.is-sealed.is-align-center_on_org .tco-doc-sign-date{display:inline-block;text-align:center;padding-right:0;}';
+        $css .= '.tco-doc-sign.is-sealed.is-align-right_align .tco-doc-sign-org{left:auto;right:' . (int) $sign_indents_sealed['date_chars'] . 'em;transform:none;text-align:right;}';
+        $css .= '.tco-doc-sign.is-sealed .tco-doc-sign-org,.tco-doc-sign.is-sealed .tco-doc-sign-date{padding-right:0;}';
         // TASK-1333 ②：附件说明正文下空一行，条目标题左空二字。
         // 选择器必须比正文段落归零规则（正文容器下的段落）更具体，否则上间距会被归零覆盖
         // —— TASK-1333 实渲染量测实测：旧写法上间距实测 0px（本次修正为 37.33px = 1 正文行）。
-        $css .= '.zw-doc-body p.zw-doc-attach{margin-top:' . $attach_gap_pt . 'pt;text-indent:' . $attach_indent . 'em;}';
+        $css .= '.tco-doc-body p.tco-doc-attach{margin-top:' . $attach_gap_pt . 'pt;text-indent:' . $attach_indent . 'em;}';
         // TASK-1333 ④：附注居左空二字（脱离落款容器的右对齐），位置仍在成文日期下一行。
-        $css .= '.zw-doc-note{text-align:left;text-indent:' . $note_indent . 'em;}';
-        $css .= '.zw-doc-record{font-family:' . zw_doc_render_font_family('note') . ';'
+        $css .= '.tco-doc-note{text-align:left;text-indent:' . $note_indent . 'em;}';
+        $css .= '.tco-doc-record{font-family:' . zw_doc_render_font_family('note') . ';'
               . 'font-size:' . (float) $record['pt'] . 'pt;line-height:' . ((float) $record['pt'] * 1.6) . 'pt;'
               . 'padding:0 ' . $record_side . 'em;}';
         // TASK-1338 批次二 ①：版记分隔线**三条**（首条粗 0.35mm、中间细 0.25mm、末条粗 0.35mm，GB/T 9704-2012 §7.4.1）。
         // 基础类为**粗线**（首/末条），附加类为中间**细线**；线宽取同一批版式常量，禁止硬编码。
-        $css .= '.zw-doc-record-block{margin-top:auto;}';
-        $css .= '.zw-doc-record-rule{border-top:' . (float) $record_rules['thick_mm'] . 'mm solid #000;}';
-        $css .= '.zw-doc-record-rule.is-thin{border-top-width:' . (float) $record_rules['thin_mm'] . 'mm;}';
+        $css .= '.tco-doc-record-block{margin-top:auto;}';
+        $css .= '.tco-doc-record-rule{border-top:' . (float) $record_rules['thick_mm'] . 'mm solid #000;}';
+        $css .= '.tco-doc-record-rule.is-thin{border-top-width:' . (float) $record_rules['thin_mm'] . 'mm;}';
         // TASK-1338 批次二 ③：印发机关左空一字、印发日期右空一字 —— 同一行两端分置（弹性布局）；
         // 左右空字数取 `record.side_indent_chars`，DOCX 通道以段落左/右字符缩进表达同一键。
-        $css .= '.zw-doc-record-print{display:flex;justify-content:space-between;}';
-        $css .= '.zw-doc-record-print .zw-doc-record-org{text-align:left;}';
-        $css .= '.zw-doc-record-print .zw-doc-record-date{text-align:right;}';
+        $css .= '.tco-doc-record-print{display:flex;justify-content:space-between;}';
+        $css .= '.tco-doc-record-print .tco-doc-record-org{text-align:left;}';
+        $css .= '.tco-doc-record-print .tco-doc-record-date{text-align:right;}';
         // 印章锚定在**落款区**内（下压发文机关署名与成文日期），不得相对整页底部定位 —— 否则会压住附件说明与版记。
         // TASK-1985（GB/T 9704-2012 §7.3.5.1）：**居中下压**改成**由几何推导**，不再用「实测量测凑出来的 −7.2mm」：
-        //   · 水平：`left:50%` 于 `.zw-doc-sign-ref`（= 以成文日期为宽度基准的参照盒）
+        //   · 水平：`left:50%` 于 `.tco-doc-sign-ref`（= 以成文日期为宽度基准的参照盒）
         //     ⇒ 章心恒等于成文日期中心，也就恒等于署名中心（署名以日期为准居中）；
-        //   · 垂直：`.zw-doc-seal` 的定位基准改为参照盒**顶边**（即成文日期那一行的行顶 = 落款块心），
+        //   · 垂直：`.tco-doc-seal` 的定位基准改为参照盒**顶边**（即成文日期那一行的行顶 = 落款块心），
         //     `top = −(center_offset_mm + 直径/2)` ⇒ 章心在落款块心**上方** `center_offset_mm`
         //     ⇔ 署名与成文日期**居印章中心偏下**（国标第二条约束），`top` 值由 `zw_doc_gb9704_seal_geometry()` 给出；
         //   · 章径与章顶留白的联动见 `zw_doc_gb9704_seal_geometry()`（章越大，落款前自动多留行，
@@ -392,35 +392,35 @@ if (!function_exists('zw_doc_render_style_block')) {
         // 落款单位与成文日期 → `z-index:2`（日期须补 `position:relative` 才生效），使文字**盖在章之上**、清晰可读。
         // `seal.text_above=false` 时恢复旧层序（章压在字上），供需要"真章压字"观感时切换。
         $seal_text_above = (bool) zw_doc_gb9704_get('seal.text_above', true);
-        $css .= '.zw-doc-seal{position:absolute;left:50%;top:' . (float) $seal_top_mm . 'mm;'
+        $css .= '.tco-doc-seal{position:absolute;left:50%;top:' . (float) $seal_top_mm . 'mm;'
               . 'transform:translateX(-50%);width:' . $seal_d_mm . 'mm;z-index:' . ($seal_text_above ? 1 : 3) . ';}';
         if ($seal_text_above) {
-            $css .= '.zw-doc-sign.is-sealed .zw-doc-sign-date{position:relative;z-index:2;}';
-            $css .= '.zw-doc-sign.is-sealed .zw-doc-sign-org{z-index:2;}';
+            $css .= '.tco-doc-sign.is-sealed .tco-doc-sign-date{position:relative;z-index:2;}';
+            $css .= '.tco-doc-sign.is-sealed .tco-doc-sign-org{z-index:2;}';
         }
-        $css .= '.zw-doc-seal img{display:block;width:100%;height:auto;}';
+        $css .= '.tco-doc-seal img{display:block;width:100%;height:auto;}';
         // 页码位于版心**下边缘再下** 7mm（`footer.baseline_below_text_mm`），故相对纸张底边定位。
         $pageno_bottom_mm = (float) $margin['bottom_mm'] - (float) $footer['baseline_below_text_mm'];
-        $css .= '.zw-doc-pageno{position:absolute;left:' . (float) $margin['left_mm'] . 'mm;right:' . (float) $margin['right_mm'] . 'mm;'
+        $css .= '.tco-doc-pageno{position:absolute;left:' . (float) $margin['left_mm'] . 'mm;right:' . (float) $margin['right_mm'] . 'mm;'
               . 'bottom:' . $pageno_bottom_mm . 'mm;'
               . 'font-family:' . zw_doc_render_font_family('page') . ';font-size:' . (float) $footer['pt'] . 'pt;line-height:1;}';
-        $css .= '.zw-doc-pageno.is-odd{text-align:right;padding-right:' . $footer_side . 'em;}';
-        $css .= '.zw-doc-pageno.is-even{text-align:left;padding-left:' . $footer_side . 'em;}';
-        $css .= '.zw-doc-pageno.is-center{text-align:center;}';
-        $css .= '.zw-doc-notice{font-family:' . zw_doc_render_font_family('body') . ';font-size:10pt;line-height:1.7;color:#646970;margin:0 0 6px;}';
-        $css .= '.zw-doc-toolbar{position:sticky;top:0;z-index:9;background:#f0f0f1;padding:8px 12px;margin:0 0 8mm;'
+        $css .= '.tco-doc-pageno.is-odd{text-align:right;padding-right:' . $footer_side . 'em;}';
+        $css .= '.tco-doc-pageno.is-even{text-align:left;padding-left:' . $footer_side . 'em;}';
+        $css .= '.tco-doc-pageno.is-center{text-align:center;}';
+        $css .= '.tco-doc-notice{font-family:' . zw_doc_render_font_family('body') . ';font-size:10pt;line-height:1.7;color:#646970;margin:0 0 6px;}';
+        $css .= '.tco-doc-toolbar{position:sticky;top:0;z-index:9;background:#f0f0f1;padding:8px 12px;margin:0 0 8mm;'
               . 'display:flex;gap:8px;align-items:center;font-family:' . zw_doc_render_font_family('body') . ';}';
-        $css .= '.zw-doc-wrap{background:#f0f0f1;padding:0 0 20px;}';
-        $css .= '.zw-doc-scaled{transform-origin:top left;}';
+        $css .= '.tco-doc-wrap{background:#f0f0f1;padding:0 0 20px;}';
+        $css .= '.tco-doc-scaled{transform-origin:top left;}';
         $css .= '@media print{@page{size:A4;margin:0}'
               . 'html,body{margin:0;padding:0;background:#fff}'
-              // TASK-1985（实渲染量测发现）：`.zw-doc-wrap{padding:0 0 20px}` 与 `background:#f0f0f1` 未在打印口径复位
+              // TASK-1985（实渲染量测发现）：`.tco-doc-wrap{padding:0 0 20px}` 与 `background:#f0f0f1` 未在打印口径复位
               // ⇒ 20px 下内边距把「预览区灰底」顶到第 2 页，**每份正式用印件都多出一页灰条空白页**
-              // （生产产物 `zw-doc-29711-*.pdf` 实测 Pages=2，而公文本身 1 页）。此处按打印口径复位，**零视觉副作用**。
-              . '.zw-doc-wrap{padding:0;background:#fff}'
-              . '.zw-doc-toolbar,.zw-doc-notice{display:none}'
-              . '.zw-doc-sheet{margin:0;box-shadow:none;page-break-after:always}'
-              . '.zw-doc-sheet:last-child{page-break-after:auto}}';
+              // （生产产物 `tco-doc-29711-*.pdf` 实测 Pages=2，而公文本身 1 页）。此处按打印口径复位，**零视觉副作用**。
+              . '.tco-doc-wrap{padding:0;background:#fff}'
+              . '.tco-doc-toolbar,.tco-doc-notice{display:none}'
+              . '.tco-doc-sheet{margin:0;box-shadow:none;page-break-after:always}'
+              . '.tco-doc-sheet:last-child{page-break-after:auto}}';
         $css .= '</style>';
 
         return $css;
@@ -1037,9 +1037,9 @@ if (!function_exists('zw_doc_render_marks_html')) {
         if (empty($lines)) {
             return '';
         }
-        $html = '<div class="zw-doc-marks">';
+        $html = '<div class="tco-doc-marks">';
         foreach ($lines as $line) {
-            $html .= '<p class="zw-doc-mark">' . esc_html($line) . '</p>';
+            $html .= '<p class="tco-doc-mark">' . esc_html($line) . '</p>';
         }
         $html .= '</div>';
 
@@ -1066,7 +1066,7 @@ if (!function_exists('zw_doc_render_letterhead_html')) {
         // （文案唯一出处 `zw_doc_letterhead_mode_state()`，经 `zw_doc_letterhead_render_args()` 下发）。
         if ((string) $args['letterhead_blocked'] !== '') {
             $hint = (string) $args['letterhead_assets_url'];
-            $html = '<div class="zw-doc-letterhead is-blocked" data-zw-note="letterhead-mode-blocked"'
+            $html = '<div class="tco-doc-letterhead is-blocked" data-zw-note="letterhead-mode-blocked"'
                   . ' style="width:' . (float) zw_doc_gb9704_get('header.letterhead_width_mm', 156.0) . 'mm;'
                   . 'box-sizing:border-box;border:1px dashed #b30404;padding:6mm;color:#b30404;'
                   . 'font-size:10.5pt;line-height:1.7;text-align:left">'
@@ -1080,7 +1080,7 @@ if (!function_exists('zw_doc_render_letterhead_html')) {
         // TASK-1274：文号位置口径（国标 above_rule 为默认；below_rule 为旧口径回退）——
         // 在图片/常量两分支之前先算好，避免回退分支在图片模式读取未定义变量。
         $number_above_rule = ((string) zw_doc_gb9704_get('header.number_position', 'above_rule') !== 'below_rule');
-        $html   = '<div class="zw-doc-letterhead' . (!empty($args['letterhead_url']) ? ' is-image' : ' is-constant') . '">';
+        $html   = '<div class="tco-doc-letterhead' . (!empty($args['letterhead_url']) ? ' is-image' : ' is-constant') . '">';
 
         // TASK-1276（CHG-155）：版头标记三要素**在发文机关标志（文字或图片）之前**输出，
         // 顺序固定 份号 → 密级和保密期限 → 紧急程度；三者皆空时 `zw_doc_render_marks_html()` 返回空串。
@@ -1099,13 +1099,13 @@ if (!function_exists('zw_doc_render_letterhead_html')) {
                 if ($size > 0) {
                     $style .= 'font-size:' . $size . 'pt;';
                 }
-                $html .= '<p class="zw-doc-number zw-doc-number-overlay" style="' . esc_attr($style) . '">' . esc_html($number) . '</p>';
+                $html .= '<p class="tco-doc-number tco-doc-number-overlay" style="' . esc_attr($style) . '">' . esc_html($number) . '</p>';
             }
         } else {
             // 常量回退模式。GB/T 9704 版头顺序：发文机关标志 → 空二行 → 发文字号 → 4mm → 红色反线。
             // 修复（TASK-775 整体验收发现）：此前漏渲染发文字号，导致无红头图时文号整体缺失。
             // TASK-1278（CHG-156）：红头字号/字距按**本文机关标志**经唯一适配函数取得，写成**元素内联样式**
-            // （静态样式块无参、保持可断言）；配合 `.zw-doc-org{white-space:nowrap}` 保证**单行不折行**。
+            // （静态样式块无参、保持可断言）；配合 `.tco-doc-org{white-space:nowrap}` 保证**单行不折行**。
             // TASK-1282（CHG-158）：**垂直拉长不进字号** —— 拉长只改高度，字号/字距永远是宽度口径。
             // TASK-1287（CHG-159）：**全等高（方案 C）** ⇒ `scaleY` 随文本变化（9 字 ≈1.05 / 11 字 1.20 /
             // 26 字 ≈2.85），故 `transform:scaleY(...)` 与**行高补偿 `padding`（按实际 scale_y）** 一并写成
@@ -1129,7 +1129,7 @@ if (!function_exists('zw_doc_render_letterhead_html')) {
             }
             $org_style = 'font-size:' . $org_fit['pt'] . 'pt;letter-spacing:' . $org_fit['letter_spacing_pt'] . 'pt;'
                        . 'transform:scaleY(' . $org_scale_y . ');padding:' . $org_pad . 'pt 0;';
-            $html .= '<div class="zw-doc-org" style="' . esc_attr($org_style) . '">' . esc_html($org) . '</div>';
+            $html .= '<div class="tco-doc-org" style="' . esc_attr($org_style) . '">' . esc_html($org) . '</div>';
             // TASK-1274（国标口径）：发文字号排进版头容器**内、红色反线之前**（居中）；
             // 文号为空时也输出（空段落）以保持「发文机关标志下空二行」的版式节奏稳定。
             if ($number_above_rule && !is_array($args['number_overlay'])) {
@@ -1140,15 +1140,15 @@ if (!function_exists('zw_doc_render_letterhead_html')) {
                     $signer_name = '';
                 }
                 if ($signer_name !== '') {
-                    $html .= '<div class="zw-doc-number-row is-above-rule" data-zw-note="letterhead-number-with-signer">'
-                          . '<p class="zw-doc-number">' . esc_html($number) . '</p>'
-                          . '<p class="zw-doc-signer">签发人：<span class="zw-doc-signer-name">' . esc_html($signer_name) . '</span></p>'
+                    $html .= '<div class="tco-doc-number-row is-above-rule" data-zw-note="letterhead-number-with-signer">'
+                          . '<p class="tco-doc-number">' . esc_html($number) . '</p>'
+                          . '<p class="tco-doc-signer">签发人：<span class="tco-doc-signer-name">' . esc_html($signer_name) . '</span></p>'
                           . '</div>';
                 } else {
-                    $html .= '<p class="zw-doc-number is-above-rule" data-zw-note="letterhead-number-above-rule">' . esc_html($number) . '</p>';
+                    $html .= '<p class="tco-doc-number is-above-rule" data-zw-note="letterhead-number-above-rule">' . esc_html($number) . '</p>';
                 }
             }
-            $html .= '<div class="zw-doc-rule"></div>';
+            $html .= '<div class="tco-doc-rule"></div>';
         }
 
         $html .= '</div>';
@@ -1159,9 +1159,9 @@ if (!function_exists('zw_doc_render_letterhead_html')) {
         // - 常量模式：国标口径已在版头容器内、反线之前输出；仅旧口径 below_rule 才排到反线之后（回退）。
         // 仅当图片模式**配置了叠加坐标**时（该素材已预留文号区）才把文号叠到图片内，不走本分支。
         if ($number !== '' && !is_array($args['number_overlay']) && !empty($args['letterhead_url'])) {
-            $html .= '<p class="zw-doc-number is-below-letterhead" data-zw-note="letterhead-number-below">' . esc_html($number) . '</p>';
+            $html .= '<p class="tco-doc-number is-below-letterhead" data-zw-note="letterhead-number-below">' . esc_html($number) . '</p>';
         } elseif (!$number_above_rule && $number !== '' && !is_array($args['number_overlay'])) {
-            $html .= '<p class="zw-doc-number is-below-letterhead" data-zw-note="letterhead-number-below-rule">' . esc_html($number) . '</p>';
+            $html .= '<p class="tco-doc-number is-below-letterhead" data-zw-note="letterhead-number-below-rule">' . esc_html($number) . '</p>';
         }
 
         return $html;
@@ -1194,7 +1194,7 @@ if (!function_exists('zw_doc_render_blocks_html')) {
                 continue;
             }
             $prefix = isset($ordinals[$index]) ? (string) $ordinals[$index] : '';
-            $class  = 'zw-doc-' . $type;
+            $class  = 'tco-doc-' . $type;
             $out   .= '<p class="' . esc_attr($class) . '">' . nl2br(esc_html($prefix . $text)) . '</p>';
         }
 
@@ -1493,22 +1493,22 @@ if (!function_exists('zw_doc_render_sign_html')) {
         $sealed = !empty($args['seal_url']);
         if (!$sealed) {
             // —— 不加盖印章：TASK-1333 口径（署名右空二字 / 成文日期右空二字），DOM 与既有逐字一致 ——
-            $html = '<div class="zw-doc-sign">';
+            $html = '<div class="tco-doc-sign">';
             if (!empty($meta['sign_org'])) {
-                $html .= '<p class="zw-doc-sign-org">' . esc_html((string) $meta['sign_org']) . '</p>';
+                $html .= '<p class="tco-doc-sign-org">' . esc_html((string) $meta['sign_org']) . '</p>';
             }
             if (!empty($meta['date'])) {
-                $html .= '<p class="zw-doc-sign-date">' . esc_html((string) $meta['date']) . '</p>';
+                $html .= '<p class="tco-doc-sign-date">' . esc_html((string) $meta['date']) . '</p>';
             }
             if (!empty($meta['note'])) {
-                $html .= '<p class="zw-doc-note">（' . esc_html((string) $meta['note']) . '）</p>';
+                $html .= '<p class="tco-doc-note">（' . esc_html((string) $meta['note']) . '）</p>';
             }
 
             return $html . '</div>';
         }
 
         // —— 加盖印章：GB/T 9704-2012 §7.3.5.1（TASK-1985 重排） ——
-        // 参照盒 `.zw-doc-sign-ref` 以**成文日期**为宽度基准（署名绝对定位在其上方并水平居中）
+        // 参照盒 `.tco-doc-sign-ref` 以**成文日期**为宽度基准（署名绝对定位在其上方并水平居中）
         // ⇒ 成文日期右空四字、署名以成文日期为准居中，两者同时精确成立。
         // 章径取**该印章的真实直径**（`seal_diameter_mm`，未登记回退常量），几何量由唯一实现
         // `zw_doc_gb9704_seal_geometry()` 给出，写成**元素内联样式**（静态样式块只留默认值）。
@@ -1572,9 +1572,9 @@ if (!function_exists('zw_doc_render_sign_html')) {
         }
         $org_style = '';
 
-        $html = '<div class="zw-doc-sign is-sealed' . ($org_wrapped ? ' is-wrapped' : '')
+        $html = '<div class="tco-doc-sign is-sealed' . ($org_wrapped ? ' is-wrapped' : '')
             . ' is-align-' . esc_attr($org_align) . '"' . $sign_style . '>';
-        $html .= '<div class="zw-doc-sign-ref">';
+        $html .= '<div class="tco-doc-sign-ref">';
         if (!empty($meta['sign_org'])) {
             $org_text = $org_wrapped
                 ? implode('<br>', array_map('esc_html', $org_lines))
@@ -1585,17 +1585,17 @@ if (!function_exists('zw_doc_render_sign_html')) {
                 // ⇒ 各行仍以日期中心为中轴居中，且宽度确定后换行行为可预期。
                 $org_style = ' style="width:' . round($org_max_w, 2) . 'mm"';
             }
-            $html .= '<p class="zw-doc-sign-org"' . $org_style . '>' . $org_text . '</p>';
+            $html .= '<p class="tco-doc-sign-org"' . $org_style . '>' . $org_text . '</p>';
         }
         if (!empty($meta['date'])) {
-            $html .= '<p class="zw-doc-sign-date">' . esc_html((string) $meta['date']) . '</p>';
+            $html .= '<p class="tco-doc-sign-date">' . esc_html((string) $meta['date']) . '</p>';
         }
         // 印章必须在落款容器内（下压署名与日期），不随整页底部定位
         $html .= zw_doc_render_seal_html($args);
         $html .= '</div>';
         if (!empty($meta['note'])) {
             // 附注仍在成文日期下一行、居左空二字（不进入参照盒，故不受「以日期为准」约束）
-            $html .= '<p class="zw-doc-note">（' . esc_html((string) $meta['note']) . '）</p>';
+            $html .= '<p class="tco-doc-note">（' . esc_html((string) $meta['note']) . '）</p>';
         }
         $html .= '</div>';
 
@@ -1627,7 +1627,7 @@ if (!function_exists('zw_doc_render_seal_html')) {
         }
         // 低清提示不落在版面上（会压住日期），统一走 `zw_doc_render_notice_html()`。
         // 图片 **必须** 走 `zw_doc_render_img_src()`：`esc_url()` 会清空 data-URI（TASK-1985 根因）。
-        return '<div class="zw-doc-seal"' . $style . '><img src="' . zw_doc_render_img_src((string) $args['seal_url']) . '" alt="印章"></div>';
+        return '<div class="tco-doc-seal"' . $style . '><img src="' . zw_doc_render_img_src((string) $args['seal_url']) . '" alt="印章"></div>';
     }
 
     if (!function_exists('zw_doc_render_seal_is_low_dpi')) {
@@ -1706,13 +1706,13 @@ if (!function_exists('zw_doc_render_record_html')) {
         // ② 抄送行（文本末尾句号已在上面经唯一实现取得）。
         $rows = array();
         if ($has_cc) {
-            $rows[] = '<div class="zw-doc-record"><p>抄送：' . esc_html($cc_text) . '</p></div>';
+            $rows[] = '<div class="tco-doc-record"><p>抄送：' . esc_html($cc_text) . '</p></div>';
         }
         if ($has_print) {
             // ③ 印发机关左空一字（容器左内边距）、印发日期右空一字（容器右内边距 + 两端分置）。
-            $rows[] = '<div class="zw-doc-record"><p class="zw-doc-record-print">'
-                    . '<span class="zw-doc-record-org">' . esc_html($print_org) . '</span>'
-                    . '<span class="zw-doc-record-date">' . esc_html($print_date) . '印发</span>'
+            $rows[] = '<div class="tco-doc-record"><p class="tco-doc-record-print">'
+                    . '<span class="tco-doc-record-org">' . esc_html($print_org) . '</span>'
+                    . '<span class="tco-doc-record-date">' . esc_html($print_date) . '印发</span>'
                     . '</p></div>';
         }
 
@@ -1725,29 +1725,29 @@ if (!function_exists('zw_doc_render_record_html')) {
             $rules_scope = 'enclose';
         }
 
-        $html = '<div class="zw-doc-record-block">';
+        $html = '<div class="tco-doc-record-block">';
         if ($rules_scope === 'print_only' && $has_cc && $has_print) {
             // 抄送提到横线之外（在首条粗线之前）。
-            $html .= '<div class="zw-doc-record is-outside-rules"><p>抄送：' . esc_html($cc_text) . '</p></div>';
-            $html .= '<div class="zw-doc-record-rule"></div>';
-            $html .= '<div class="zw-doc-record"><p class="zw-doc-record-print">'
-                . '<span class="zw-doc-record-org">' . esc_html($print_org) . '</span>'
-                . '<span class="zw-doc-record-date">' . esc_html($print_date) . '印发</span></p></div>';
-            $html .= '<div class="zw-doc-record-rule"></div>';
+            $html .= '<div class="tco-doc-record is-outside-rules"><p>抄送：' . esc_html($cc_text) . '</p></div>';
+            $html .= '<div class="tco-doc-record-rule"></div>';
+            $html .= '<div class="tco-doc-record"><p class="tco-doc-record-print">'
+                . '<span class="tco-doc-record-org">' . esc_html($print_org) . '</span>'
+                . '<span class="tco-doc-record-date">' . esc_html($print_date) . '印发</span></p></div>';
+            $html .= '<div class="tco-doc-record-rule"></div>';
         } elseif ($rules_scope === 'none') {
             foreach ($rows as $row) {
                 $html .= $row;
             }
         } else {
             // 首条恒为粗线（plan[0]）。
-            $html .= '<div class="zw-doc-record-rule"></div>';
+            $html .= '<div class="tco-doc-record-rule"></div>';
             foreach ($rows as $ri => $row) {
                 $html .= $row;
                 $next  = isset($rule_plan[$ri + 1]) ? (string) $rule_plan[$ri + 1] : '';
                 if ($next === 'thin') {
-                    $html .= '<div class="zw-doc-record-rule is-thin"></div>';
+                    $html .= '<div class="tco-doc-record-rule is-thin"></div>';
                 } elseif ($next === 'thick') {
-                    $html .= '<div class="zw-doc-record-rule"></div>';
+                    $html .= '<div class="tco-doc-record-rule"></div>';
                 }
             }
         }
@@ -1773,11 +1773,11 @@ if (!function_exists('zw_doc_render_pageno_html')) {
         $dash  = (string) zw_doc_gb9704_get('footer.dash', '—');
         $label = $dash . ' ' . (int) $page_no . ' ' . $dash;
         if ($mode === 'center') {
-            return '<div class="zw-doc-pageno is-center">' . esc_html($label) . '</div>';
+            return '<div class="tco-doc-pageno is-center">' . esc_html($label) . '</div>';
         }
         $is_odd = ((int) $page_no % 2) === 1;
 
-        return '<div class="zw-doc-pageno ' . ($is_odd ? 'is-odd' : 'is-even') . '">' . esc_html($label) . '</div>';
+        return '<div class="tco-doc-pageno ' . ($is_odd ? 'is-odd' : 'is-even') . '">' . esc_html($label) . '</div>';
     }
 }
 
@@ -1798,8 +1798,8 @@ if (!function_exists('zw_doc_render_document_html')) {
 
         $html = '';
         foreach ($pages as $page_idx => $indexes) {
-            $html .= '<div class="zw-doc-sheet" data-zw-page="' . (int) ($page_idx + 1) . '">';
-            $html .= '<div class="zw-doc-flow">';
+            $html .= '<div class="tco-doc-sheet" data-zw-page="' . (int) ($page_idx + 1) . '">';
+            $html .= '<div class="tco-doc-flow">';
             if ($page_idx === 0) {
                 $html .= zw_doc_render_letterhead_html($meta, $args);
                 if (!empty($meta['title'])) {
@@ -1809,22 +1809,22 @@ if (!function_exists('zw_doc_render_document_html')) {
                         (string) $meta['title'],
                         isset($meta['title_lines']) && is_array($meta['title_lines']) ? $meta['title_lines'] : array()
                     );
-                    $html .= '<h1 class="zw-doc-title">'
+                    $html .= '<h1 class="tco-doc-title">'
                           . implode('<br>', array_map('esc_html', $title_lines_1342))
                           . '</h1>';
                 }
                 if (!empty($meta['receiver'])) {
-                    $html .= '<p class="zw-doc-receiver">' . esc_html((string) $meta['receiver']) . '</p>';
+                    $html .= '<p class="tco-doc-receiver">' . esc_html((string) $meta['receiver']) . '</p>';
                 }
             }
-            $html .= '<div class="zw-doc-body">';
+            $html .= '<div class="tco-doc-body">';
             $html .= zw_doc_render_blocks_html($blocks, $indexes);
             if ($page_idx === count($pages) - 1) {
                 // TASK-1333 ②：附件说明**移到落款之前**（正文下空一行），
                 // 纸面顺序固定为 正文 → 空一行 → 附件说明 → 空一行 → 署名 → 成文日期 → 附注 → 版记。
                 if (!empty($meta['attach_note']) && is_array($meta['attach_note'])) {
                     foreach ($meta['attach_note'] as $note) {
-                        $html .= '<p class="zw-doc-attach">' . esc_html((string) $note) . '</p>';
+                        $html .= '<p class="tco-doc-attach">' . esc_html((string) $note) . '</p>';
                     }
                 }
                 $html .= zw_doc_render_sign_html($meta, $args);
@@ -1868,7 +1868,7 @@ if (!function_exists('zw_doc_render_notice_html')) {
             $lines[] = zw_doc_gb9704_disclaimer('seal_low_dpi') . '：当前印章素材有效分辨率仅 ' . (int) $args['seal_dpi'] . 'dpi（低于 ' . (int) zw_doc_gb9704_get('seal.low_dpi_threshold', 300) . 'dpi），打印边缘可能发虚，建议更换高清原图。';
         }
 
-        return '<div class="zw-doc-notice">' . implode('<br>', array_map('esc_html', $lines)) . '</div>';
+        return '<div class="tco-doc-notice">' . implode('<br>', array_map('esc_html', $lines)) . '</div>';
     }
 }
 
@@ -1889,14 +1889,14 @@ if (!function_exists('zw_doc_render_standalone_html')) {
                . '<meta name="robots" content="noindex,nofollow">'
                . '<title>' . esc_html($title) . '</title>'
                . zw_doc_render_style_block((string) $args['base_url'])
-               . '</head><body class="zw-doc-wrap">';
+               . '</head><body class="tco-doc-wrap">';
 
         $toolbar = '';
         if (!empty($args['show_toolbar'])) {
-            $toolbar = '<div class="zw-doc-toolbar">'
+            $toolbar = '<div class="tco-doc-toolbar">'
                      . '<button type="button" class="button button-primary" onclick="window.print();">打印 / 另存为 PDF</button>'
                      . '<button type="button" class="button" onclick="window.close();">关闭</button>'
-                     . '<span class="zw-doc-notice" style="margin:0;">如未自动弹出打印窗口，请点击左侧按钮。</span>'
+                     . '<span class="tco-doc-notice" style="margin:0;">如未自动弹出打印窗口，请点击左侧按钮。</span>'
                      . '</div>';
         }
 
@@ -1921,7 +1921,7 @@ if (!function_exists('zw_doc_render_preview_html')) {
      */
     function zw_doc_render_preview_html($body, $args = array(), $scale = 62) {
         $scale = max(30, min(100, (int) $scale));
-        $html  = '<div class="zw-doc-preview">';
+        $html  = '<div class="tco-doc-preview">';
         $html .= zw_doc_render_notice_html($args);
         // **必须以 mm 显式收外框**（TASK-780）：`transform:scale()` 只做视觉缩放，**不改变布局尺寸**。
         // 早期实现外层声明 `width:21000/scale mm`（scale=46 时约 457mm≈1728px），
@@ -1929,8 +1929,8 @@ if (!function_exists('zw_doc_render_preview_html')) {
         // 现外层盒子 = 视觉尺寸（210×scale%），内层仍为 210mm 宽内容并按 origin 左上角缩小。
         $box_w = (int) round(210 * $scale / 100);
         $box_h = (int) round(297 * $scale / 100);
-        $html .= '<div class="zw-doc-preview-box" style="width:' . $box_w . 'mm;height:' . $box_h . 'mm;">';
-        $html .= '<div class="zw-doc-scaled" style="transform:scale(' . ($scale / 100) . ');transform-origin:top left;width:210mm;">';
+        $html .= '<div class="tco-doc-preview-box" style="width:' . $box_w . 'mm;height:' . $box_h . 'mm;">';
+        $html .= '<div class="tco-doc-scaled" style="transform:scale(' . ($scale / 100) . ');transform-origin:top left;width:210mm;">';
         $html .= zw_doc_render_document_html($body, $args);
         $html .= '</div></div></div>';
 

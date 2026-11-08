@@ -163,25 +163,25 @@ if (!function_exists('zw_receipt_admin_ui_table_wrap_style')) {
     /**
      * 收文管理域的 canonical 宽表横滑规则输出（TASK-1633 / TASK-1579 §7 P1-6 第四批）。
      *
-     * **本函数不是第二套声明**：唯一出处仍是 canonical `inc/admin/admin-ui-tokens.php` 的
-     * `zw_adm_ui_table_wrap_css()`（本函数只做 `<style>` 包裹，逐字透传），因此本文件不含该
+     * **本函数不是第二套声明**：唯一出处仍是 canonical `includes/ui/ui-tokens.php` 的
+     * `tco_ui_table_wrap_css()`（本函数只做 `<style>` 包裹，逐字透传），因此本文件不含该
      * canonical 类的**字面声明体**（写「声明体」三个字即可，不写字面量，避免与
      * `tests/test-admin-h5-gate.php` 段 W/X 的「全仓唯一声明」判据冲突）。收文管理域 slug 前缀
-     * `zw-receipt` **不命中**会员域外壳判定 `zw_mc_adm_is_screen()`（只看 `zw-mc` / `zw-member`
+     * `zw-receipt` **不命中**会员域外壳判定 `会员域后台壳判定()`（只看 `zw-mc` / `zw-member`
      * / `zw-policy` / `zw-notify`）⇒ 本域页面必须**自带**该规则的输出点
      * （先例 TASK-1627 / TASK-1632 的活动域 / 组织架构域）。
      *
      * @return string `<style>…</style>`；canonical 未加载时返回空串（不猜测、不回落自造规则）。
      */
     function zw_receipt_admin_ui_table_wrap_style() {
-        if (!function_exists('zw_adm_ui_table_wrap_css')) {
+        if (!function_exists('tco_ui_table_wrap_css')) {
             return '';
         }
-        // TASK-1637（P1-4 余项 / 用户拍板②）：收文域同样不继承会员域外壳的 `.zw-adm-tcpc`
-        // ⇒ 同批透传 canonical 触屏块（`zw_adm_ui_touch_css('body')`；仍只做 `<style>` 包裹、
+        // TASK-1637（P1-4 余项 / 用户拍板②）：收文域同样不继承会员域外壳的 `.tco-tcpc`
+        // ⇒ 同批透传 canonical 触屏块（`tco_ui_touch_css('body')`；仍只做 `<style>` 包裹、
         // **零自造声明**；规则仅 `@media(pointer:coarse)` 命中 ⇒ 桌面零视觉变更）。
-        $touch = function_exists('zw_adm_ui_touch_css') ? zw_adm_ui_touch_css('body') : '';
-        return '<style>' . zw_adm_ui_table_wrap_css() . $touch . '</style>';
+        $touch = function_exists('tco_ui_touch_css') ? tco_ui_touch_css('body') : '';
+        return '<style>' . tco_ui_table_wrap_css() . $touch . '</style>';
     }
 }
 
@@ -196,12 +196,33 @@ if (!function_exists('zw_receipt_admin_page_classes')) {
      */
     function zw_receipt_admin_page_classes() {
         return array(
-            'zw-receipt-create',
-            'zw-receipt-ledger',
-            'zw-receipt-detail',
-            'zw-receipt-orgs',
-            'zw-receipt-issues',
-            'zw-receipt-number',
+            'tco-receipt-create',
+            'tco-receipt-ledger',
+            'tco-receipt-detail',
+            'tco-receipt-orgs',
+            'tco-receipt-issues',
+            'tco-receipt-number',
+        );
+    }
+}
+
+if (!function_exists('zw_receipt_admin_page_slug_map')) {
+    /**
+     * 页面 slug → `.wrap` 类名（**slug 保持稳定**，只映射到自有 `tco-*` 类）。
+     *
+     * slug 不随 UI 独立改名：主题侧 RBAC 功能 ID（`sub:zw-receipt-…`）与用户书签仍按原 slug，
+     * 本表是唯一映射处；新增收文页必须同步本表与 `zw_receipt_admin_page_classes()`。
+     *
+     * @return array<string,string>
+     */
+    function zw_receipt_admin_page_slug_map() {
+        return array(
+            'zw-receipt-create' => 'tco-receipt-create',
+            'zw-receipt-ledger' => 'tco-receipt-ledger',
+            'zw-receipt-detail' => 'tco-receipt-detail',
+            'zw-receipt-orgs'   => 'tco-receipt-orgs',
+            'zw-receipt-issues' => 'tco-receipt-issues',
+            'zw-receipt-number' => 'tco-receipt-number',
         );
     }
 }
@@ -239,7 +260,8 @@ if (!function_exists('zw_receipt_admin_ui_page_class')) {
      */
     function zw_receipt_admin_ui_page_class($slug) {
         $slug = trim((string) $slug);
-        return in_array($slug, zw_receipt_admin_page_classes(), true) ? $slug : '';
+        $map  = zw_receipt_admin_page_slug_map();
+        return isset($map[$slug]) ? $map[$slug] : '';
     }
 }
 
@@ -259,7 +281,7 @@ if (!function_exists('zw_receipt_admin_ui_page_open')) {
         echo zw_receipt_admin_ui_style();
         echo '<h1>' . zw_receipt_admin_ui_esc($title) . '</h1>';
         if ($subtitle !== '') {
-            echo '<p class="zw-doc-sub">' . $subtitle . '</p>';
+            echo '<p class="tco-doc-sub">' . $subtitle . '</p>';
         }
         echo zw_receipt_admin_ui_nav($current);
     }

@@ -332,9 +332,9 @@ if (!function_exists('zw_receipt_disposal_render_page')) {
         echo '<div class="notice notice-info inline" style="margin:0 0 14px"><p><strong>红线：</strong>'
             . '系统**不会删除任何文件或记录**。这里的「销毁」只写状态与清册（留痕），物理删除由人线下执行。</p></div>';
 
-        echo '<div class="zw-adm-card" style="margin:0 0 16px"><h2>到期可销毁清单（' . count($due) . ' 件）</h2>';
-        echo '<p class="zw-doc-muted">口径：已归档（有盒号）+ 保管期限已到 + 尚未销毁。</p>';
-        echo '<div class="zw-adm-table-wrap"><table class="widefat striped"><thead><tr>'
+        echo '<div class="tco-card" style="margin:0 0 16px"><h2>到期可销毁清单（' . count($due) . ' 件）</h2>';
+        echo '<p class="tco-doc-muted">口径：已归档（有盒号）+ 保管期限已到 + 尚未销毁。</p>';
+        echo '<div class="tco-table-wrap"><table class="widefat striped"><thead><tr>'
             . '<th>收文</th><th>保管年限</th><th>到期日</th><th>操作</th></tr></thead><tbody>';
         if (!$due) {
             echo '<tr><td colspan="4">（暂无到期件）</td></tr>';
@@ -350,8 +350,8 @@ if (!function_exists('zw_receipt_disposal_render_page')) {
         }
         echo '</tbody></table></div></div>';
 
-        echo '<div class="zw-adm-card" style="margin:0 0 16px"><h2>逐件处置（保管期限 / 清退 / 销毁）</h2>';
-        echo '<div class="zw-adm-table-wrap"><table class="widefat striped"><thead><tr>'
+        echo '<div class="tco-card" style="margin:0 0 16px"><h2>逐件处置（保管期限 / 清退 / 销毁）</h2>';
+        echo '<div class="tco-table-wrap"><table class="widefat striped"><thead><tr>'
             . '<th>收文</th><th>标题</th><th>收文日期</th><th>盒号</th><th>保管期限</th><th>当前状态</th></tr>'
             . '</thead><tbody>';
         foreach ((array) $rows as $r) {
@@ -374,7 +374,7 @@ if (!function_exists('zw_receipt_disposal_render_page')) {
                 . '<td>' . esc_html(isset($state_label[$st['state']]) ? $state_label[$st['state']] : $st['state']) . '</td></tr>';
         }
         echo '</tbody></table></div>';
-        echo '<p class="zw-doc-muted">设置与标记请用 WP-CLI（避免在页面放危险按钮）：<br>'
+        echo '<p class="tco-doc-muted">设置与标记请用 WP-CLI（避免在页面放危险按钮）：<br>'
             . '<code>wp eval \'zw_receipt_disposal_set_retention("&lt;收文ID&gt;", 10);\'</code><br>'
             . '<code>wp eval \'zw_receipt_disposal_mark("&lt;收文ID&gt;", "returned", "批准人", "备注");\'</code>'
             . '</p></div>';
