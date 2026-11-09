@@ -94,9 +94,14 @@ ZW_MARKER_CLEAR_ON_EXIT=1   # 质量门已过：此后任何失败都清 marker
 # 唯一入口在主题仓（本段只调用，不复制测试清单）；红 ⇒ 中断收口（marker 保留）。
 THEME_MAIN="${ZW_WORKBENCH_THEME:-/srv/git/worktrees/dev-tcpc/main}"
 if [[ -f "$THEME_MAIN/scripts/plugin-gate.sh" ]]; then
-  echo "==> 跨仓验证：plugin-gate dev-tcpc-oa"
-  if ! bash "$THEME_MAIN/scripts/plugin-gate.sh" dev-tcpc-oa; then
+  # AGENT-0342 / OA-2492（P1-A）：必须传 `--repo-path "$REPO"` —— 不传时 `plugin-gate` 按
+  # `docs/ops/repos.yml` 的登记路径（= 主工作区 dev）求值：`PG_CI` 跑 dev 的 ci-check、
+  # `PG_SUBSET` 对着 dev 的源码 ⇒ 收口查不出「本单自己会引入的违规」；
+  # 一旦并入把 dev 弄红，下一单 finish 的 PG_CI 必红 ⇒ 死锁。
+  echo "==> 跨仓验证：plugin-gate dev-tcpc-oa --repo-path $REPO（对待并分支求值）"
+  if ! bash "$THEME_MAIN/scripts/plugin-gate.sh" dev-tcpc-oa --repo-path "$REPO"; then
     echo "✗ 跨仓验证未通过（本仓绿 ≠ 主题绿），收口中止（marker 保留）" >&2
+    echo "  回看：bash $THEME_MAIN/scripts/plugin-gate.sh dev-tcpc-oa --repo-path $REPO" >&2
     exit 1
   fi
 else
