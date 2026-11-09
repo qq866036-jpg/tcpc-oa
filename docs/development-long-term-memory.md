@@ -553,3 +553,12 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
 - **改动**：`scripts/plugin-switch-oa.sh` 原子交换后**强制** `chown -R ${ZW_OA_OWNER:-www:www}` + 目录 755 / 文件 644，
   并**回读** `stat -c '%a %U:%G'`；不符打印告警（不静默放过）。
 - **现场**：生产 `tcpc-oa` / `tcpc-mapp` 已 `chown -R www:www`，回读 `755 www:www`，HTTP 探针确认两插件仍加载。
+
+## 收口必须传 `--repo-path`（OA-2492 / 载体单 AGENT-0342，2026-11-09）
+
+- **事实**：本仓 `workbench/finish.sh` 调主题仓 `scripts/plugin-gate.sh dev-tcpc-oa` 时**原先不传** `--repo-path`
+  ⇒ 入口按 `docs/ops/repos.yml` 的登记路径（= 主工作区 `…/dev-tcpc-oa/main`，即 dev）求值：
+  `PG_CI` 跑的是 **dev** 的 `ci-check.sh`、`PG_SUBSET` 子集对着 **dev** 的源码
+  ⇒ 收口那一刻**查不出本分支会引入的违规**；并入把 dev 弄红后，下一单 finish 的 `PG_CI` 必红 ⇒ 死锁。
+- **改法**：改为 `plugin-gate dev-tcpc-oa --repo-path "$REPO"`（`$REPO` 是本仓工作树根）。
+- **症状记忆**：遇到「本仓全绿、并入 dev 后主题侧红」时，**先怀疑门禁看的是 dev**。
