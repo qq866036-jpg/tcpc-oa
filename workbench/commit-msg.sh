@@ -68,7 +68,23 @@ PY
 )"
 elif [[ -f "$GD/zw-finished-task" ]]; then
   # OA-2456：marker 已清（finish 之后）⇒ 用收口留痕里的任务号继续做"提交信息必须包含"校验
-  MTASK="$(python3 - "$GD/zw-finished-task" <<'PY'
+  # OA-2493（实测缺陷修订）：本分支**原先没有 TTL** —— 留痕落盘后永久有效，于是 3 天前的旧留痕
+  #   （OA-2490，2026-11-06）会拦掉**任何别的任务**的提交/合并（2026-11-09 OA-2492 合并实测被拦，
+  #   只能人工删留痕）。现与 `pre-commit.sh` 同口径：**只认 2 小时内的留痕**；
+  #   过期/不可读/无 task ⇒ 视为"无留痕"（不参与"必须包含"校验，也不因它判红）。
+  if ! python3 - "$GD/zw-finished-task" <<'PYTTL'
+import json, sys, time
+try:
+    d = json.load(open(sys.argv[1], encoding="utf-8"))
+    t = time.mktime(time.strptime(str(d.get("finished_at", ""))[:19], "%Y-%m-%d %H:%M:%S"))
+except Exception:
+    sys.exit(1)
+sys.exit(0 if (time.time() - t) <= 2 * 3600 and d.get("task") else 1)
+PYTTL
+  then
+    MTASK=""
+  else
+    MTASK="$(python3 - "$GD/zw-finished-task" <<'PY'
 import json, sys
 try:
     print(json.load(open(sys.argv[1], encoding="utf-8")).get("task", ""))
@@ -76,6 +92,7 @@ except Exception:
     print("")
 PY
 )"
+  fi
 fi
 if [[ -n "$MTASK" ]]; then
   if [[ " $TASKS " != *" $MTASK "* ]]; then
