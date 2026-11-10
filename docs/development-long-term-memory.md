@@ -574,3 +574,24 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
 - **判别力（实测两态）**：marker 移除后，新鲜留痕（2h 内、任务号不同）⇒ rc=1 拦住；
   3 天前留痕 ⇒ rc=0 放过。**严格性未降**（2 小时内仍是硬约束）。
 - **口径**：任何「一次性/短时状态」落盘成文件，都必须带 TTL 判据 —— 否则它会变成永不失效的第二事实源。
+
+## OA-2494 发版互斥接入：**两条生产写入路径**都要锁（2026-11-10）
+
+- **本仓事实**：`scripts/plugin-switch-oa.sh` 现在有两条生产写入路径，两条都取同一把锁
+  （唯一实现 `scripts/lib/release-lock.sh`，主题 `scripts/lib/plugin-release-lock.sh` 的逐字副本）：
+  ① 正常发版——锁在「① 版本三方 + ② 兼容矩阵」之后、**③ 构建产物（首个写入）之前**；
+  ② `--rollback <ts>`——还原备份前取锁，且**显式放开版本降级**（回滚本身就是降级），
+  成功后把「回滚到的版本」写进 `.released`，让后续守卫以实际在跑版本为基线。
+- **失败语义**：锁被占 / 版本降级被拒 ⇒ 退出码 **3**，且**未改动生产目录**；
+  逃生口 `ZW_RELEASE_LOCK=0`（跳过）与 `--allow-downgrade`/`--force-unlock`（放开降级），均须在台账写明理由。
+  锁在 `/root/tcpc-release-locks/tcpc-oa.lock|.released`（0700/600），`kill -9` 随进程退出自动释放。
+- **权限回读改 fail-closed**：原先回读只 `echo "⚠ 可能不加载"`，现在 `oa_verify_perms` 判红 ⇒
+  用**本次备份**自动还原（`oa_restore_backup`）再 `fail`。理由：CLI 以 root 跑 `wp eval` 看不出
+  `www` 读不到目录（learning `root:root 700` 同源事故），只告警等于把事故留给用户发现。
+- **坑（本单实测）**：① 脚本是 `set -uo pipefail`（无 `-e`）+ 多个 `exit 0` 成功出口 ⇒ 解锁必须靠
+  `trap … EXIT INT TERM` 兜，只在正常终点 release 会漏掉 `--no-smoke` / dry-run 两条出口；
+  ② dry-run **要取锁**（这样版本守卫的结论也是真的），但**不能**写 `.released`（没发布），
+  否则一次演练就会把基线抬到未上线版本；③ 顺序判据要用**行号**锚定注释段（`# ── ③ 构建产物`），
+  不要在整文件里盲 `grep` 关键函数名（回滚路径也含同名调用，会取到前面那一处）。
+- **判据**：`tests/test-release-lock.sh` 30 项（行为 10 + 正常路径接线 9 + 回滚接线 3 + 回读接线 3 +
+  权限本体 4），已进 `scripts/ci-check.sh` ⑧；反向控制（降级判断改 `if false` ⇒ 用例②红）已验。
