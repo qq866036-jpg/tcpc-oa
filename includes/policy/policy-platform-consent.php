@@ -420,7 +420,7 @@ if (!function_exists('zw_legal_consent_admin_csv')) {
         $fh = fopen('php://temp', 'w+');
         if (!$fh) { return ''; }
         $headers = array('规范ID', '规范名称', '版本', '账号UID', '显示名', '机构', '角色', '状态', '确认时间', '阅读耗时(秒)', '正文哈希');
-        fputcsv($fh, array_map('zw_branch_csv_export_cell', $headers));
+        fputcsv($fh, array_map('zw_branch_csv_export_cell', $headers), ',', '"', '');
         foreach (zw_legal_consent_admin_rows($doc, $state) as $r) {
             $line = array(
                 (string) $doc['doc_id'],
@@ -435,7 +435,7 @@ if (!function_exists('zw_legal_consent_admin_csv')) {
                 ($r['read_seconds'] === null ? '' : (int) $r['read_seconds']),
                 (string) ($doc['source_hash'] ?? ''),
             );
-            fputcsv($fh, array_map('zw_branch_csv_export_cell', $line));
+            fputcsv($fh, array_map('zw_branch_csv_export_cell', $line), ',', '"', '');
         }
         rewind($fh);
         $csv = (string) stream_get_contents($fh);

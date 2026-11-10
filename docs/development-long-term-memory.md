@@ -595,3 +595,9 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
   不要在整文件里盲 `grep` 关键函数名（回滚路径也含同名调用，会取到前面那一处）。
 - **判据**：`tests/test-release-lock.sh` 30 项（行为 10 + 正常路径接线 9 + 回滚接线 3 + 回读接线 3 +
   权限本体 4），已进 `scripts/ci-check.sh` ⑧；反向控制（降级判断改 `if false` ⇒ 用例②红）已验。
+
+## 2026-11-11 · OA-2495：CSV 导出 fputcsv 必须显式传 escape（PHP 8.4）
+
+- 事实：PHP 8.4 起 `fputcsv()` 不传第 5 个参数 `$escape` 会发 deprecation；管理面渲染测试会因此判红（B1 验收红项）。
+- 口径：本项目所有 `fputcsv()` 一律写 `fputcsv($fh, $row, ',', '"', '')`（显式空 escape，输出与旧默认一致）。
+- 落点：`includes/policy/policy-platform-consent.php`（CSV 导出两处，本次已修）；新增导出代码照此写。
