@@ -16,8 +16,14 @@
 #   bash scripts/plugin-switch-oa.sh                    # 正式发版（含冒烟）
 #   bash scripts/plugin-switch-oa.sh --no-smoke         # 仅交换（不推荐）
 #   bash scripts/plugin-switch-oa.sh --rollback 20261028-1400
+#   bash scripts/plugin-switch-oa.sh --allow-downgrade  # 放开版本降级（回退旧构建）
+#   ZW_RELEASE_LOCK=0 bash scripts/plugin-switch-oa.sh  # 应急跳过发版互斥（须在台账写明理由）
 #
-# 退出码：0 成功；1 任一判据失败；2 用法/环境错误。
+# 发版互斥（OA-2494）：唯一实现 `scripts/lib/release-lock.sh`（flock 单实例 + 版本占用禁降级 + 进程退出自愈）。
+#   本脚本有**两条生产写入路径**（正常发版 ④⑤、回滚 `--rollback`），两条都要取锁；
+#   版本守卫只对正常路径生效（回滚本身就是降级，内部放开）。锁被占 / 降级被拒均**未改动生产目录**。
+#
+# 退出码：0 成功；1 任一判据失败；2 用法/环境错误；3 锁被占或版本降级被拒。
 set -uo pipefail
 
 WP_PATH="/www/wwwroot/tcpc.org.cn"
@@ -32,12 +38,14 @@ SMOKE_HOST="${ZW_OA_SMOKE_HOST:-}"
 DRY=0
 NO_SMOKE=0
 ROLLBACK=""
+ALLOW_DOWNGRADE=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --dry-run) DRY=1; shift ;;
     --no-smoke) NO_SMOKE=1; shift ;;
     --rollback) ROLLBACK="${2:-}"; shift 2 ;;
+    --allow-downgrade|--force-unlock) ALLOW_DOWNGRADE=1; shift ;;
     -h|--help) sed -n '2,30p' "$0"; exit 0 ;;
     *) echo "未知参数：$1" >&2; exit 2 ;;
   esac
@@ -51,6 +59,55 @@ say()  { printf '==> %s\n' "$*"; }
 fail() { printf '✗ %s\n' "$*" >&2; exit 1; }
 run()  { if [[ "$DRY" -eq 1 ]]; then printf '  [dry-run] %s\n' "$*"; else "$@"; fi; }
 
+OWNER="${ZW_OA_OWNER:-www:www}"
+TASK_ID="${ZW_TASK:-未记}"
+
+# ── 发版互斥唯一实现（OA-2494 / 口径 docs/ops/plugin-release-lock.md）─────────────
+# 为什么 source 而不是复刻：锁语义只有一份（flock 单实例 + 版本占用禁降级 + 进程退出自愈）；
+# 本仓 `scripts/lib/release-lock.sh` 是**逐字副本**，判据：主题 `tests/test-release-lock-parity.sh`。
+. "$ROOT/scripts/lib/release-lock.sh"
+
+# ── 属主/权限归一 + 回读（OA-2494：回读由「只告警」改为 fail-closed）──────────────
+# 治什么：安装目录不可读 ⇒ 插件「active 却不加载」；CLI 以 root 跑 `wp eval` **看不出来**
+# （learning 仓 `root:root 700` 事故同源）。所以不只要 chown，还要 chmod + **回读**。
+oa_normalize_perms() {
+  local dir="$1"
+  [[ -d "$dir" ]] || return 0
+  chown -R "$OWNER" "$dir" 2>/dev/null || echo "  ⚠ 属主归一失败（$OWNER），请手工 chown -R" >&2
+  find "$dir" -type d -exec chmod 755 {} \; 2>/dev/null || true
+  find "$dir" -type f -exec chmod 644 {} \; 2>/dev/null || true
+}
+
+oa_verify_perms() {
+  local dir="$1" mode bad
+  [[ -d "$dir" ]] || return 1
+  mode="$(stat -c '%a %U:%G' "$dir" 2>/dev/null || echo '?')"
+  bad="$(find "$dir" -type f ! -perm -o+r 2>/dev/null | wc -l | tr -d ' ')"
+  echo "  属主/权限：${mode}（期望 755 ${OWNER}）｜非 o+r 文件：${bad}"
+  [[ "$mode" = "755 ${OWNER}" && "$bad" = "0" ]]
+}
+
+# 回读失败 ⇒ 用**本次备份**自动还原（对称恢复；不依赖人工记得跑 --rollback）
+oa_restore_backup() {
+  [[ -d "$BACKUP_DIR/$PLUGIN_SLUG" ]] || { echo "  ⚠ 无可用备份（$BACKUP_DIR），请人工处置" >&2; return 1; }
+  wp plugin deactivate "$PLUGIN_SLUG" --path="$WP_PATH" --allow-root >/dev/null 2>&1 || true
+  [[ -d "$PLUGIN_DIR" ]] && mv "$PLUGIN_DIR" "$PLUGIN_DIR.failed-$STAMP"
+  cp -a "$BACKUP_DIR/$PLUGIN_SLUG" "$PLUGIN_DIR"
+  oa_normalize_perms "$PLUGIN_DIR"
+  wp plugin activate "$PLUGIN_SLUG" --path="$WP_PATH" --allow-root >/dev/null 2>&1 || true
+  rm -rf "$PLUGIN_DIR.failed-$STAMP"
+  echo "  ✓ 已还原备份：$BACKUP_DIR/$PLUGIN_SLUG"
+}
+
+# 发布成功：**先写版本记录再解锁**（失败/回滚路径只解锁，由 trap 兜）。
+oa_publish_ok() {
+  [[ "${ZW_RELEASE_LOCK:-1}" = "0" ]] && return 0
+  [[ "${DRY:-0}" -eq 1 ]] && return 0      # dry-run 没有发布，不写版本记录（trap 会解锁）
+  zwrel_release "$PLUGIN_SLUG" "$VERSION" "$TASK_ID"
+  trap - EXIT INT TERM
+  echo "  ✓ 已释放发版锁并记录版本 $VERSION（后续更低版本会被拒）"
+}
+
 [[ -d "$WP_PATH" ]] || fail "生产路径不存在：$WP_PATH"
 command -v wp >/dev/null 2>&1 || fail "缺 wp-cli"
 command -v curl >/dev/null 2>&1 || fail "缺 curl"
@@ -60,6 +117,14 @@ if [[ -n "$ROLLBACK" ]]; then
   src="$BACKUP_ROOT/pre-switch-$ROLLBACK/$PLUGIN_SLUG"
   [[ -d "$src" ]] || fail "备份不存在：$src"
   say "回滚到 $ROLLBACK"
+  RB_VER="$(tr -d ' \t\r\n' < "$src/VERSION" 2>/dev/null || true)"
+  # 回滚也是一次**生产写入** ⇒ 同样要单实例锁；版本守卫显式放开（回滚本身就是降级）。
+  if [[ "${ZW_RELEASE_LOCK:-1}" != "0" ]]; then
+    if ! ZW_RELEASE_ALLOW_DOWNGRADE=1 zwrel_acquire "$PLUGIN_SLUG" "${RB_VER:-0.0.0}" "$TASK_ID"; then
+      fail "发版互斥未通过（锁被占）；**未改动生产目录**"
+    fi
+    trap 'zwrel_unlock "$PLUGIN_SLUG"' EXIT INT TERM
+  fi
   run wp plugin deactivate "$PLUGIN_SLUG" --path="$WP_PATH" --allow-root || true
   if [[ -d "$PLUGIN_DIR" ]]; then
     run mv "$PLUGIN_DIR" "$PLUGIN_DIR.rollback-$STAMP"
@@ -67,6 +132,11 @@ if [[ -n "$ROLLBACK" ]]; then
   run cp -a "$src" "$PLUGIN_DIR"
   run rm -rf "$PLUGIN_DIR.rollback-$STAMP"
   run wp plugin activate "$PLUGIN_SLUG" --path="$WP_PATH" --allow-root
+  if [[ "${ZW_RELEASE_LOCK:-1}" != "0" && "$DRY" -eq 0 ]]; then
+    zwrel_release "$PLUGIN_SLUG" "${RB_VER:-0.0.0}" "$TASK_ID"
+    trap - EXIT INT TERM
+    echo "  ✓ 已释放发版锁并记录回滚到的版本 ${RB_VER:-0.0.0}"
+  fi
   say "回滚完成：$( [[ "$DRY" -eq 1 ]] && echo '(dry-run)' || echo "$PLUGIN_DIR" )"
   exit 0
 fi
@@ -91,6 +161,24 @@ if [[ "$(printf '%s\n%s\n' "$MIN_THEME_FILE" "$LIVE_THEME" | sort -V | head -1)"
   fail "在线主题 $LIVE_THEME 低于插件要求的 $MIN_THEME_FILE（拒发）"
 fi
 echo "  ✓ 在线主题 $LIVE_THEME >= MIN_THEME $MIN_THEME_FILE"
+
+# ── ②b 发版互斥（OA-2494）——「前置校验之后、任何生产写入（构建目录 / 备份 / 交换）之前」
+# 两道守卫：① 单实例（flock 仓外锁，第二者 rc=3 并打印持有者，**不动生产目录**）；
+#          ② 版本占用（目标 < 最近成功发布 ⇒ 拒绝，防「从更早分支发低版本覆盖」）。
+# 失败/回滚只解锁；只有**成功发布**才写版本记录（见 oa_publish_ok）。
+if [[ "${ZW_RELEASE_LOCK:-1}" = "0" ]]; then
+  echo "  ⚠ 已跳过发版互斥（ZW_RELEASE_LOCK=0）：并发发版可能互相覆盖（须在台账写明理由）" >&2
+else
+  if [[ "$ALLOW_DOWNGRADE" -eq 1 ]]; then
+    export ZW_RELEASE_ALLOW_DOWNGRADE=1
+    echo "  ⚠ 已请求放开版本降级（--allow-downgrade / --force-unlock）" >&2
+  fi
+  if ! zwrel_acquire "$PLUGIN_SLUG" "$VERSION" "$TASK_ID"; then
+    fail "发版互斥未通过（锁被占 / 版本降级被拒）；**未改动生产目录**"
+  fi
+  trap 'zwrel_unlock "$PLUGIN_SLUG"' EXIT INT TERM
+  echo "  ✓ 已取得 $PLUGIN_SLUG 发版锁（task=$TASK_ID，target=$VERSION）"
+fi
 
 # ── ③ 构建产物（只取 HEAD）───────────────────────────────────────────────────
 say "构建产物（git archive HEAD）"
@@ -138,23 +226,24 @@ run mv "$STAGING" "$PLUGIN_DIR"
 run rm -rf "$PLUGIN_DIR.old-$STAMP"
 echo "  ✓ 已落盘：$PLUGIN_DIR（v$VERSION）"
 
-# ── ⑤b 属主/权限归一（2026-11-06 事故教训，必须做）────────────────────────────
+# ── ⑤b 属主/权限归一 + 回读（2026-11-06 事故教训；OA-2494 起回读 fail-closed）────────
 # 背景：同源的 learning 插件曾因安装目录变成 `root:root 700` ⇒ PHP-FPM(www) 连目录都进不去 ⇒
 #   插件"显示 active 却从不加载"；而 CLI 以 root 运行、`wp eval` **看不出来**。本仓实测曾是
-#   `root:root 755`（靠 o+r 兜着），一旦某次复制带来 600 文件就会复现。这里强制归一 + 回读。
-OWNER="${ZW_OA_OWNER:-www:www}"
-run chown -R "$OWNER" "$PLUGIN_DIR" 2>/dev/null || echo "  ⚠ 属主归一失败（$OWNER），请手工 chown -R"
-find "$PLUGIN_DIR" -type d -exec chmod 755 {} \; 2>/dev/null || true
-find "$PLUGIN_DIR" -type f -exec chmod 644 {} \; 2>/dev/null || true
-PLUGIN_MODE="$(stat -c '%a %U:%G' "$PLUGIN_DIR" 2>/dev/null || echo '?')"
-if [[ "$PLUGIN_MODE" == "755 www:www" ]]; then
-  echo "  ✓ 属主/权限：$PLUGIN_MODE"
+#   `root:root 755`（靠 o+r 兜着），一旦某次复制带来 600 文件就会复现。这里强制归一 + **回读**。
+if [[ "$DRY" -eq 1 ]]; then
+  echo "  [dry-run] 跳过属主/权限归一与回读"
 else
-  echo "  ⚠ 属主/权限异常：$PLUGIN_MODE（期望 755 www:www）—— 可能导致插件不加载"
+  oa_normalize_perms "$PLUGIN_DIR"
+  if ! oa_verify_perms "$PLUGIN_DIR"; then
+    echo "✗ 属主/权限回读失败（期望 755 $OWNER / 文件 644）⇒ 用本次备份自动还原" >&2
+    oa_restore_backup || true
+    fail "权限回读失败，已尝试还原（备份 $BACKUP_DIR）；请人工复核"
+  fi
 fi
 
 # ── ⑥ 冒烟 ───────────────────────────────────────────────────────────────────
 if [[ "$NO_SMOKE" -eq 1 ]]; then
+  oa_publish_ok
   say "冒烟已跳过（--no-smoke，不作为放行依据）"
   exit 0
 fi
@@ -197,6 +286,7 @@ else
   echo "  ✓ /bhzc 正文（DB）未变化（$BHZC_AFTER）"
 fi
 
+oa_publish_ok
 say "发版完成：v$VERSION（备份 $BACKUP_DIR）"
 say "回滚命令：bash scripts/plugin-switch-oa.sh --rollback $STAMP"
 exit 0

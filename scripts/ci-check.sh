@@ -4,7 +4,7 @@
 # 为什么抽成脚本：写在 ci.yml 里会出现「CI 的 shell」与「本地验过的 shell」两份实现 ⇒ 漂移。
 # 抽出后 `bash scripts/ci-check.sh` 通过 ⇒ CI 必然通过。
 #
-# 六项判据（都能真红，不是「跑通即绿」）：
+# 八项判据（都能真红，不是「跑通即绿」）：
 #   ① php -l 全量（语法）
 #   ② 版本三方一致：VERSION / TCPC_OA_VERSION 常量 / 插件头 Version
 #   ③ 反向依赖守卫：本仓**不得**用 get_stylesheet_directory / get_template_directory / TEMPLATEPATH
@@ -12,6 +12,9 @@
 #   ④ 骨架完整性：AGENTS.md / workbench 七件套 / docs/contract-tcpc-oa.md / MIN_THEME 均在
 #   ⑤ 构建产物校验：git archive HEAD 必含 VERSION / MIN_THEME / 入口 / 契约（--precommit 跳过）
 #   ⑥ 契约自洽：docs/contract-tcpc-oa.md 必含 P-1/P-2/P-3/W-1 四个符号 + 「唯一出处」声明
+#   ⑦ 装载顺序探针：theme-first / plugin-first 双序不得 Cannot redeclare（找不到主题副本时 skip）
+#   ⑧ 发版互斥接入（OA-2494）：flock 单实例 / 版本降级 rc=4 / 并发 rc=3 / 两条生产写入路径都取锁 /
+#      权限回读 fail-closed（行为在 tests/test-release-lock.sh，这里只负责「失败即红」）
 #
 # 用法：
 #   bash scripts/ci-check.sh             # 六项全跑（本地收口 / CI）
@@ -122,10 +125,20 @@ case "$probe_rc" in
   *) bad "装载顺序探针失败（rc=$probe_rc）：插件顶层声明缺 function_exists 守卫，激活插件会 fatal" ;;
 esac
 
+echo "== ⑧ 发版互斥接入（OA-2494）"
+# 为什么进 CI：发版/回滚是**生产写入通道**，守卫不进 CI 就等于靠自觉。
+# 判据本体 tests/test-release-lock.sh（行为 10 项 + 接线 + 权限归一回读），这里只负责「失败即红」。
+if bash tests/test-release-lock.sh >/tmp/zw-oa-release-lock.log 2>&1; then
+  ok "发版互斥判据全绿（$(tail -1 /tmp/zw-oa-release-lock.log)）"
+else
+  bad "发版互斥判据判红（bash tests/test-release-lock.sh）"
+  tail -20 /tmp/zw-oa-release-lock.log
+fi
+
 echo "----------------------------------------"
 if [ "$fail" -gt 0 ]; then
   printf '✗ ci-check 未通过：%d 项判红\n' "$fail" >&2
   exit 1
 fi
-echo "✓ ci-check 七项全绿"
+echo "✓ ci-check 八项全绿"
 exit 0
