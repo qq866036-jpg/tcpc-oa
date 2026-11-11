@@ -89,6 +89,20 @@ fi
 rm -f "$OUT"
 ZW_MARKER_CLEAR_ON_EXIT=1   # 质量门已过：此后任何失败都清 marker
 
+# 铁律 33（AGENT-0402 复用）：界面文案 / 适老化门禁 —— 判据在主题仓唯一出处，本仓只传可见面清单。
+# 缺「界面文案增量」结论、新增可见文字带方案代号 / 占位词 / zw_* 函数名 ⇒ 判红中止（marker 保留，可修后重跑）。
+THEME_UX="${ZW_WORKBENCH_THEME:-/srv/git/worktrees/dev-tcpc/main}"
+if [[ -f "$THEME_UX/scripts/ux-guard-sync-check.sh" ]]; then
+  echo "==> 界面文案 · 适老化门禁（铁律 33）"
+  if ! ZW_UX_GUARD_TASKS_FILE="${LTM_LEDGER_WT:-$THEME_UX}/AUTONOMOUS_TASKS.md" \
+       bash "$THEME_UX/scripts/ux-guard-sync-check.sh" \
+         --task "$MARKER_TASK" --roles "$MARKER_ROLES_SPEC" \
+         --repo-path "$REPO" --visible-paths '^(includes|assets|templates)/'; then
+    echo "✗ 界面文案/适老化门禁未通过，收口中止（marker 保留）" >&2
+    exit 1
+  fi
+fi
+
 # ── AGENT-0244 / OA-2486（方案 §7 H）：**跨仓验证** —— 本仓收口同时跑「主题里断言本仓源码的测试」。
 # 为什么 oa 优先：四个卫星仓里 oa 是**唯一没有任何跨仓兜底**的，「oa 绿、主题红」此前无机制可拦。
 # 唯一入口在主题仓（本段只调用，不复制测试清单）；红 ⇒ 中断收口（marker 保留）。
