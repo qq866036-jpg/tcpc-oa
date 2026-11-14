@@ -130,6 +130,11 @@ else
 fi
 grep -qF "manifest['api_version']" "$SWITCH"
 ck "结构冒烟按 api_version 判定（manifest 真实键）" $?
+# OA-2506：新只读端点必须真的注册（manifest 写了但路由没注册 ⇒ 判红）
+grep -qF 'REST 路由缺失' "$SWITCH"
+ck "结构冒烟断言新只读端点已注册" $?
+grep -qF '/tcpc-oa/v1/legal/' "$SWITCH" && grep -qF '/tcpc-oa/v1/doc/inbox' "$SWITCH" && grep -qF '/tcpc-oa/v1/files/' "$SWITCH"
+ck "结构冒烟覆盖 legal/doc-inbox/files 三条路由" $?
 ln_theme_gate="$(grep -n 'THEME_FUNCTIONS=' "$SWITCH" | head -1 | cut -d: -f1)"
 ln_build_swap="$(grep -n 'STAGING="\$PLUGINS_ROOT' "$SWITCH" | head -1 | cut -d: -f1)"
 [ -n "$ln_theme_gate" ] && [ -n "$ln_build_swap" ] && [ "$ln_theme_gate" -lt "$ln_build_swap" ]

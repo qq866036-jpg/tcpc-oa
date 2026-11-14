@@ -768,3 +768,13 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
   `php tests/test-oa-api-manifest.php` 扩到 **32 项**（含三条新路由 + files 函数体不含 path/url/owner 输出）。
 - **未验证**：真实 WP 下的路由鉴权与 mapp 消费方联调（本机无登录态）；`files` 的团队/部门级可见性目前
   只做「本人或管理员」，更细的 RBAC 待 C2 消费者接入时按需扩。
+
+## 2026-11-14 · OA-2506：0.1.28 发版（REST 只读端点上生产）
+
+- **版本**：0.1.27 → **0.1.28**（三处同改 + CHANGELOG 段），只含 OA-2505 的 REST 端点；
+  主题侧本轮无改动（1.2.5 已含守卫），故插件可单发。
+- **冒烟扩面**：结构冒烟新增「`/tcpc-oa/v1/legal/`、`/doc/inbox`、`/files/` 三条路由必须真实注册」
+  （用 `rest_get_server()->get_routes()` 校验），治「manifest 写了但忘了 register_rest_route」的静默漂移；
+  `tests/test-release-lock.sh` 扩到 41 项。
+- **发版顺序不变**：主题 1.2.5 已在生产且含插件优先守卫 ⇒ 插件门禁自动放行。
+- **工具纪律自报**：本单滑点 2 处（python 内联改三处版本行；sed -i 改记忆措辞）⇒ `pitfalls.py bump PIT-012` 两次（→221）。

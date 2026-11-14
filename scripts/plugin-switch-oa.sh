@@ -394,6 +394,22 @@ if (function_exists('rest_do_request')) {
         $errors[] = 'REST health 错误：' . $resp->get_error_message();
     }
 }
+// OA-2506：新只读端点必须真的注册（防止「manifest 写了、路由没注册」的静默漂移）。
+if (function_exists('rest_get_server')) {
+    $routes = array_keys((array) rest_get_server()->get_routes());
+    foreach (array('/tcpc-oa/v1/legal/', '/tcpc-oa/v1/doc/inbox', '/tcpc-oa/v1/files/') as $needle) {
+        $hit = false;
+        foreach ($routes as $route) {
+            if (strpos((string) $route, $needle) !== false) {
+                $hit = true;
+                break;
+            }
+        }
+        if (!$hit) {
+            $errors[] = 'REST 路由缺失：' . $needle;
+        }
+    }
+}
 if ($errors) {
     echo "OA_SMOKE_FAIL\n" . implode("\n", $errors) . "\n";
     exit(1);
