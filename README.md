@@ -72,6 +72,9 @@ wp --path=/www/wwwroot/tcpc.org.cn --allow-root plugin is-active tcpc-oa        
 wp --path=/www/wwwroot/tcpc.org.cn --allow-root cron event list | grep -E "zw_(policy|legal)"  # 政策归档/通知
 ```
 
+- **一键巡检（只读，含三类告警）**：`bash scripts/health-oa.sh`（`--json` 接监控、`--self-test` 夹具自测）；
+  覆盖插件缺失 / 版本漂移 / 六菜单 / 关键符号 / REST / 公开页 / `/bhzc` 哈希 / 发版记录漂移 / cron；
+  cron 与 systemd 接入方式见 [`docs/ops/health-monitoring.md`](docs/ops/health-monitoring.md)。
 - 结构自检：`wp eval-file` 冒烟脚本（发版脚本内置：六菜单 / 模块符号 / API 清单 / REST health）。
 - REST：`GET /wp-json/tcpc-oa/v1/health`（需 `read` 能力位，未登录 401 属正常）。
 - **失败信号**：插件目录不可读 / 页面 500 / 六菜单缺任一 / REST 非预期 ⇒ 先
