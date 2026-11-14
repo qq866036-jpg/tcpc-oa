@@ -260,10 +260,10 @@ if (!function_exists('zw_org_departments')) {
      * @return array
      */
     function zw_org_departments() {
-        $stored = get_option(ZW_ORG_DEPARTMENTS_OPTION, null);
+        $stored = zw_oa_org_dict_get('departments', null);
         if (!is_array($stored)) {
             $stored = zw_org_default_departments();
-            update_option(ZW_ORG_DEPARTMENTS_OPTION, $stored, false);
+            zw_oa_org_dict_save('departments', $stored);
         }
         $rows    = zw_org_normalize_rows($stored, zw_org_default_departments());
         $keys    = array_column($rows, 'key');
@@ -276,7 +276,7 @@ if (!function_exists('zw_org_departments')) {
         }
         if ($changed) {
             usort($rows, 'zw_org_sort_rows');
-            update_option(ZW_ORG_DEPARTMENTS_OPTION, $rows, false);
+            zw_oa_org_dict_save('departments', $rows);
         }
         return $rows;
     }
@@ -292,15 +292,15 @@ if (!function_exists('zw_org_duties')) {
         if (function_exists('zw_org_maybe_migrate_data')) {
             zw_org_maybe_migrate_data();
         }
-        $stored = get_option(ZW_ORG_DUTIES_OPTION, null);
+        $stored = zw_oa_org_dict_get('duties', null);
         if (!is_array($stored)) {
-            $legacy = get_option(ZW_ORG_ROLES_OPTION, null);
+            $legacy = zw_oa_org_dict_get('roles', null);
             if (is_array($legacy) && !empty($legacy)) {
                 $stored = zw_org_filter_legacy_duties($legacy);
             } else {
                 $stored = zw_org_default_duties();
             }
-            update_option(ZW_ORG_DUTIES_OPTION, $stored, false);
+            zw_oa_org_dict_save('duties', $stored);
         }
         $rows    = zw_org_normalize_rows($stored, zw_org_default_duties());
         $keys    = array_column($rows, 'key');
@@ -313,7 +313,7 @@ if (!function_exists('zw_org_duties')) {
         }
         if ($changed) {
             usort($rows, 'zw_org_sort_rows');
-            update_option(ZW_ORG_DUTIES_OPTION, $rows, false);
+            zw_oa_org_dict_save('duties', $rows);
         }
         return $rows;
     }
@@ -329,7 +329,7 @@ if (!function_exists('zw_org_roles')) {
         if (function_exists('zw_org_maybe_migrate_data')) {
             zw_org_maybe_migrate_data();
         }
-        $stored = get_option(ZW_ORG_ROLES_OPTION, array());
+        $stored = zw_oa_org_dict_get('roles', array());
         if (!is_array($stored)) {
             $stored = array();
         }
@@ -345,7 +345,7 @@ if (!function_exists('zw_org_save_departments')) {
      * @return void
      */
     function zw_org_save_departments($rows) {
-        update_option(ZW_ORG_DEPARTMENTS_OPTION, zw_org_normalize_rows($rows, zw_org_default_departments()), false);
+        zw_oa_org_dict_save('departments', zw_org_normalize_rows($rows, zw_org_default_departments()));
     }
 }
 
@@ -357,7 +357,7 @@ if (!function_exists('zw_org_save_duties')) {
      * @return void
      */
     function zw_org_save_duties($rows) {
-        update_option(ZW_ORG_DUTIES_OPTION, zw_org_normalize_rows($rows, zw_org_default_duties()), false);
+        zw_oa_org_dict_save('duties', zw_org_normalize_rows($rows, zw_org_default_duties()));
     }
 }
 
@@ -369,7 +369,7 @@ if (!function_exists('zw_org_save_roles')) {
      * @return void
      */
     function zw_org_save_roles($rows) {
-        update_option(ZW_ORG_ROLES_OPTION, zw_org_normalize_rows($rows, zw_org_default_roles()), false);
+        zw_oa_org_dict_save('roles', zw_org_normalize_rows($rows, zw_org_default_roles()));
     }
 }
 
@@ -1951,13 +1951,13 @@ if (!function_exists('zw_org_maybe_migrate_data')) {
         if ($running) {
             return;
         }
-        $version = (string) get_option(ZW_ORG_DATA_MODEL_OPTION, '');
+        $version = (string) zw_oa_org_data_model_get();
         if (!$force && $version === ZW_ORG_DATA_MODEL_VERSION) {
             return;
         }
         $running = true;
 
-        $legacy_rows = get_option(ZW_ORG_ROLES_OPTION, null);
+        $legacy_rows = zw_oa_org_dict_get('roles', null);
         if (!is_array($legacy_rows) || empty($legacy_rows)) {
             $legacy_rows = zw_org_legacy_default_roles();
         }
@@ -1973,8 +1973,8 @@ if (!function_exists('zw_org_maybe_migrate_data')) {
         if (empty($duties)) {
             $duties = zw_org_default_duties();
         }
-        update_option(ZW_ORG_DUTIES_OPTION, zw_org_normalize_rows($duties, zw_org_default_duties()), false);
-        update_option(ZW_ORG_ROLES_OPTION, array(), false);
+        zw_oa_org_dict_save('duties', zw_org_normalize_rows($duties, zw_org_default_duties()));
+        zw_oa_org_dict_save('roles', array());
 
         $legacy_map = array();
         foreach ($legacy_rows as $row) {
@@ -2080,7 +2080,7 @@ if (!function_exists('zw_org_maybe_migrate_data')) {
             }
         }
 
-        update_option(ZW_ORG_DATA_MODEL_OPTION, ZW_ORG_DATA_MODEL_VERSION, false);
+        zw_oa_org_data_model_save(ZW_ORG_DATA_MODEL_VERSION);
         $running = false;
     }
 }

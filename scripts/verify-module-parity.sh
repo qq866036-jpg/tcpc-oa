@@ -155,6 +155,8 @@ require|org|org-repository.php
 require|org|org-admin.php
 require|org|org-admin-people.php
 require|org|org-admin-roles.php
+# OA-2500：组织字典契约消费层（P-8）；主题侧数据契约见 inc/oa/contract-org-data.php。
+require|org|org-contract.php
 require|files|file-center.php
 require|files|org-files.php
 module|files|list|includes/files|org-files.php|

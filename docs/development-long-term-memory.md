@@ -664,3 +664,16 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
 - **回归**：`php tests/test-oa-api-manifest.php` 23 项；`php tests/test-oa-api-proxy.php`（主题侧）18 项；
   `ci-check` 八项全绿；policy/org parity 均 `POST-MIGRATION OK`。
 - **未验证**：REST 在真实 WP 的鉴权/响应（本机无登录态）；消费方（branch/cert/mapp）尚未切到 manifest，下一单接入。
+
+## 2026-11-14 · OA-2500：组织架构 O2a 字典数据契约化
+
+- **契约**：主题 `inc/oa/contract-org-data.php`（P-8，version 1）唯一写口；
+  白名单 4 键 → 既有 option（departments/duties/roles/data_model），未知键 fail-closed。
+- **插件消费层** `includes/org/org-contract.php`：契约优先（`zw_oa_org_data_version >= 1`）；
+  旧主题无契约 ⇒ 回落直读既有 option（过渡，不新增键、不改键名）。
+- **收口**：`org-repository.php` 16 处 `get_option/update_option(ZW_ORG_*)` 全部改为
+  `zw_oa_org_dict_get/save` / `zw_oa_org_data_model_get/save`；插件内直连 = 0。
+- **边界**：`zw_org_person` CPT 仍由主题注册（数据面留主题）；人员 meta 写口属 O2b，另行评审。
+- **回归**：`php tests/test-oa-org-contract.php` 13 项（旧主题回退 / 契约优先 / 源码零直连）；
+  主题 `php tests/test-oa-org-data-proxy.php` 17 项。
+- **未验证**：真实 WP 下 option 读写与 autoload 行为（本机无 WP 会话）；分支/证书仓切换契约消费未做。

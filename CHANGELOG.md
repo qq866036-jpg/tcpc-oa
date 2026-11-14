@@ -14,6 +14,10 @@
   `tcpc_oa_api_call()` 结构化降级、只读 REST `GET /wp-json/tcpc-oa/v1/manifest|health`。
   回归：`php tests/test-oa-api-manifest.php`（23 项）。
 - **parity 登记补齐**：policy 14 文件 + org 5 文件（`org-permissions.php` 按 Q2 exclude）。
+- **组织架构 O2a（OA-2500 / TASK-2820）**：新增 `includes/org/org-contract.php`，组织字典
+  （departments/duties/roles/data_model）改走主题 P-8 契约（`zw_oa_org_data_dict_get/save`，版本 >=1）；
+  旧主题无契约时回落直读既有 option（不新增键）。`org-repository.php` 内 16 处直连 option 全部收口，
+  `get/update/delete_option(ZW_ORG_*)` = 0。回归：`php tests/test-oa-org-contract.php`（13 项）。
 
 ### Changed
 
