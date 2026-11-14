@@ -139,8 +139,11 @@ if (!function_exists('tcpc_oa_api_manifest')) {
             'rest' => array(
                 'namespace' => 'tcpc-oa/v1',
                 'routes'    => array(
-                    'GET /manifest' => array('read_only' => true, 'cap' => 'read'),
-                    'GET /health'   => array('read_only' => true, 'cap' => 'read'),
+                    'GET /manifest'   => array('read_only' => true, 'cap' => 'read'),
+                    'GET /health'     => array('read_only' => true, 'cap' => 'read'),
+                    'GET /legal/(?P<doc>[A-Za-z0-9._-]{1,64})' => array('read_only' => true, 'cap' => 'read'),
+                    'GET /doc/inbox'  => array('read_only' => true, 'cap' => 'read'),
+                    'GET /files/(?P<id>\d+)' => array('read_only' => true, 'cap' => 'read'),
                 ),
             ),
         );
@@ -266,9 +269,131 @@ if (!function_exists('tcpc_oa_api_rest_permission')) {
     }
 }
 
+if (!function_exists('tcpc_oa_api_rest_legal')) {
+    /**
+     * `GET /tcpc-oa/v1/legal/{doc}` —— 当前生效条款（只读）。
+     *
+     * 降级：读源缺失 ⇒ 503 `LEGAL_UNAVAILABLE`（上游 degrade=empty 的语义）；
+     * 文档不存在 ⇒ 404；内部/禁读文档 ⇒ 404。
+     * 铁律 19：`/bhzc`（章程官网页）**永不可读**，doc id 命中直接拒绝。
+     *
+     * @param WP_REST_Request $request 请求。
+     * @return array|WP_Error
+     */
+    function tcpc_oa_api_rest_legal($request) {
+        $doc = (string) $request->get_param('doc');
+        if (!preg_match('/^[A-Za-z0-9._-]{1,64}$/', $doc)) {
+            return new WP_Error('LEGAL_DOC_INVALID', '文档编号不合法。', array('status' => 400));
+        }
+        if (strtolower($doc) === 'bhzc') {
+            return new WP_Error('LEGAL_DOC_FORBIDDEN', '该页面不在条款读源范围内。', array('status' => 404));
+        }
+        if (!function_exists('zw_legal_text_current')) {
+            return new WP_Error('LEGAL_UNAVAILABLE', '条款读源不可用。', array('status' => 503));
+        }
+        if (function_exists('zw_legal_text_visibility') && (string) zw_legal_text_visibility($doc) !== 'public') {
+            return new WP_Error('LEGAL_DOC_NOT_PUBLIC', '该文档不对外公开。', array('status' => 404));
+        }
+        $current = zw_legal_text_current($doc);
+        if (!is_array($current) || $current === array()) {
+            return new WP_Error('LEGAL_DOC_NOT_FOUND', '未找到该文档的生效版本。', array('status' => 404));
+        }
+        return array(
+            'doc_id'       => $doc,
+            'version_no'   => (string) ($current['version_no'] ?? ''),
+            'effective_at' => (string) ($current['effective_at'] ?? ''),
+            'body_hash'    => (string) ($current['body_hash'] ?? ''),
+            'body_html'    => (string) ($current['body_html'] ?? ''),
+            'degrade'      => 'empty',
+        );
+    }
+}
+
+if (!function_exists('tcpc_oa_api_rest_doc_inbox')) {
+    /**
+     * `GET /tcpc-oa/v1/doc/inbox` —— 当前用户收文（只读）。
+     *
+     * 降级（degrade=empty）：查询器缺失 ⇒ 200 + `available=false` + 空列表（调用方按空处理）。
+     *
+     * @param WP_REST_Request $request 请求。
+     * @return array|WP_Error
+     */
+    function tcpc_oa_api_rest_doc_inbox($request) {
+        $uid = function_exists('get_current_user_id') ? (int) get_current_user_id() : 0;
+        if ($uid <= 0) {
+            return new WP_Error('DOC_INBOX_UNAUTHORIZED', '未登录。', array('status' => 401));
+        }
+        $page = max(1, (int) $request->get_param('page'));
+        $per_page = (int) $request->get_param('per_page');
+        $per_page = $per_page > 0 ? min(50, $per_page) : 10;
+        if (!function_exists('zw_oa_doc_inbox_query')) {
+            return array('available' => false, 'reason' => 'accessor_missing', 'items' => array(), 'total' => 0, 'pages' => 0, 'is_admin' => false, 'degrade' => 'empty');
+        }
+        $r = zw_oa_doc_inbox_query($uid, $page, $per_page);
+        $r = is_array($r) ? $r : array();
+        return array(
+            'available' => !empty($r['available']),
+            'reason'    => (string) ($r['reason'] ?? ''),
+            'items'     => isset($r['items']) && is_array($r['items']) ? array_values($r['items']) : array(),
+            'total'     => (int) ($r['total'] ?? 0),
+            'pages'     => (int) ($r['pages'] ?? 0),
+            'is_admin'  => !empty($r['is_admin']),
+            'degrade'   => 'empty',
+        );
+    }
+}
+
+if (!function_exists('tcpc_oa_api_rest_file')) {
+    /**
+     * `GET /tcpc-oa/v1/files/{id}` —— 文件**元数据**（只读，脱敏）。
+     *
+     * 越权面（fail-closed）：未登录 401；存储契约缺失 503（degrade=deny）；
+     * 非本人且无 `manage_options` ⇒ 403。**只回白名单字段**，绝不返回物理路径 / 直链。
+     *
+     * @param WP_REST_Request $request 请求。
+     * @return array|WP_Error
+     */
+    function tcpc_oa_api_rest_file($request) {
+        $id = (int) $request->get_param('id');
+        if ($id <= 0) {
+            return new WP_Error('FILE_ID_INVALID', '文件编号不合法。', array('status' => 400));
+        }
+        $uid = function_exists('get_current_user_id') ? (int) get_current_user_id() : 0;
+        if ($uid <= 0) {
+            return new WP_Error('FILE_UNAUTHORIZED', '未登录。', array('status' => 401));
+        }
+        if (!function_exists('zw_oa_storage_get')) {
+            return new WP_Error('STORAGE_UNAVAILABLE', '文件存储服务不可用。', array('status' => 503));
+        }
+        $file = zw_oa_storage_get($id);
+        if (!is_array($file) || empty($file['id'])) {
+            return new WP_Error('FILE_NOT_FOUND', '未找到该文件。', array('status' => 404));
+        }
+        $owner = (int) ($file['owner_user_id'] ?? 0);
+        $is_admin = function_exists('current_user_can') && current_user_can('manage_options');
+        if (!$is_admin && $owner !== $uid) {
+            return new WP_Error('FILE_FORBIDDEN', '无权读取该文件。', array('status' => 403));
+        }
+        return array(
+            'id'      => (int) $file['id'],
+            'title'   => (string) ($file['title'] ?? ''),
+            'mime'    => (string) ($file['mime'] ?? ''),
+            'size'    => (int) ($file['size'] ?? 0),
+            'kind'    => (string) ($file['kind'] ?? ''),
+            'scope'   => (string) ($file['scope'] ?? ''),
+            'exists'  => !empty($file['exists']),
+            'degrade' => 'deny',
+        );
+    }
+}
+
 if (!function_exists('tcpc_oa_api_register_rest')) {
     /**
-     * 注册 `/tcpc-oa/v1` 只读路由（manifest / health）。
+     * 注册 `/tcpc-oa/v1` 只读路由。
+     *
+     * 全部 `GET` + `read` 能力位（manifest 的 `rest` 段与门禁只允许只读方法）。
+     * `policy/check` **不提供 REST**：它需要结构化请求上下文，用 GET 伪装「读取」会诱导调用方
+     * 把「判定」当无副作用；该能力继续走 PHP 符号契约（`tcpc_oa_api_call('policy.check', …)`）。
      *
      * @return void
      */
@@ -289,6 +414,21 @@ if (!function_exists('tcpc_oa_api_register_rest')) {
             'callback'            => function () {
                 return tcpc_oa_api_health();
             },
+        ));
+        register_rest_route('tcpc-oa/v1', '/legal/(?P<doc>[A-Za-z0-9._-]{1,64})', array(
+            'methods'             => 'GET',
+            'permission_callback' => 'tcpc_oa_api_rest_permission',
+            'callback'            => 'tcpc_oa_api_rest_legal',
+        ));
+        register_rest_route('tcpc-oa/v1', '/doc/inbox', array(
+            'methods'             => 'GET',
+            'permission_callback' => 'tcpc_oa_api_rest_permission',
+            'callback'            => 'tcpc_oa_api_rest_doc_inbox',
+        ));
+        register_rest_route('tcpc-oa/v1', '/files/(?P<id>\d+)', array(
+            'methods'             => 'GET',
+            'permission_callback' => 'tcpc_oa_api_rest_permission',
+            'callback'            => 'tcpc_oa_api_rest_file',
         ));
     }
 }
