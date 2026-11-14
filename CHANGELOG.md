@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+## [0.1.28] - 2026-11-14
+
+### Added
+
+- **REST 只读端点（OA-2505）**：`tcpc-oa/v1` 新增 `GET /legal/{doc}`、`GET /doc/inbox`、`GET /files/{id}`
+  （全部 `read` 能力位、无写路由）：
+  - `legal/{doc}`：当前生效条款（`version_no/effective_at/body_hash/body_html`）；内部文档 404、`bhzc` 404（铁律 19）、
+    读源缺失 503；
+  - `doc/inbox`：当前用户收文；查询器缺失 ⇒ 200 + `available=false` + 空列表（degrade=empty）；
+  - `files/{id}`：文件**脱敏元数据**（无 path/url/owner_user_id）；非本人且非管理员 403、存储缺失 503。
+
+### Changed
+
+- **发版冒烟扩面（OA-2506）**：结构冒烟新增「三条新只读路由必须真实注册」断言
+  （`rest_get_server()->get_routes()` 校验），防止 manifest 写了路由却没注册的静默漂移；
+  `tests/test-release-lock.sh` 29→**41 项**全绿。
+
 ## [0.1.27] - 2026-11-14
 
 ### Release
