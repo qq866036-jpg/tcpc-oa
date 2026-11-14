@@ -329,6 +329,13 @@ if (!function_exists('zw_receipt_disposal_render_page')) {
             . " WHERE origin = 'incoming' ORDER BY id ASC LIMIT 100", 'ARRAY_A'
         ) : array();
 
+        // OA-2489：两份清册的打印入口（打印友好 HTML，浏览器「打印 / 另存为 PDF」）。
+        echo '<p style="margin:0 0 14px">'
+            . '<a class="button" target="_blank" rel="noopener" href="' . esc_url(zw_receipt_disposal_print_url('destroy'))
+            . '">打印销毁清册</a> '
+            . '<a class="button" target="_blank" rel="noopener" href="' . esc_url(zw_receipt_disposal_print_url('return'))
+            . '">打印清退清单</a></p>';
+
         echo '<div class="notice notice-info inline" style="margin:0 0 14px"><p><strong>红线：</strong>'
             . '系统**不会删除任何文件或记录**。这里的「销毁」只写状态与清册（留痕），物理删除由人线下执行。</p></div>';
 
@@ -379,4 +386,200 @@ if (!function_exists('zw_receipt_disposal_render_page')) {
             . '<code>wp eval \'zw_receipt_disposal_mark("&lt;收文ID&gt;", "returned", "批准人", "备注");\'</code>'
             . '</p></div>';
     }
+}
+
+if (!function_exists('zw_receipt_disposal_print_types')) {
+    /**
+     * 处置打印单据类型（OA-2489）。
+     *
+     * @return array<string,string>
+     */
+    function zw_receipt_disposal_print_types() {
+        return array(
+            'destroy' => '档案销毁清册',
+            'return'  => '档案清退清单',
+        );
+    }
+}
+
+if (!function_exists('zw_receipt_disposal_print_url')) {
+    /**
+     * 打印地址（处置页按钮用）。
+     *
+     * @param string $type destroy|return。
+     * @return string
+     */
+    function zw_receipt_disposal_print_url($type) {
+        $type = isset(zw_receipt_disposal_print_types()[$type]) ? (string) $type : 'destroy';
+        $args = array('action' => 'zw_receipt_disposal_print', 'doc' => $type);
+        if (function_exists('wp_create_nonce')) {
+            $args['_wpnonce'] = wp_create_nonce('zw_receipt_disposal_print_' . $type);
+        }
+        $base = function_exists('admin_url') ? (string) admin_url('admin-post.php') : 'admin-post.php';
+        return function_exists('add_query_arg') ? (string) add_query_arg($args, $base) : $base . '?' . http_build_query($args);
+    }
+}
+
+if (!function_exists('zw_receipt_disposal_print_rows')) {
+    /**
+     * 清册行（只读）：按最新处置状态筛「已销毁 / 已清退」，并补齐收文要素。
+     *
+     * @param string $type destroy|return。
+     * @param int    $limit 上限。
+     * @return array[]
+     */
+    function zw_receipt_disposal_print_rows($type, $limit = 500) {
+        $state = $type === 'return' ? 'returned' : 'destroyed';
+        if (!zw_receipt_disposal_ready()) {
+            return array();
+        }
+        global $wpdb;
+        $rows = $wpdb->get_results($wpdb->prepare(
+            'SELECT receipt_id, years, until, approver, operator, created_at FROM ' . zw_receipt_disposal_table()
+            . ' WHERE state = %s ORDER BY id ASC LIMIT %d',
+            $state,
+            max(1, (int) $limit)
+        ), 'ARRAY_A');
+        $out  = array();
+        $seen = array();
+        foreach (is_array($rows) ? $rows : array() as $one) {
+            $rid = isset($one['receipt_id']) ? (string) $one['receipt_id'] : '';
+            if ($rid === '' || isset($seen[$rid])) {
+                continue; // 同一收文只取最早一条该状态（清册不重复列）
+            }
+            $seen[$rid] = true;
+            $row  = function_exists('zw_receipt_ledger_row_by_id') ? zw_receipt_ledger_row_by_id($rid) : array();
+            $view = function_exists('zw_receipt_ledger_row_view') ? zw_receipt_ledger_row_view($row) : array();
+            $arch = function_exists('zw_receipt_handle_archive_info') ? zw_receipt_handle_archive_info($rid) : array();
+            $one['number']   = isset($view['number']) ? (string) $view['number'] : $rid;
+            $one['title']    = isset($view['title']) ? (string) $view['title'] : '';
+            $one['org']      = isset($view['org_label']) ? (string) $view['org_label'] : '';
+            $one['box']      = isset($arch['archive_box_no']) ? (string) $arch['archive_box_no'] : '';
+            $one['arch_year'] = isset($arch['archive_year']) ? (int) $arch['archive_year'] : 0;
+            $out[] = $one;
+        }
+        return $out;
+    }
+}
+
+if (!function_exists('zw_receipt_disposal_print_render')) {
+    /**
+     * 清册 HTML（A4 **横版**：列多；打印友好，不引 PDF 库）。
+     *
+     * @param array  $rows 行。
+     * @param string $type destroy|return。
+     * @return string
+     */
+    function zw_receipt_disposal_print_render($rows, $type) {
+        $types = zw_receipt_disposal_print_types();
+        $title = isset($types[$type]) ? $types[$type] : '档案销毁清册';
+        $e = function ($v) {
+            return function_exists('esc_html') ? (string) esc_html((string) $v) : htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
+        };
+        $now = function_exists('current_time') ? (string) current_time('mysql') : date('Y-m-d H:i:s');
+
+        $css = '<style>'
+            . '@page{size:A4 landscape;margin:12mm 10mm}'
+            . 'body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;font-size:13px;line-height:1.5;color:#000;background:#fff;margin:0}'
+            . '.doc{max-width:277mm;margin:0 auto}'
+            . 'h1{font-size:20px;text-align:center;letter-spacing:2px;margin:0 0 2px}'
+            . '.org{text-align:center;font-size:12px;margin:0 0 10px}'
+            . '.meta{display:flex;justify-content:space-between;font-size:12px;margin:0 0 8px}'
+            . 'table{width:100%;border-collapse:collapse}'
+            . 'th,td{border:1px solid #000;padding:5px 6px;vertical-align:top}'
+            . 'th{background:#f2f2f2;font-weight:600;white-space:nowrap}'
+            . 'td.num{text-align:center;white-space:nowrap}'
+            . '.foot{margin-top:12px;font-size:12px;display:flex;justify-content:space-between}'
+            . '.print-bar{margin:0 0 10px;text-align:right}'
+            . '@media print{.print-bar{display:none}}'
+            . '</style>';
+
+        $html = '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><title>' . $e($title) . '</title>' . $css . '</head><body><div class="doc">';
+        $html .= '<div class="print-bar"><button type="button" onclick="window.print()">打印 / 另存为 PDF</button></div>';
+        $html .= '<h1>' . $e($title) . '</h1><p class="org">中国传统文化促进会</p>';
+        $html .= '<div class="meta"><span>合计：<strong>' . count($rows) . '</strong> 件</span><span>制表时间：' . $e($now) . '</span></div>';
+
+        if ($type === 'return') {
+            $html .= '<table><thead><tr><th style="width:4%">序号</th><th style="width:14%">收文编号</th><th>标题</th>'
+                . '<th style="width:14%">来文单位</th><th style="width:10%">归档盒号</th><th style="width:10%">清退日期</th><th style="width:10%">经办人</th></tr></thead><tbody>';
+            if (!$rows) {
+                $html .= '<tr><td colspan="7" class="num">（暂无已清退记录）</td></tr>';
+            }
+            foreach ($rows as $i => $r) {
+                $html .= '<tr><td class="num">' . ($i + 1) . '</td><td>' . $e($r['number']) . '</td>'
+                    . '<td>' . $e($r['title']) . '</td><td>' . $e($r['org']) . '</td>'
+                    . '<td>' . $e($r['box']) . '</td><td>' . $e($r['created_at']) . '</td>'
+                    . '<td>' . $e($r['operator']) . '</td></tr>';
+            }
+            $html .= '</tbody></table>';
+        } else {
+            $html .= '<table><thead><tr><th style="width:4%">序号</th><th style="width:12%">收文编号</th><th>标题</th>'
+                . '<th style="width:12%">来文单位</th><th style="width:9%">归档盒号</th><th style="width:6%">年度</th>'
+                . '<th style="width:7%">保管期限</th><th style="width:9%">到期日</th><th style="width:9%">批准人</th>'
+                . '<th style="width:9%">销毁日期</th></tr></thead><tbody>';
+            if (!$rows) {
+                $html .= '<tr><td colspan="10" class="num">（暂无已销毁记录）</td></tr>';
+            }
+            foreach ($rows as $i => $r) {
+                $years = (int) $r['years'];
+                $html .= '<tr><td class="num">' . ($i + 1) . '</td><td>' . $e($r['number']) . '</td>'
+                    . '<td>' . $e($r['title']) . '</td><td>' . $e($r['org']) . '</td>'
+                    . '<td>' . $e($r['box']) . '</td><td class="num">' . ((int) $r['arch_year'] > 0 ? (int) $r['arch_year'] : '—') . '</td>'
+                    . '<td class="num">' . ($years === 0 ? '永久' : $years . ' 年') . '</td>'
+                    . '<td class="num">' . $e((string) $r['until']) . '</td>'
+                    . '<td>' . $e($r['approver']) . '</td><td class="num">' . $e($r['created_at']) . '</td></tr>';
+            }
+            $html .= '</tbody></table>';
+        }
+
+        // 按年度小计（纸质清册常见要求）：只统计有归档年度的行。
+        if ($type !== 'return' && $rows) {
+            $by_year = array();
+            foreach ($rows as $r) {
+                $y = (int) ($r['arch_year'] ?? 0);
+                $key = $y > 0 ? (string) $y : '未标注';
+                $by_year[$key] = isset($by_year[$key]) ? $by_year[$key] + 1 : 1;
+            }
+            ksort($by_year, SORT_NATURAL);
+            $html .= '<p class="meta" style="margin-top:10px"><span>按年度小计：'
+                . $e(implode('　', array_map(function ($k, $v) { return $k . ' 年度 ' . $v . ' 件'; }, array_keys($by_year), array_values($by_year))))
+                . '</span></p>';
+        }
+
+        $html .= '<div class="foot"><span>制表人：____________　审核：____________　批准：____________</span>'
+            . '<span>本清册由系统生成，系统未删除任何文件或记录</span></div>';
+        $html .= '</div></body></html>';
+        return $html;
+    }
+}
+
+if (!function_exists('zw_receipt_disposal_print_handle')) {
+    /**
+     * `admin-post.php?action=zw_receipt_disposal_print` 入口。
+     *
+     * @return void
+     */
+    function zw_receipt_disposal_print_handle() {
+        if (function_exists('zw_receipt_ledger_can') && !zw_receipt_ledger_can()) {
+            wp_die('无权限打印处置清册（需要 tcpc_perm_doc）。', '无权访问', array('response' => 403));
+        }
+        $type = isset($_GET['doc']) ? trim((string) wp_unslash($_GET['doc'])) : 'destroy';
+        if (!isset(zw_receipt_disposal_print_types()[$type])) {
+            wp_die('打印参数非法。', '参数错误', array('response' => 400));
+        }
+        if (function_exists('check_admin_referer')) {
+            check_admin_referer('zw_receipt_disposal_print_' . $type);
+        }
+        if (!headers_sent()) {
+            header('Content-Type: text/html; charset=UTF-8');
+            header('Cache-Control: no-store');
+            header('X-Robots-Tag: noindex, nofollow');
+        }
+        echo zw_receipt_disposal_print_render(zw_receipt_disposal_print_rows($type), $type);
+        exit;
+    }
+}
+
+if (function_exists('add_action')) {
+    add_action('admin_post_zw_receipt_disposal_print', 'zw_receipt_disposal_print_handle');
 }
