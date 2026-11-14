@@ -539,9 +539,9 @@ if (!function_exists('zw_legal_text_diff')) {
         $max = max(count($old_lines), count($new_lines));
         // TASK-1633（TASK-1579 P1-6 第四批）：退回的逐行对比表落 canonical 横滑包裹。
         // 唯一调用方是 policy-platform-document-center.php（页 slug `zw-policy-documents`，
-        // 前缀 `zw-policy` 命中 zw_mc_adm_is_screen() ⇒ canonical 规则已由会员域外壳下沉），
+        // 前缀 `zw-policy` 命中会员域后台外壳判定 ⇒ canonical 规则已由会员域外壳下沉），
         // 故此处只需包裹、不新增 <style>、不复制第二套声明。
-        $html = '<div class="zw-adm-table-wrap"><table class="zw-legal-diff" style="width:100%;border-collapse:collapse;font-size:12.5px">';
+        $html = '<div class="tco-table-wrap"><table class="zw-legal-diff" style="width:100%;border-collapse:collapse;font-size:12.5px">';
         for ($i = 0; $i < $max; $i++) {
             $o = array_key_exists($i, $old_lines) ? $old_lines[$i] : null;
             $n = array_key_exists($i, $new_lines) ? $new_lines[$i] : null;
