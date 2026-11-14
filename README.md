@@ -4,7 +4,7 @@
 网盘文件中心、组织架构业务。
 
 - 本仓 = **插件仓**，仓根 == 插件根；生产落点 `/www/wwwroot/tcpc.org.cn/wp-content/plugins/tcpc-oa`
-  （**已上线**：`0.1.27` / 2026-11-14，六个模块全部启用）
+  （**已上线**：`0.1.28` / 2026-11-14，六个模块全部启用）
 - **双远端**（OA-2457）：唯一权威裸库 `/srv/git/repositories/tcpc-oa.git`（`origin`）＋ GitHub 私有镜像
   `qq866036-jpg/tcpc-oa`（`github`，deploy key `/root/.ssh/github_tcpc_oa_ed25519`）。
   合并进 `dev` **只前移本地 ref**（`dev-merge.sh` 不 push）⇒ 收口后必须手工同步：
@@ -28,7 +28,7 @@
 
 ## 安装 / 发版 / 回滚
 
-本插件**已在生产运行**（2026-11-14 起 `0.1.27`）。唯一发版入口：
+本插件**已在生产运行**（2026-11-14 起 `0.1.28`，主题 `1.2.6`）。唯一发版入口：
 
 ```bash
 bash scripts/plugin-switch-oa.sh --dry-run    # 先看将要做什么（不落盘）
