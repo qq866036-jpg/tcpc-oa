@@ -791,3 +791,17 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
 - **边界**：脚本只管「升版」，发布仍走 `plugin-switch-oa.sh`（版本三方 + 主题兼容 + 结构冒烟 + 回滚）。
 
 - **工具纪律自报**：本单滑点 4 处（python 内联改 README 版本段、台账范围行、记忆；sed -i 改记忆）⇒ `pitfalls.py bump PIT-012` ×4（→228）。
+
+## 2026-11-14 · OA-2508：健康检查与三类告警（health-oa.sh）
+
+- **入口**：`scripts/health-oa.sh`（只读；`--json` / `--quiet` / `--no-alert` / `--self-test`），
+  9 项检查 → 9 类告警：`PLUGIN_MISSING` / `VERSION_DRIFT` / `MENU_MISSING` / `SYMBOL_MISSING` /
+  `REST_DOWN` / `PUBLIC_URL_DOWN` / `BHZC_CHANGED` / `RELEASE_DRIFT` / `CRON_MISSING`。
+- **判据来源**：插件 active + 版本三方、六菜单（admin 身份触发 `admin_menu`）、6 个关键符号、
+  `GET /tcpc-oa/v1/health`、四个公开页 200、`/bhzc` 正文 md5 与基线（首次自动建基线
+  `/root/tcpc-release-locks/oa-bhzc.sha256`）、发版记录 vs 生产常量、5 个政策/条款 cron 事件。
+- **只读边界**：不写 WordPress 数据、不改插件目录；唯一写盘是首次建立 `/bhzc` 基线。
+- **告警通道**：`ZW_OA_ALERT_CMD`（stdin 收告警正文，可接 mail / webhook）；未设置只打印 `ALERT|<TYPE>|`。
+- **接入文档**：`docs/ops/health-monitoring.md`（cron / systemd timer 两种接法 + 通道示例）。
+- **回归**：`bash tests/test-health-oa.sh` 25 项（self-test 11 项判别力 + CLI 契约 + 9 检查/9 告警齐全 +
+  只读静态断言 + `--json` 可解析）；真实生产巡检 9/9 绿（rc=0）。
