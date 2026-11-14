@@ -9,6 +9,15 @@
   文档中心「新建版本」「确认生效」前置校验，不通过回执 `content_invalid` 并逐条列原因。
   回归：`php tests/test-oa-legal-content-rules.php`（18 项）。
 
+### Changed
+
+- **读源/版本模型迁入本仓并优先装载（OA-2498 / TASK-2814 S1）**：`policy-platform-data` /
+  `legal-text-source` / `logic/legal-text` / `legal-admin-bridge` 已复制进 `includes/policy/`（首版 DIFF=0，
+  仅两处有意差异：归档写 `uploads/tcpc-legal/`、审计缺位 fail-closed 不反向读主题）。
+  插件 `policy` 模块装载时先装读源再装管理面；主题侧同名副本保留为**插件停用回退**，
+  由 `functions.php` 的 `function_exists` 条件加载跳过。回归：`bash scripts/ci-check.sh` 八项全绿 +
+  `verify-module-parity.sh policy --expect-theme-absent`。
+
 ## [0.1.7] - 2026-11-03
 
 ### Release

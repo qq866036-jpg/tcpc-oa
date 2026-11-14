@@ -616,3 +616,22 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
 - **待办（S1 收口）**：主题 `scripts/privacy-policy-content-check.php` 改薄包装（优先加载本文件），
   消除第二套规则；引擎（legal-text-source/data/logic/bridge）迁入本仓另批。
 - **未验证**：真实 WP 后台表单提交 + transient 回执渲染（本单无浏览器会话，仅源码/纯函数级证据）。
+
+## 2026-11-14 · OA-2498 S1：读源/版本模型迁入（插件优先，主题回退）
+
+- **迁入**：`policy-platform-data.php` / `legal-text-source.php` / `logic/legal-text.php` / `legal-admin-bridge.php`
+  复制进 `includes/policy/`（首版 4 文件 DIFF=0）；`policy-platform-admin.php` 装载顺序改为
+  data → legal-text-source（内部 require logic）→ bridge → 3 个管理面。
+- **两处有意差异**（仅插件副本）：
+  ① `zw_legal_text_export_archive()` 写 `uploads/tcpc-legal/`，不再写主题 `docs/legal/`
+  （政策更新是 DB 发布，不要求主题发版/commit）；
+  ② `zw_legal_text_audit()` 去掉「反向 require 主题 admin」候选，审计写入缺位即 fail-closed
+  （本仓 `policy-platform-admin.php` 已提供 `zw_policy_platform_audit_insert`）。
+- **主题侧回退**：主题同名副本**保留但不再优先**；`functions.php` 的 data / bridge / legal-text 三处
+  require 改为 `function_exists` 条件（插件在线即跳过）。主题副本在 S2/S4 补完静态降级后删除。
+- **冲突面**：插件 admin 先声明 `zw_policy_platform_table/exists/ready`；data.php 的同名声明带守卫 ⇒ 跳过。
+  主题 legal-text 副本的所有函数均带 `function_exists` 守卫 ⇒ 即使无条件加载也不会 `Cannot redeclare`。
+- **门禁**：`ci-check` 八项全绿（94 文件 lint / 反向依赖 0 / 双序装载安全 / 发版互斥 30/30）；
+  `verify-module-parity.sh policy --expect-theme-absent` ⇒ `POST-MIGRATION OK`（插件 11 文件、主题仅 shim）。
+- **未验证（如实）**：真实 WP 下「插件在线 + 主题条件加载」的运行时行为（本机无 WP 会话）；
+  `uploads/tcpc-legal/` 归档在生产的可写性；S1 尚未删主题副本（有意，留回退）。

@@ -133,6 +133,11 @@ require|policy|policy-platform-content-review.php
 require|policy|policy-platform-cron.php
 require|policy|policy-platform-document-center.php
 require|policy|policy-rule-engine.php
+# OA-2498 S1：读源/版本模型/桥接助手 + 政策正文内容规则进本仓（主题侧保留为插件停用回退，不参与比对）。
+require|policy|policy-platform-data.php
+require|policy|legal-text-source.php
+require|policy|legal-admin-bridge.php
+require|policy|legal-content-rules.php
 # OA-2437（R8-1）：org / files 的**主题侧 shim 登记**（用户拍板③）。
 # 形态与 W1 的 policy 一致：主题只留一个薄 shim（插件优先 / 插件缺席 fail-closed），
 # 其余实现副本删除。shim 只允许**存在且不参与比对**，不降低其它文件的判据。
