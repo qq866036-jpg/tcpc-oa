@@ -70,8 +70,23 @@ echo "== 5) REST 只读约束（源码级） ==\n";
 $src = (string) file_get_contents(dirname(__DIR__) . '/includes/api/oa-api.php');
 oaapi_chk(strpos($src, "register_rest_route('tcpc-oa/v1', '/manifest'") !== false, '注册 GET /manifest');
 oaapi_chk(strpos($src, "register_rest_route('tcpc-oa/v1', '/health'") !== false, '注册 GET /health');
+oaapi_chk(strpos($src, "register_rest_route('tcpc-oa/v1', '/legal/") !== false, '注册 GET /legal/{doc}（OA-2505）');
+oaapi_chk(strpos($src, "register_rest_route('tcpc-oa/v1', '/doc/inbox'") !== false, '注册 GET /doc/inbox（OA-2505）');
+oaapi_chk(strpos($src, "register_rest_route('tcpc-oa/v1', '/files/") !== false, '注册 GET /files/{id}（OA-2505）');
 oaapi_chk(strpos($src, "'methods'             => 'POST'") === false && strpos($src, "'methods' => 'POST'") === false, '无任何 POST 路由');
-oaapi_chk(strpos($src, 'tcpc_oa_api_rest_permission') !== false, '两个路由都带权限回调');
+oaapi_chk(substr_count($src, 'tcpc_oa_api_rest_permission') >= 5, '五个路由都带权限回调');
+// OA-2505：files 端点只回白名单字段，绝不返回物理路径/直链（越权与脱敏）。
+// 判据落在**函数体**上（整文件断言会被别处的 path/url 误伤/误过）。
+$file_body = '';
+if (preg_match('/function tcpc_oa_api_rest_file\(.*?\n\}/s', $src, $fm)) {
+    $file_body = (string) $fm[0];
+}
+oaapi_chk($file_body !== '', '定位到 files 端点函数体');
+oaapi_chk($file_body !== '' && strpos($file_body, "'path'") === false, 'files 响应不含 path 字段');
+oaapi_chk($file_body !== '' && strpos($file_body, "'url'") === false, 'files 响应不含 url 字段');
+oaapi_chk($file_body !== '' && strpos($file_body, "'owner_user_id' =>") === false, 'files 响应不外泄 owner_user_id（只允许作为入参读取）');
+oaapi_chk($file_body !== '' && strpos($file_body, '$owner !== $uid') !== false, 'files 端点有「非本人拒绝」判据');
+oaapi_chk($file_body !== '' && strpos($file_body, "current_user_can('manage_options')") !== false, '管理员可读（显式能力位）');
 
 if ($GLOBALS['oaapi_fail']) {
     fwrite(STDERR, "FAIL: OA-2499 API 清单断言未通过（{$GLOBALS['oaapi_pass']} 通过 / " . count($GLOBALS['oaapi_fail']) . " 失败）\n");

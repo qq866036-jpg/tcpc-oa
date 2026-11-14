@@ -753,3 +753,18 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
   主题侧仅剩 shim）。
 - **保留的提醒**：`list`（迁移前）模式对 doc 会报 `doc-seal.php` missing——那是「主题未迁移」的旧口径，
   迁移完成后一律用 `--expect-theme-absent`；不要据此误判为缺口。
+
+## 2026-11-14 · OA-2505：REST 只读端点补全（legal/{doc} · doc/inbox · files/{id}）
+
+- **范围**：在 `tcpc-oa/v1` 下新增三条 **GET 只读**路由（`read` 能力位）：
+  `legal/{doc}`（当前生效条款）、`doc/inbox`（当前用户收文）、`files/{id}`（文件元数据）。
+  **`policy/check` 不提供 REST**：需要结构化上下文，用 GET 伪装「读取」会让调用方误以为无副作用；
+  继续走 PHP 符号契约 `tcpc_oa_api_call('policy.check', …)`（manifest 的 `rest` 段仍只允许 GET，门禁不变）。
+- **降级语义（与 manifest 对齐）**：legal 读源缺失 ⇒ 503 `LEGAL_UNAVAILABLE`；inbox 查询器缺失 ⇒
+  200 + `available=false` + 空列表（degrade=empty）；files 存储契约缺失 ⇒ 503 `STORAGE_UNAVAILABLE`（degrade=deny）。
+- **越权与脱敏**：files 端点只回白名单（id/title/mime/size/kind/scope/exists），**绝不返回 path/url**；
+  非本人且非管理员 ⇒ 403；未登录 401。legal 只回 `visibility=public`；`bhzc` 直接 404（铁律 19）。
+- **回归**：`php tests/test-oa-api-rest-endpoints.php` **25 项**（路由登记/400/401/403/404/503/降级/脱敏/子进程）；
+  `php tests/test-oa-api-manifest.php` 扩到 **32 项**（含三条新路由 + files 函数体不含 path/url/owner 输出）。
+- **未验证**：真实 WP 下的路由鉴权与 mapp 消费方联调（本机无登录态）；`files` 的团队/部门级可见性目前
+  只做「本人或管理员」，更细的 RBAC 待 C2 消费者接入时按需扩。

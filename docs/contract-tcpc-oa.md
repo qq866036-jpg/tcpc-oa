@@ -94,7 +94,7 @@
 | 调用入口 | `tcpc_oa_api_call($key,$args)` ⇒ `{ok,code:ok|unknown|unavailable,degrade,data}`，**不抛错** |
 | 可用性 | `tcpc_oa_api_available($key)`（PHP 符号是否已声明）；清单登记 ≠ 运行时可用 |
 | 降级语义 | `empty`（列表/文本 → 空）、`fail_closed`（合规面 → 拒绝/拦截）、`deny`（存储 → 无地址/拒绝） |
-| REST | `GET /wp-json/tcpc-oa/v1/manifest`、`GET /…/health`（只读，`read` 能力位；**无写路由**） |
+| REST | `GET /wp-json/tcpc-oa/v1/manifest`、`/health`、`/legal/{doc}`、`/doc/inbox`、`/files/{id}`（全部只读 + `read` 能力位；**无写路由**）。`legal` 只回公开文档（`bhzc` 永不返回，铁律 19）；`doc/inbox` 只回当前用户（管理员按既有口径）；`files` 只回白名单元数据（无 path/url），非本人且非管理员 ⇒ 403 |
 | 主题代理 | `inc/oa/contract-api.php` 的 `zw_oa_api_manifest/version/supports/degrade/call`：插件在 ⇒ 原样投影；插件缺 ⇒ `source=off` 零值 + 按降级语义 |
 
 **消费纪律**：先 `supports` 再 `available` 再 `call`；`ok=false` 必须按 `degrade` 处理，禁止把缺位当成功。
