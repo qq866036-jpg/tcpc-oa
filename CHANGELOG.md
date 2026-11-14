@@ -18,6 +18,14 @@
   由 `functions.php` 的 `function_exists` 条件加载跳过。回归：`bash scripts/ci-check.sh` 八项全绿 +
   `verify-module-parity.sh policy --expect-theme-absent`。
 
+### Changed
+
+- **判定引擎 / 签署 / 拦截 / 通知 / 定时迁入本仓（OA-2498 S2）**：`policy-module-map` / `policy-rule-engine` /
+  `policy-platform-cron` / `legal-consent` / `legal-consent-gate` / `legal-consent-notify` 复制进
+  `includes/policy/`（首版 DIFF=0），插件 `policy` 模块按依赖顺序装载；主题侧同名副本改为
+  `function_exists` 条件加载（插件在线即跳过，停用即回退）。回归：`ci-check` 八项全绿 +
+  `verify-module-parity.sh policy --expect-theme-absent`（插件 14 文件、主题仅 shim）。
+
 ## [0.1.7] - 2026-11-03
 
 ### Release

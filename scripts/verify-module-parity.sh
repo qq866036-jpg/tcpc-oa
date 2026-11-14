@@ -138,6 +138,13 @@ require|policy|policy-platform-data.php
 require|policy|legal-text-source.php
 require|policy|legal-admin-bridge.php
 require|policy|legal-content-rules.php
+# OA-2498 S2：判定引擎 + 签署/拦截/通知 + 定时也进本仓（主题侧保留回退，不参与比对）。
+require|policy|policy-module-map.php
+require|policy|policy-rule-engine.php
+require|policy|policy-platform-cron.php
+require|policy|legal-consent.php
+require|policy|legal-consent-gate.php
+require|policy|legal-consent-notify.php
 # OA-2437（R8-1）：org / files 的**主题侧 shim 登记**（用户拍板③）。
 # 形态与 W1 的 policy 一致：主题只留一个薄 shim（插件优先 / 插件缺席 fail-closed），
 # 其余实现副本删除。shim 只允许**存在且不参与比对**，不降低其它文件的判据。
