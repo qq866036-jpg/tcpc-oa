@@ -450,7 +450,13 @@ function zw_policy_platform_cron_age_watch($as_of = '') {
         'at'             => time(),
     );
 
-    if (!function_exists('get_posts') || !function_exists('get_post_meta') || !function_exists('zw_branch_leaders')) {
+    // TASK-2582（分仓 P1）：把到龄扫描用到的**全部**分支机构函数纳入守卫。
+    // 原先只守 `zw_branch_leaders`，但下面还直接用了 `zw_branch_leader_meta_key()`（:462）与
+    // `zw_branch_leader_is_active()`（:481）—— 分支模块被拆走后这两处会 Fatal（静默失败算缺陷，铁律 24）。
+    if (!function_exists('get_posts') || !function_exists('get_post_meta')
+        || !function_exists('zw_branch_leaders')
+        || !function_exists('zw_branch_leader_meta_key')
+        || !function_exists('zw_branch_leader_is_active')) {
         return $summary; // 依赖未加载 ⇒ 安静退出（不写状态，避免污染）
     }
 

@@ -2139,10 +2139,31 @@ function zw_policy_platform_page_supervision() {
  * `zw_legal_consent_admin_menu`（全仓唯一无声明守卫的函数，见 R3-1 归属清单）⇒ `Cannot redeclare`。
  * 该函数体属主题副本的 DIFF=0 面，本轮不得改（加守卫/删体留给 R3-4，主题切片）。
  * ════════════════════════════════════════════════════════════════════════════ */
+// OA-2498 S1/S2：把「读源/版本模型 + 判定引擎 + 签署/拦截/通知 + 定时」一并装入本仓（插件优先）。
+// 主题侧同名副本保留为回退，`functions.php` 已改为 `function_exists` 条件加载 ⇒ 插件在线时不重复声明。
+// 顺序：module-map → data → rule-engine → legal-text-source（内部 require logic）→ consent → gate → notify → cron → bridge。
+foreach (array(
+    'policy-module-map.php',
+    'policy-platform-data.php',
+    'policy-rule-engine.php',
+    'legal-text-source.php',
+    'legal-consent.php',
+    'legal-consent-gate.php',
+    'legal-consent-notify.php',
+    'policy-platform-cron.php',
+    'legal-admin-bridge.php',
+) as $zw_policy_engine_file) {
+    $zw_policy_engine_path = __DIR__ . '/' . $zw_policy_engine_file;
+    if (is_file($zw_policy_engine_path)) {
+        require_once $zw_policy_engine_path;
+    }
+}
+unset($zw_policy_engine_file, $zw_policy_engine_path);
+
 foreach (array(
     // 只装**管理面** 3 个（本文件 = 第 4 个，由 load-list 以 bootstrap 装载）。
-    // 读侧 3 个（policy-module-map / policy-platform-cron / policy-rule-engine）**不装**：
-    // 主题 inc/policy-platform/ 有同名同函数实现（Q-A2 读侧留主题），装了必 Cannot redeclare。
+    // 读侧/引擎 6 个（module-map / rule-engine / cron / consent / gate / notify）已由上方
+    // OA-2498 引擎块装载；主题侧同名副本改为 `function_exists` 条件加载 ⇒ 不再撞 Cannot redeclare。
     'policy-platform-consent.php',
     'policy-platform-content-review.php',
     'policy-platform-document-center.php',

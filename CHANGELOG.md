@@ -1,5 +1,31 @@
 # CHANGELOG
 
+## [Unreleased]
+
+### Added
+
+- **政策正文内容规则（OA-2498 / TASK-2814 S1）**：新增 `includes/policy/legal-content-rules.php`
+  （隐私政策必备章节 / 产品文档禁用词 / 22100 字上限；用户协议 30000 字护栏；未登记文档跳过）。
+  文档中心「新建版本」「确认生效」前置校验，不通过回执 `content_invalid` 并逐条列原因。
+  回归：`php tests/test-oa-legal-content-rules.php`（18 项）。
+
+### Changed
+
+- **读源/版本模型迁入本仓并优先装载（OA-2498 / TASK-2814 S1）**：`policy-platform-data` /
+  `legal-text-source` / `logic/legal-text` / `legal-admin-bridge` 已复制进 `includes/policy/`（首版 DIFF=0，
+  仅两处有意差异：归档写 `uploads/tcpc-legal/`、审计缺位 fail-closed 不反向读主题）。
+  插件 `policy` 模块装载时先装读源再装管理面；主题侧同名副本保留为**插件停用回退**，
+  由 `functions.php` 的 `function_exists` 条件加载跳过。回归：`bash scripts/ci-check.sh` 八项全绿 +
+  `verify-module-parity.sh policy --expect-theme-absent`。
+
+### Changed
+
+- **判定引擎 / 签署 / 拦截 / 通知 / 定时迁入本仓（OA-2498 S2）**：`policy-module-map` / `policy-rule-engine` /
+  `policy-platform-cron` / `legal-consent` / `legal-consent-gate` / `legal-consent-notify` 复制进
+  `includes/policy/`（首版 DIFF=0），插件 `policy` 模块按依赖顺序装载；主题侧同名副本改为
+  `function_exists` 条件加载（插件在线即跳过，停用即回退）。回归：`ci-check` 八项全绿 +
+  `verify-module-parity.sh policy --expect-theme-absent`（插件 14 文件、主题仅 shim）。
+
 ## [0.1.7] - 2026-11-03
 
 ### Release

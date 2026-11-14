@@ -140,7 +140,8 @@ if (!function_exists('zw_policy_recommended_scenario_alias')) {
      * 为什么要有：`rule_code` 由导入器按毫秒时间戳生成（`AUTO-CONF-<ms>-<seq>`），
      * **换环境 / 重新导入即变**。因此除 `rule_code` 直接命中外，还需按业务场景中文名回退，
      * 才能让「一键推荐」在 dev / 测试环境同样可用。**别名只指向同一张推荐表**（不复制第二套键集，
-     * 由 `tests/test-policy-applicability.php` 断言两张表逐条一致）。
+     * 由主题侧 `tests/test-policy-module-map.php` 断言两张表逐条一致；
+     * 适用性配置本身已随法务管理面迁入 tcpc-oa（AGENT-0060：原 `test-policy-applicability` 主题副本已删）。
      *
      * 值为空串 = 该场景**已知为占位**（`待业务场景映射`）⇒ 无推荐（不臆造）。
      *

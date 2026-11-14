@@ -601,3 +601,52 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
 - 事实：PHP 8.4 起 `fputcsv()` 不传第 5 个参数 `$escape` 会发 deprecation；管理面渲染测试会因此判红（B1 验收红项）。
 - 口径：本项目所有 `fputcsv()` 一律写 `fputcsv($fh, $row, ',', '"', '')`（显式空 escape，输出与旧默认一致）。
 - 落点：`includes/policy/policy-platform-consent.php`（CSV 导出两处，本次已修）；新增导出代码照此写。
+
+## 2026-11-14 · OA-2498 S1：政策正文内容规则（插件侧唯一实现）
+
+- **用户口径**（TASK-2814 / 2026-11-14）：隐私/注册政策数据库化，更新政策不再发版；正文入库前必须有规则硬校验。
+- **落点**：`includes/policy/legal-content-rules.php`（纯 PHP、零 WP 依赖，`rules_version=1`）；
+  文档中心「新建版本」「确认生效」两处调用；不通过 ⇒ 不建版本/不生效，回执 `content_invalid`，
+  逐条原因存 5 分钟 transient（不落库）并在提示条列出。
+- **规则**：隐私政策 14 个必备章节 + 产品文档禁用词 + 22100 字上限；用户协议 30000 字护栏 + 禁用词；
+  未登记文档（章程等）跳过，避免误伤。
+- **坑（已修）**：PCRE 的 `\b` 在「…到工作台点…」这类中文语境不成立 ⇒ 中文禁用词一律去掉 `\b` 按子串匹配，
+  只有 `PRD` 英文缩写保留词边界；首版实测漏报，回归已锁。
+- **回归**：`php tests/test-oa-legal-content-rules.php` 18 项；`bash scripts/ci-check.sh` 八项全绿（90 文件 lint）。
+- **待办（S1 收口）**：主题 `scripts/privacy-policy-content-check.php` 改薄包装（优先加载本文件），
+  消除第二套规则；引擎（legal-text-source/data/logic/bridge）迁入本仓另批。
+- **未验证**：真实 WP 后台表单提交 + transient 回执渲染（本单无浏览器会话，仅源码/纯函数级证据）。
+
+## 2026-11-14 · OA-2498 S1：读源/版本模型迁入（插件优先，主题回退）
+
+- **迁入**：`policy-platform-data.php` / `legal-text-source.php` / `logic/legal-text.php` / `legal-admin-bridge.php`
+  复制进 `includes/policy/`（首版 4 文件 DIFF=0）；`policy-platform-admin.php` 装载顺序改为
+  data → legal-text-source（内部 require logic）→ bridge → 3 个管理面。
+- **两处有意差异**（仅插件副本）：
+  ① `zw_legal_text_export_archive()` 写 `uploads/tcpc-legal/`，不再写主题 `docs/legal/`
+  （政策更新是 DB 发布，不要求主题发版/commit）；
+  ② `zw_legal_text_audit()` 去掉「反向 require 主题 admin」候选，审计写入缺位即 fail-closed
+  （本仓 `policy-platform-admin.php` 已提供 `zw_policy_platform_audit_insert`）。
+- **主题侧回退**：主题同名副本**保留但不再优先**；`functions.php` 的 data / bridge / legal-text 三处
+  require 改为 `function_exists` 条件（插件在线即跳过）。主题副本在 S2/S4 补完静态降级后删除。
+- **冲突面**：插件 admin 先声明 `zw_policy_platform_table/exists/ready`；data.php 的同名声明带守卫 ⇒ 跳过。
+  主题 legal-text 副本的所有函数均带 `function_exists` 守卫 ⇒ 即使无条件加载也不会 `Cannot redeclare`。
+- **门禁**：`ci-check` 八项全绿（94 文件 lint / 反向依赖 0 / 双序装载安全 / 发版互斥 30/30）；
+  `verify-module-parity.sh policy --expect-theme-absent` ⇒ `POST-MIGRATION OK`（插件 11 文件、主题仅 shim）。
+- **未验证（如实）**：真实 WP 下「插件在线 + 主题条件加载」的运行时行为（本机无 WP 会话）；
+  `uploads/tcpc-legal/` 归档在生产的可写性；S1 尚未删主题副本（有意，留回退）。
+
+## 2026-11-14 · OA-2498 S2：判定引擎/签署/拦截/通知/定时迁入（插件优先，主题回退）
+
+- **迁入 6 文件（首版 DIFF=0）**：`policy-module-map` / `policy-rule-engine` / `policy-platform-cron` /
+  `legal-consent` / `legal-consent-gate` / `legal-consent-notify` → `includes/policy/`。
+- **装载顺序**（`policy-platform-admin.php`）：module-map → data → rule-engine → legal-text-source →
+  consent → gate → notify → cron → bridge → 3 个管理面。主题侧 9 处 require 全部改为
+  `function_exists` 条件（插件在线跳过、停用回退），不再依赖「谁先装载」。
+- **冲突面**：6 个文件函数均带 `function_exists` 守卫；cron 顶部对主题 admin 的 require 有
+  `!function_exists('zw_policy_platform_table')` 守卫 ⇒ 插件在线时整段跳过。
+- **门禁**：`ci-check` 八项全绿（100 文件 lint / 双序装载安全）；`verify-module-parity.sh policy
+  --expect-theme-absent` ⇒ `POST-MIGRATION OK`（插件 14 文件、主题仅 `policy-platform-admin.php` shim）。
+- **待办（收口前）**：主题 `scripts/privacy-policy-content-check.php` 改薄包装到本仓规则；
+  主题侧 10 个回退副本删除与静态降级页（S4）另批。
+- **未验证**：真实 WP 下「插件在线 + 主题条件加载」的运行时（含 cron 事件是否重复注册）需生产/预发实测。
