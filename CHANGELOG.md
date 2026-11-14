@@ -19,6 +19,14 @@
   旧主题无契约时回落直读既有 option（不新增键）。`org-repository.php` 内 16 处直连 option 全部收口，
   `get/update/delete_option(ZW_ORG_*)` = 0。回归：`php tests/test-oa-org-contract.php`（13 项）。
 
+- **组织架构 O2b 人员 meta 写口（OA-2501 / TASK-2823 / 主题契约 TASK-2821）**：`org-contract.php`
+  新增 `zw_oa_org_person_meta_set/delete` —— 优先走主题 `zw_oa_org_data_person_meta_set`
+  （`zw_person_` 前缀 + 标量 + `person_id>0`，key ≤64），旧主题无写口时回退
+  `update_post_meta/delete_post_meta`（不新增键、不改语义）。`org-repository.php` 内
+  **30 处写入 + 1 处删除**全部收口，直连 `update_post_meta/delete_post_meta` = 0。
+  回归：`php tests/test-oa-org-contract.php`（38 项：回退/契约双路径 + 空串与 0 放行 +
+  非前缀/数组/对象/非法 ID 拒绝 + 源码零直连）。
+
 ### Changed
 
 - **读源/版本模型迁入本仓并优先装载（OA-2498 / TASK-2814 S1）**：`policy-platform-data` /
