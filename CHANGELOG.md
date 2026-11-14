@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+## [0.1.27] - 2026-11-14
+
+### Release
+
+- **发版范围**：把 2026-11-09（0.1.26 / `953c6ed`）以来的 25 个提交一次上线，生产当前落后本仓一整代：
+  - **AI法务部全量迁入**（OA-2498 / TASK-2814 S1+S2）：读源/版本模型/内容规则/判定引擎/签署/拦截/通知/定时
+    共 14 文件进 `includes/policy/`；主题同名副本改为「插件优先、停用回退」条件加载。
+  - **组织架构数据面契约**（OA-2500 O2a / OA-2501 O2b / 主题 TASK-2820·2821）：字典与人员 meta 经
+    `zw_oa_org_data_*` 契约读写；插件内直连 option = 0、直连人员 meta 写 = 0（旧主题自动回退）。
+  - **OA API 互通**（OA-2499 / TASK-2818）：`tcpc_oa_api_manifest()` 11 符号 + 版本握手 + 结构化降级 +
+    只读 REST `GET /wp-json/tcpc-oa/v1/manifest|health`；消费登记表与门禁（观察期）。
+  - **卫星仓 UI 独立**（OA-2491）、**发版互斥**（OA-2494）、**界面文案门禁**（OA-2497）、
+    **CSV 导出 PHP 8.4 兼容**（OA-2495）、收口/归档类修复（OA-2492/2493/2490）。
+  - **发版通道扩面（本单 OA-2502）**：`plugin-switch-oa.sh` 冒烟新增「六菜单可达 + 模块符号 + API 清单结构 +
+    REST health + `/userra/`」，改变此前只验登录页/隐私页/章程哈希的窄口径（TASK-2306 §10 G3）。
+- **回滚**：`bash scripts/plugin-switch-oa.sh --rollback <ts>`（发版时自动备份到
+  `/root/tcpc-oa-plugin-backups/pre-switch-<ts>/`）。
+
 ### Added
 
 - **政策正文内容规则（OA-2498 / TASK-2814 S1）**：新增 `includes/policy/legal-content-rules.php`

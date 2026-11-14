@@ -286,6 +286,93 @@ else
   echo "  ✓ /bhzc 正文（DB）未变化（$BHZC_AFTER）"
 fi
 
+# ── OA-2502：结构冒烟扩面（TASK-2306 §10 G3）────────────────────────────────
+# 旧口径只验 /login、/privacy-policy/、/bhzc —— 发版后哪怕六个办公菜单全没注册、API 清单缺失、
+# 模块符号没加载，也会「冒烟通过」。本段把 G3 的「6 菜单 + 模块面」落成可判据：
+#   ① 六个后台菜单 slug 真实注册（以 admin 用户 1 触发 admin_menu，回避 CLI 无 caps 的假阴）；
+#   ② 关键模块符号在场（发文页回调 / 条款读源 / 签署判定 / OA API / 组织写口 / 政策引擎）；
+#   ③ API 清单结构（11 符号 / version=1）与 REST health 可路由；
+#   ④ /userra/ 200（用户协议）。
+# 判别力：旧构建（0.1.26 / OA-2491）没有 `tcpc_oa_api_manifest` ⇒ 本段必红（已实测）。
+say "结构冒烟（六菜单 / 模块符号 / API 清单 / REST）"
+SMOKE_PHP="$(mktemp /tmp/zw-oa-smoke-php.XXXXXX.php)"
+cat > "$SMOKE_PHP" <<'PHP'
+<?php
+$errors = array();
+$need_menus = array('zw-doc', 'zw-receipt', 'zw-org', 'zw-policy-platform', 'zw-org-files', 'zw-secretariat');
+$need_funcs = array(
+    'zw_doc_page_list',
+    'zw_legal_text_current',
+    'zw_legal_consent_enforce_enabled',
+    'tcpc_oa_api_manifest',
+    'zw_oa_org_person_meta_set',
+    'zw_policy_check',
+);
+$need_files = array(
+    'includes/api/oa-api.php',
+    'includes/org/org-contract.php',
+    'includes/policy/legal-text-source.php',
+);
+require_once ABSPATH . 'wp-admin/includes/admin.php';
+do_action('admin_menu');
+global $menu, $submenu;
+$slugs = array();
+foreach ((array) $menu as $m) {
+    if (!empty($m[2])) {
+        $slugs[] = (string) $m[2];
+    }
+}
+foreach ((array) $submenu as $items) {
+    foreach ((array) $items as $it) {
+        if (!empty($it[2])) {
+            $slugs[] = (string) $it[2];
+        }
+    }
+}
+foreach ($need_menus as $slug) {
+    if (!in_array($slug, $slugs, true)) {
+        $errors[] = '菜单缺失：' . $slug;
+    }
+}
+foreach ($need_funcs as $fn) {
+    if (!function_exists($fn)) {
+        $errors[] = '函数缺失：' . $fn;
+    }
+}
+foreach ($need_files as $rel) {
+    if (!is_file(TCPC_OA_DIR . '/' . $rel)) {
+        $errors[] = '文件缺失：' . $rel;
+    }
+}
+if (function_exists('tcpc_oa_api_manifest')) {
+    $manifest = tcpc_oa_api_manifest();
+    $count = isset($manifest['symbols']) && is_array($manifest['symbols']) ? count($manifest['symbols']) : 0;
+    if ($count !== 11) {
+        $errors[] = 'API 清单符号数=' . $count . '（期望 11）';
+    }
+    if ((int) ($manifest['version'] ?? 0) !== 1) {
+        $errors[] = 'API 清单版本不是 1';
+    }
+}
+if (function_exists('rest_do_request')) {
+    $resp = rest_do_request(new WP_REST_Request('GET', '/tcpc-oa/v1/health'));
+    if (is_wp_error($resp)) {
+        $errors[] = 'REST health 错误：' . $resp->get_error_message();
+    }
+}
+if ($errors) {
+    echo "OA_SMOKE_FAIL\n" . implode("\n", $errors) . "\n";
+    exit(1);
+}
+echo 'OA_SMOKE_OK menus=' . count($need_menus) . ' funcs=' . count($need_funcs) . ' files=' . count($need_files) . "\n";
+PHP
+if ! wp eval-file "$SMOKE_PHP" --user="${ZW_OA_SMOKE_USER:-1}" --path="$WP_PATH" --allow-root; then
+  rm -f "$SMOKE_PHP"
+  fail "结构冒烟失败：六菜单 / 模块符号 / API 清单 / REST 未全部就绪"
+fi
+rm -f "$SMOKE_PHP"
+check_url "/userra/"
+
 oa_publish_ok
 say "发版完成：v$VERSION（备份 $BACKUP_DIR）"
 say "回滚命令：bash scripts/plugin-switch-oa.sh --rollback $STAMP"
