@@ -71,6 +71,20 @@
 
 **破坏性变更**：改号段边界或改「谁写 position」＝契约破坏性变更，须双仓同批 + 升主版本 + 更新本节。
 
+## P-6 · 政策正文内容规则（插件侧唯一实现 · OA-2498 / TASK-2814 S1）
+
+| 项 | 值 |
+| --- | --- |
+| 唯一实现 | 本仓 `includes/policy/legal-content-rules.php`（纯 PHP，零 WP 依赖） |
+| 规则版本 | `tcpc_oa_legal_content_rules_version()`；改规则必须 +1 |
+| 覆盖文档 | `SRC-PRIVACY-POLICY`（必备章节 / 产品文档禁用词 / 22100 字上限）、`SRC-USER-AGREEMENT`（必备片段 / 禁用词 / 30000 字护栏）；未登记文档（如 `SRC-CHARTER`）**跳过**，不误伤 |
+| 触发点 | 文档中心「新建版本」与「确认生效」两处；不通过 ⇒ 不建版本/不生效，回执 `content_invalid` 并**逐条列出原因**（5 分钟 transient，不落库） |
+| 主题 CLI | `scripts/privacy-policy-content-check.php` 在 S1 完成后改**薄包装**（优先加载本文件）；本文件是唯一规则源，禁止第二套 |
+| 边界 | 不写库、不改生效版本、不改签署/拦截；`/bhzc` 仍永不纳入（铁律 19） |
+
+**破坏性变更**：改规则集（必备章节/上限/禁用词）必须 bump `rules_version` 并补回归（`tests/test-oa-legal-content-rules.php`）；
+改回执键名须双仓同批（主题 `workbench-finish` 的 DB 证据口径不依赖本键，但运营文案依赖）。
+
 ## 只读对账
 
 主题侧 `scripts/oa-contract-shadow-check.php`（`wp eval-file`，只读）比对「契约 vs 旧实现」，

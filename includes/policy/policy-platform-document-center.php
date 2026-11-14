@@ -20,6 +20,14 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// 政策正文内容规则（插件侧唯一实现；OA-2498 S1）。
+if (!function_exists('tcpc_oa_legal_content_check')) {
+    $zw_legal_rules = __DIR__ . '/legal-content-rules.php';
+    if (is_file($zw_legal_rules)) {
+        require_once $zw_legal_rules;
+    }
+}
+
 // 读源与版本模型（前端也会用到；后台侧防御性再引入一次，保证菜单独立可用）。
 if (!function_exists('zw_legal_text_source')) {
     $zw_lt_engine = dirname(__DIR__) . '/policy-platform/legal-text-source.php';
@@ -230,6 +238,7 @@ if (!function_exists('zw_policy_document_center_notice')) {
             'empty_body'      => array('notice-warning', '未创建版本：正文为空。'),
             'confirm_mismatch' => array('notice-error', '二次确认失败：文档名不一致，操作已取消。'),
             'hash_mismatch'   => array('notice-error', '拒绝生效：版本正文哈希与记录不一致（疑似被篡改）。'),
+            'content_invalid' => array('notice-error', '未保存：正文未通过内容规则检查（隐私政策/用户协议不得写入产品文档、缺少必备章节或超长）。'),
             'no_doc'          => array('notice-error', '文档主档不存在。'),
             'no_version'      => array('notice-error', '目标版本不存在。'),
             'forbidden'       => array('notice-error', '无权限：确认生效 / 回退 / 导出仅站点管理员可操作。'),
@@ -242,7 +251,19 @@ if (!function_exists('zw_policy_document_center_notice')) {
             $rel = isset($_GET['zw_archive']) ? sanitize_text_field(wp_unslash((string) $_GET['zw_archive'])) : '';
             if ($rel !== '') { $text .= '　路径：' . $rel; }
         }
-        echo '<div class="notice ' . esc_attr($map[$msg][0]) . ' is-dismissible"><p>' . esc_html($text) . '</p></div>';
+        $errors_html = '';
+        if ($msg === 'content_invalid' && function_exists('get_transient') && function_exists('get_current_user_id')) {
+            $doc = isset($_GET['doc']) ? sanitize_text_field(wp_unslash((string) $_GET['doc'])) : '';
+            $key = 'zw_policy_doc_content_errors_' . (int) get_current_user_id() . '_' . md5($doc);
+            $errs = get_transient($key);
+            if (is_array($errs) && $errs) {
+                if (function_exists('delete_transient')) { delete_transient($key); }
+                $items = array();
+                foreach ($errs as $err) { $items[] = '<li>' . esc_html((string) $err) . '</li>'; }
+                $errors_html = '<ul>' . implode('', $items) . '</ul>';
+            }
+        }
+        echo '<div class="notice ' . esc_attr($map[$msg][0]) . ' is-dismissible"><p>' . esc_html($text) . '</p>' . $errors_html . '</div>';
     }
 }
 
@@ -299,6 +320,20 @@ if (!function_exists('zw_policy_document_handle_create')) {
         $doc_id = isset($_POST['doc']) ? sanitize_text_field(wp_unslash((string) $_POST['doc'])) : '';
         $body   = isset($_POST['body']) ? (string) wp_unslash($_POST['body']) : '';
         $note   = isset($_POST['note']) ? sanitize_text_field(wp_unslash((string) $_POST['note'])) : '';
+        // OA-2498 S1：正文入库前硬校验（隐私政策/用户协议）；不通过则不创建版本，原因回执到页面。
+        if (function_exists('tcpc_oa_legal_content_check')) {
+            $zw_check = tcpc_oa_legal_content_check($doc_id, $body);
+            if (empty($zw_check['ok'])) {
+                if (function_exists('set_transient') && function_exists('get_current_user_id')) {
+                    set_transient(
+                        'zw_policy_doc_content_errors_' . (int) get_current_user_id() . '_' . md5((string) $doc_id),
+                        (array) $zw_check['errors'],
+                        5 * MINUTE_IN_SECONDS
+                    );
+                }
+                zw_policy_document_center_redirect($doc_id, 'content_invalid');
+            }
+        }
         if (!function_exists('zw_legal_text_create_version')) {
             zw_policy_document_center_redirect($doc_id, 'error');
         }
@@ -324,6 +359,24 @@ if (!function_exists('zw_policy_document_handle_activate')) {
         $doc_id  = isset($_POST['doc']) ? sanitize_text_field(wp_unslash((string) $_POST['doc'])) : '';
         $version = isset($_POST['version']) ? sanitize_text_field(wp_unslash((string) $_POST['version'])) : '';
         $confirm = isset($_POST['confirm_title']) ? sanitize_text_field(wp_unslash((string) $_POST['confirm_title'])) : '';
+        // OA-2498 S1：生效前再校验一次目标版本正文（防"先建后改规则/绕过创建口"）。
+        if (function_exists('tcpc_oa_legal_content_check') && function_exists('zw_legal_text_version')) {
+            $zw_row = zw_legal_text_version($doc_id, $version);
+            $zw_body = is_array($zw_row) ? (string) ($zw_row['body_html'] ?? '') : '';
+            if ($zw_body !== '') {
+                $zw_check = tcpc_oa_legal_content_check($doc_id, $zw_body);
+                if (empty($zw_check['ok'])) {
+                    if (function_exists('set_transient') && function_exists('get_current_user_id')) {
+                        set_transient(
+                            'zw_policy_doc_content_errors_' . (int) get_current_user_id() . '_' . md5((string) $doc_id),
+                            (array) $zw_check['errors'],
+                            5 * MINUTE_IN_SECONDS
+                        );
+                    }
+                    zw_policy_document_center_redirect($doc_id, 'content_invalid');
+                }
+            }
+        }
         if (!function_exists('zw_legal_text_activate')) {
             zw_policy_document_center_redirect($doc_id, 'error');
         }

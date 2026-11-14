@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [Unreleased]
+
+### Added
+
+- **政策正文内容规则（OA-2498 / TASK-2814 S1）**：新增 `includes/policy/legal-content-rules.php`
+  （隐私政策必备章节 / 产品文档禁用词 / 22100 字上限；用户协议 30000 字护栏；未登记文档跳过）。
+  文档中心「新建版本」「确认生效」前置校验，不通过回执 `content_invalid` 并逐条列原因。
+  回归：`php tests/test-oa-legal-content-rules.php`（18 项）。
+
 ## [0.1.7] - 2026-11-03
 
 ### Release
