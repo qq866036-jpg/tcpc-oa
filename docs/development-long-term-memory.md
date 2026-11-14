@@ -650,3 +650,17 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
 - **待办（收口前）**：主题 `scripts/privacy-policy-content-check.php` 改薄包装到本仓规则；
   主题侧 10 个回退副本删除与静态降级页（S4）另批。
 - **未验证**：真实 WP 下「插件在线 + 主题条件加载」的运行时（含 cron 事件是否重复注册）需生产/预发实测。
+
+## 2026-11-14 · OA-2499：OA API manifest / 版本握手 / 降级 + parity 登记
+
+- **新增** `includes/api/oa-api.php`（无条件装载，零行为）：唯一能力清单 11 符号
+  （legal.text/consent、policy.check/gate、doc.inbox、storage.get、org.person、dashboard.snapshot），
+  每符号带 provider / version / php / degrade(empty|fail_closed|deny) / consumers。
+- **版本握手**：`tcpc_oa_api_version()` + `tcpc_oa_api_supports()`；`available()` 区分「登记」与「运行时可用」；
+  `call()` 返回 `{ok,code:ok|unknown|unavailable,degrade,data}`，不抛错。
+- **REST**：`GET /wp-json/tcpc-oa/v1/manifest|health`，只读 + `read` 能力位，**无写路由**。
+- **主题代理**：`inc/oa/contract-api.php` 的 `zw_oa_api_*` 原样投影/委托；插件缺 ⇒ `source=off` 零值 + fail_closed。
+- **parity 登记补齐**（补 OA-2498 收口）：policy 14 文件、org 5 文件（`org-permissions.php` 按 Q2 exclude、删陈旧 allow）。
+- **回归**：`php tests/test-oa-api-manifest.php` 23 项；`php tests/test-oa-api-proxy.php`（主题侧）18 项；
+  `ci-check` 八项全绿；policy/org parity 均 `POST-MIGRATION OK`。
+- **未验证**：REST 在真实 WP 的鉴权/响应（本机无登录态）；消费方（branch/cert/mapp）尚未切到 manifest，下一单接入。

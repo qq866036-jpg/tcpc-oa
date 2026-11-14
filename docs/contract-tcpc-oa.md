@@ -85,6 +85,21 @@
 **破坏性变更**：改规则集（必备章节/上限/禁用词）必须 bump `rules_version` 并补回归（`tests/test-oa-legal-content-rules.php`）；
 改回执键名须双仓同批（主题 `workbench-finish` 的 DB 证据口径不依赖本键，但运营文案依赖）。
 
+## P-7 · OA API 互通（manifest + 版本握手 + 降级 · OA-2499 / TASK-2818）
+
+| 项 | 值 |
+| --- | --- |
+| 唯一清单 | 本仓 `includes/api/oa-api.php` 的 `tcpc_oa_api_manifest()`（符号 / provider / version / php / degrade / consumers） |
+| 版本握手 | `tcpc_oa_api_version()` + `tcpc_oa_api_supports($key)`；改签名/删符号/改 degrade ⇒ 版本 +1（双仓同批） |
+| 调用入口 | `tcpc_oa_api_call($key,$args)` ⇒ `{ok,code:ok|unknown|unavailable,degrade,data}`，**不抛错** |
+| 可用性 | `tcpc_oa_api_available($key)`（PHP 符号是否已声明）；清单登记 ≠ 运行时可用 |
+| 降级语义 | `empty`（列表/文本 → 空）、`fail_closed`（合规面 → 拒绝/拦截）、`deny`（存储 → 无地址/拒绝） |
+| REST | `GET /wp-json/tcpc-oa/v1/manifest`、`GET /…/health`（只读，`read` 能力位；**无写路由**） |
+| 主题代理 | `inc/oa/contract-api.php` 的 `zw_oa_api_manifest/version/supports/degrade/call`：插件在 ⇒ 原样投影；插件缺 ⇒ `source=off` 零值 + 按降级语义 |
+
+**消费纪律**：先 `supports` 再 `available` 再 `call`；`ok=false` 必须按 `degrade` 处理，禁止把缺位当成功。
+新增符号只增不改；改版本必须同时更新主题代理与 `docs/ops/oa-api-registry.yml`（后续单）。
+
 ## 只读对账
 
 主题侧 `scripts/oa-contract-shadow-check.php`（`wp eval-file`，只读）比对「契约 vs 旧实现」，

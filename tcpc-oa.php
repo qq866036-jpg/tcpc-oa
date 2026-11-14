@@ -49,6 +49,10 @@ if (!defined('TCPC_OA_MIN_THEME')) {
 if (file_exists(TCPC_OA_DIR . '/includes/ui/ui-bootstrap.php')) {
     require_once TCPC_OA_DIR . '/includes/ui/ui-bootstrap.php';
 }
+// OA-2499：对外 API 清单 / 版本握手 / 只读 REST（不注册菜单、不读业务数据，无条件装载零行为）。
+if (file_exists(TCPC_OA_DIR . '/includes/api/oa-api.php')) {
+    require_once TCPC_OA_DIR . '/includes/api/oa-api.php';
+}
 if (file_exists(TCPC_OA_DIR . '/includes/load-list.php')) {
     require_once TCPC_OA_DIR . '/includes/load-list.php';
     // AGENT-0248：工作台卡片 provider（只返回数据，渲染由 tcpc-workbench 负责）。

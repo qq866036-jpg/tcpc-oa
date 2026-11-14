@@ -9,6 +9,12 @@
   文档中心「新建版本」「确认生效」前置校验，不通过回执 `content_invalid` 并逐条列原因。
   回归：`php tests/test-oa-legal-content-rules.php`（18 项）。
 
+- **OA API 互通（OA-2499 / TASK-2818）**：新增 `includes/api/oa-api.php` —— 唯一能力清单
+  `tcpc_oa_api_manifest()`（11 符号 / provider / version / degrade / consumers）、版本握手、
+  `tcpc_oa_api_call()` 结构化降级、只读 REST `GET /wp-json/tcpc-oa/v1/manifest|health`。
+  回归：`php tests/test-oa-api-manifest.php`（23 项）。
+- **parity 登记补齐**：policy 14 文件 + org 5 文件（`org-permissions.php` 按 Q2 exclude）。
+
 ### Changed
 
 - **读源/版本模型迁入本仓并优先装载（OA-2498 / TASK-2814 S1）**：`policy-platform-data` /
@@ -559,3 +565,4 @@
 - AI 秘书处模块 `secretariat.enabled` 置 true（第二把钥匙 `tcpc_oa_enable_secretariat` 默认关）。
   门状态存于任务文章 post meta `_zw_sec_gates`（迁移前后同一份），74/74 函数带 `function_exists` 守卫。
   权限沿用 `tcpc_perm_doc`（TCPC管理员 / TCPC审批人 / TCPC监督管理），未给内置 administrator 扩权。
+
