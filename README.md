@@ -23,6 +23,9 @@
 
 `VERSION` 是发版唯一号源；`TCPC_OA_VERSION` 与插件头 `Version:` 必须与之一致；`MIN_THEME` 声明最低兼容主题版本。
 
+**升版唯一入口**（OA-2507）：`bash scripts/release-bump-oa.sh patch|minor|major "说明"` —— 校验升版前三方一致 →
+三处原子同升 → 落盘后回读；失败零落盘（stdout 单行 = 新版本号）。回归：`bash tests/test-release-bump-oa.sh`（14 项）。
+
 ## 安装 / 发版 / 回滚
 
 本插件**已在生产运行**（2026-11-14 起 `0.1.27`）。唯一发版入口：

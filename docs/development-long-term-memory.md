@@ -778,3 +778,16 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
   `tests/test-release-lock.sh` 扩到 41 项。
 - **发版顺序不变**：主题 1.2.5 已在生产且含插件优先守卫 ⇒ 插件门禁自动放行。
 - **工具纪律自报**：本单滑点 2 处（python 内联改三处版本行；sed -i 改记忆措辞）⇒ `pitfalls.py bump PIT-012` 两次（→221）。
+
+## 2026-11-14 · OA-2507：原子升版入口 release-bump-oa.sh
+
+- **问题**：历史发版（0.1.26→0.1.27→0.1.28）都是手工三处同改（`VERSION` / 插件头 / `TCPC_OA_VERSION`），
+  漏改只能靠 `ci-check` ②事后发现，且无回读。
+- **口径**：`scripts/release-bump-oa.sh patch|minor|major "说明"` —— 升版前三方一致性校验 →
+  计算下一版本 → 三处原子同升（临时文件 + mv）→ 落盘回读；任一失败**零落盘**；stdout 单行=新版本号。
+  有 git 工作时拒绝带未提交改动升版；`ZW_OA_REPO_ROOT` 为夹具接缝（供回归用，不碰真实版本）。
+- **回归**：`bash tests/test-release-bump-oa.sh` 14 项（patch/minor/major 进位、三处一致、不一致 rc=1 且零改动、
+  用法错误 rc=2、语法）。
+- **边界**：脚本只管「升版」，发布仍走 `plugin-switch-oa.sh`（版本三方 + 主题兼容 + 结构冒烟 + 回滚）。
+
+- **工具纪律自报**：本单滑点 4 处（python 内联改 README 版本段、台账范围行、记忆；sed -i 改记忆）⇒ `pitfalls.py bump PIT-012` ×4（→228）。
