@@ -100,6 +100,19 @@
 **消费纪律**：先 `supports` 再 `available` 再 `call`；`ok=false` 必须按 `degrade` 处理，禁止把缺位当成功。
 新增符号只增不改；改版本必须同时更新主题代理与 `docs/ops/oa-api-registry.yml`（后续单）。
 
+## P-8 · 组织架构数据面（主题契约 · OA-2500 / TASK-2820）
+
+| 项 | 值 |
+| --- | --- |
+| 唯一写口 | 主题 `inc/oa/contract-org-data.php`；插件只经 `zw_oa_org_data_dict_get/save` 读写 |
+| 白名单 | `departments` / `duties` / `roles` / `data_model` → `zw_org_departments` / `zw_org_duties` / `zw_org_roles` / `zw_org_data_model_version`；未知键 ⇒ `null`/`false`（fail-closed） |
+| 版本握手 | `zw_oa_org_data_version()`（当前 1）；插件侧 `>=1` 才走契约 |
+| 插件消费层 | `includes/org/org-contract.php`：契约优先；旧主题无契约 ⇒ 回落直读**既有** option（过渡，不新增键） |
+| 边界 | 不新建 option、不注册 `zw_org_person` CPT（CPT/schema 仍在主题）；插件内 `get/update/delete_option(ZW_ORG_*)` = 0 |
+| 阶段 | O2a：字典 + 数据模型版本（本单）；O2b：人员 meta 写口（`zw_oa_org_data_person_meta_set`）另行评审 |
+
+**破坏性变更**：改白名单键/option 名/语义 ⇒ `zw_oa_org_data_version` +1、双仓同批、更新本节。
+
 ## 只读对账
 
 主题侧 `scripts/oa-contract-shadow-check.php`（`wp eval-file`，只读）比对「契约 vs 旧实现」，

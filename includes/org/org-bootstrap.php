@@ -11,6 +11,15 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// OA-2500：组织字典统一走主题 P-8 契约（旧主题无契约时由本层回落直读既有 option）。
+if (!function_exists('zw_oa_org_dict_get')) {
+    $zw_org_contract = __DIR__ . '/org-contract.php';
+    if (is_file($zw_org_contract)) {
+        require_once $zw_org_contract;
+    }
+    unset($zw_org_contract);
+}
+
 if (!is_admin() && !(defined('WP_CLI') && WP_CLI)) {
     return;
 }
