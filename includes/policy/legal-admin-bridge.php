@@ -46,6 +46,9 @@ if (!function_exists('zw_policy_platform_badge')) {
      */
     function zw_policy_platform_badge($type, $label) {
         $type = in_array($type, array('on', 'wait', 'err', 'info', 'off'), true) ? $type : 'off';
-        return '<span class="zw-adm-badge ' . esc_attr($type) . '">' . esc_html((string) $label) . '</span>';
+        if (function_exists('tco_badge')) {
+            return tco_badge($type, $label);
+        }
+        return '<span class="tco-badge ' . esc_attr($type) . '">' . esc_html((string) $label) . '</span>';
     }
 }

@@ -133,15 +133,22 @@ require|policy|policy-platform-content-review.php
 require|policy|policy-platform-cron.php
 require|policy|policy-platform-document-center.php
 require|policy|policy-rule-engine.php
+# OA-2499（补 OA-2498 收口）：读源/版本模型/桥接/内容规则 + 判定引擎/签署/拦截/通知/定时进本仓。
+require|policy|policy-platform-data.php
+require|policy|legal-text-source.php
+require|policy|legal-admin-bridge.php
+require|policy|legal-content-rules.php
+require|policy|legal-consent.php
+require|policy|legal-consent-gate.php
+require|policy|legal-consent-notify.php
 # OA-2437（R8-1）：org / files 的**主题侧 shim 登记**（用户拍板③）。
 # 形态与 W1 的 policy 一致：主题只留一个薄 shim（插件优先 / 插件缺席 fail-closed），
 # 其余实现副本删除。shim 只允许**存在且不参与比对**，不降低其它文件的判据。
-module|org|list|includes/org|org-bootstrap.php|org-files.php file-center.php
+module|org|list|includes/org|org-bootstrap.php|org-files.php file-center.php org-permissions.php
 theme|org|inc/admin/org/org-*.php
-# OA-2434（R6b）有意差异，逐行理由见 CHG-434。**不是**整模块 exclude。
-# 注：`org-bootstrap.php` 在 R8 起改为**主题侧 shim**（OA-2437 已登记 module 行的 shim 字段），
-# shim 不参与比对 ⇒ 原先针对它的 allow 行必须删除，否则会触发「陈旧豁免判红」（本脚本自带该判据）。
-allow|org|org-admin.php|R6b：org-files.php 已按模块迁到 includes/files/，require 路径改指 files 模块目录
+# OA-2499 O1（Q2 延续）：`org-permissions.php` 是全站 RBAC 内核，留主题不迁；
+# module 行 exclude ⇒ 不算主题实现副本、也不要求插件有副本。插件内出现同名副本即判红。
+# OA-2499：R6b 的 org-admin allow 已随删除轮消失，按陈旧豁免规则删除（原先的 allow 行不再保留）。
 # OA-2437（R8）插件侧齐全性清单：R8 删主题副本后，插件必须齐备这 5 个文件（org）与 2 个（files）
 require|org|org-bootstrap.php
 require|org|org-repository.php
