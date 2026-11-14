@@ -739,3 +739,17 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
   门禁保持 fail-closed（主题缺守卫即拒发），**不保留**「关模块即放行」的口子（并有回归钉住它不复活）。
 - **同批修**：发版冒烟把 manifest 版本键从 `version` 改为真实键 `api_version`（否则恒误报「版本不是 1」）；
   回滚通道读 `VERSION` 前先判文件存在（该文件 export-ignore，备份里没有）。
+
+## 2026-11-14 · OA-2504：文档纠偏 + parity doc/secretariat shim 登记
+
+- **文档纠偏（事实）**：本仓**早在生产运行**（0.1.27 / 主题 1.2.5 / 2026-11-14），
+  README 与 AGENTS 里「骨架期 / 尚未部署 / 生产 plugins 下无本插件 / load-list enabled=false」均已过时，
+  会误导后续会话做出错误判断（例：把「未部署」当回滚依据）。已按实测改写，并补「发版顺序（主题先发）+ 监控/健康检查」。
+- **parity shim 登记**：`verify-module-parity.sh` 的 doc / secretariat 两个 module 行 shim 字段原为空
+  ⇒ `--expect-theme-absent` 直接 fail-closed（无法判定「主题侧只允许剩 shim」）。
+  已登记 `doc-bootstrap.php` / `secretariat-bootstrap.php`，并补齐两模块的 27 / 7 条 `require` 清单；
+  同时退役 `doc-appoint-cert.php` 的旧 allow 行（主题侧副本已删，保留会触发「陈旧豁免」判红）。
+- **结果**：六模块 post-migration 全绿（doc 27 / receipt 18 / files 2 / org 6 / secretariat 7 / policy 14 文件齐全，
+  主题侧仅剩 shim）。
+- **保留的提醒**：`list`（迁移前）模式对 doc 会报 `doc-seal.php` missing——那是「主题未迁移」的旧口径，
+  迁移完成后一律用 `--expect-theme-absent`；不要据此误判为缺口。

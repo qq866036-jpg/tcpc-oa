@@ -49,7 +49,7 @@ bash workbench/worktree.sh remove OA-xxxx --delete-branch      # 合并后清理
 ## 2. 硬约束（一票否决）
 
 - **唯一台账 / 唯一角色表 / 唯一工作台页**：都在主题仓；本仓不复制。
-- **生产只读**：`/www/wwwroot/tcpc.org.cn` 禁止直接改；发版走 `scripts/plugin-switch-oa.sh`（待建）。
+- **生产只读**：`/www/wwwroot/tcpc.org.cn` 禁止直接改；发版走 `scripts/plugin-switch-oa.sh`（已上线使用，含主题兼容门禁与结构冒烟）。
 - **契约唯一出处**：`docs/contract-tcpc-oa.md`；主题侧同名文件只留指针。
 - **版本三方一致**：`VERSION` == `TCPC_OA_VERSION` == 插件头 `Version:`；`MIN_THEME` 声明最低兼容主题版本。
 - **不得反向依赖主题内部实现**：只允许调主题**内核契约**（`inc/oa/contract-legal.php` 的 P-1/P-2/P-3/W-1 等）
@@ -60,8 +60,12 @@ bash workbench/worktree.sh remove OA-xxxx --delete-branch      # 合并后清理
 
 ## 3. 当前阶段（重要）
 
-本仓处于**骨架期**：只含接入层与契约指针，业务代码尚未迁入。
-迁移分阶段与门禁见主题仓 `docs/migration/TASK-2306-中传网办公协同tcpc-oa分仓调研与迁移方案-20261028.md`
-（P0 基线 → P1 解耦 → P2 建仓 → P3 发布通道 → P4 主题收尾 → P5 门禁 → P6 多仓调度）。
+本仓**已在生产运行**（2026-11-14 起 `0.1.27`，主题 `1.2.5`）：发文 / 收文 / AI法务部 / AI秘书处 /
+网盘文件中心 / 组织架构业务六个模块全部迁入并在生产启用；主题侧只保留 parity shim 与读侧回退副本。
 
-**禁止**在骨架期把主题业务目录整段复制进来（会产生两套实现）；迁入必须按阶段单执行，并保留 diff=0 证据。
+迁移分期见主题仓 `docs/migration/TASK-2306-中传网办公协同tcpc-oa分仓调研与迁移方案-20261028.md`
+（P0 基线 → P1 解耦 → P2 建仓 → P3 发布通道 → P4 主题收尾 → P5 门禁 → P6 多仓调度）；当前剩余为
+**主题回退副本清理 / 门禁翻强制 / 消费者接线**（见台账最新单）。
+
+**纪律不变**：仍禁止把主题业务目录整段复制回来（会产生两套实现）；任何迁入必须按阶段单执行并保留 diff=0 证据。
+**发版顺序**：主题先发（含「插件优先」条件加载守卫）→ 插件后发；反过来会 `Cannot redeclare`。

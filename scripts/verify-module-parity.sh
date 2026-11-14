@@ -162,12 +162,48 @@ require|files|org-files.php
 module|files|list|includes/files|org-files.php|
 theme|files|inc/admin/org/file-center.php
 theme|files|inc/admin/org/org-files.php
-# OA-2443（契约轮）：唯一有意差异 —— 实名客户端改走主题契约，不再直取主题内部类路径。
-allow|doc|doc-appoint-cert.php|契约轮：实名客户端改走主题契约 zw_oa_realname_client_ready()，不再 require 主题内部类文件（陈旧豁免会判红）
-module|doc|list|includes/doc||
+# OA-2504（D 批）：`doc-appoint-cert.php` 的旧 allow 行已退役——主题侧文件已删除（迁移完成），
+# 继续保留会触发「陈旧豁免」判红；该文件现在只在插件侧，属正常迁入结果（不再需要有意差异登记）。
+# OA-2504（D 批）：doc / secretariat 的**主题侧 shim 登记**（此前为空 ⇒ `--expect-theme-absent` 判红）。
+# 主题侧各只留一个薄 shim：插件在时不声明符号；插件缺/未启用 ⇒ 零菜单 + 管理员提示（fail-closed）。
+module|doc|list|includes/doc|doc-bootstrap.php|
 theme|doc|inc/admin/doc/*.php
-module|secretariat|list|includes/secretariat||
+require|doc|doc-admin-dict.php
+require|doc|doc-admin-flow.php
+require|doc|doc-admin-list.php
+require|doc|doc-admin-numbers.php
+require|doc|doc-admin-ui.php
+require|doc|doc-appoint-cert.php
+require|doc|doc-appoint.php
+require|doc|doc-auto-flow.php
+require|doc|doc-body-model.php
+require|doc|doc-bootstrap.php
+require|doc|doc-composer.php
+require|doc|doc-copy-number-repository.php
+require|doc|doc-download.php
+require|doc|doc-export-docx.php
+require|doc|doc-helpers.php
+require|doc|doc-import-docx.php
+require|doc|doc-import.php
+require|doc|doc-layout-designer.php
+require|doc|doc-layout-gb9704.php
+require|doc|doc-legal.php
+require|doc|doc-letterhead.php
+require|doc|doc-number-repository.php
+require|doc|doc-pdf.php
+require|doc|doc-public-guard.php
+require|doc|doc-render-html.php
+require|doc|doc-repository.php
+require|doc|doc-seal.php
+module|secretariat|list|includes/secretariat|secretariat-bootstrap.php|
 theme|secretariat|inc/secretariat/*.php
+require|secretariat|secretariat-admin.php
+require|secretariat|secretariat-bootstrap.php
+require|secretariat|secretariat-gates.php
+require|secretariat|secretariat-helpers.php
+require|secretariat|secretariat-missions.php
+require|secretariat|secretariat-qa.php
+require|secretariat|secretariat-repository.php
 OA_REGISTRY
 }
 
