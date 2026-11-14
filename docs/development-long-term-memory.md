@@ -727,3 +727,15 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
 - **发版前必做的双重验证**：① 主题 9 个守卫哨兵在插件里全部有定义（policy-platform-data / legal-admin-bridge /
   cron / consent / consent-gate / consent-notify / legal-text-source / module-map / rule-engine —— 本单已逐项 grep 通过）；
   ② 在线主题版本必须 ≥ 含守卫的构建（门禁自动判）。
+
+## 2026-11-14 · OA-2503：policy 模块分步发版（主题旧版时先关模块再发插件）
+
+- **问题**：OA-2502 直发 fatal 的根因是「新插件 policy 模块装载全部 7 个文件（含读侧 3 个）」与「主题无限时副本」冲突；
+  而主题发版需要单独窗口。结论：**policy 模块可以后开**，插件其余模块不必被主题发版阻塞。
+- **口径**：发版前把 `tcpc_oa_enable_policy` 置 0 ⇒ 插件不装载任何 policy 文件（不声明任何 policy 符号）⇒
+  与旧主题副本零冲突，policy 功能由主题副本继续提供（与发版前完全一致）。
+- **门禁**：`plugin-switch-oa.sh` 主题兼容门禁改为两段——主题缺守卫时**再读** `tcpc_oa_enable_policy`：
+  非 0 ⇒ 拒发（会 fatal）；=0 ⇒ 放行并打印「policy 由主题副本提供」。
+  这样既不放过真危险组合，也不把「模块可关」的合法分步发版一刀切。
+- **切换**：主题发版（带 9 个插件优先守卫）后 `wp option update tcpc_oa_enable_policy 1` 即切到插件 policy；
+  一键回滚 = 置 0（主题副本自动接管）。

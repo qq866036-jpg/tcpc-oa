@@ -26,6 +26,10 @@
   为此本单同批加固发版通道：① 新增「主题兼容门禁」——在线主题 `functions.php` 缺
   `function_exists('zw_policy_platform_cron_mask_webhook')` 守卫即**拒发**（在任何生产写入之前）；
   ② 修复 `--rollback` 在备份无 `VERSION`（export-ignore）时把版本记录写成 `0.0.0` 的缺陷（改读插件头）。
+- **分步发版（OA-2503）**：在线主题尚未发版期间，允许先以 `tcpc_oa_enable_policy=0` 发插件 ——
+  policy 模块 14 个文件全部经双钥匙装载，关掉后插件不声明任何 policy 符号 ⇒ 与旧主题副本不再冲突，
+  功能继续由主题副本提供（与发版前一致）。门禁相应收紧为：**主题缺守卫且 policy 开启才拒发**；
+  主题发版后把开关置 1 即完成 policy 迁移切换（一对一键回滚）。
 
 ### Added
 
