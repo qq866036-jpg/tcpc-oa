@@ -117,7 +117,10 @@ if [[ -n "$ROLLBACK" ]]; then
   src="$BACKUP_ROOT/pre-switch-$ROLLBACK/$PLUGIN_SLUG"
   [[ -d "$src" ]] || fail "备份不存在：$src"
   say "回滚到 $ROLLBACK"
-  RB_VER="$(tr -d ' \t\r\n' < "$src/VERSION" 2>/dev/null || true)"
+  RB_VER=""
+  if [[ -f "$src/VERSION" ]]; then
+    RB_VER="$(tr -d ' \t\r\n' < "$src/VERSION" 2>/dev/null || true)"
+  fi
   if [[ -z "$RB_VER" ]]; then
     # VERSION 是 `export-ignore` 治理文件（不随产物上线）⇒ 线上/备份目录里没有它。
     # 2026-11-14 实测：原实现读不到 VERSION 就把版本记录写成 0.0.0（等于给之后所有版本放行降级）。
@@ -179,22 +182,18 @@ echo "  ✓ 在线主题 $LIVE_THEME >= MIN_THEME $MIN_THEME_FILE"
 # 无条件 require 主题副本），交换后首次加载即 `Cannot redeclare` ⇒ 整站 500，冒烟前就挂。
 # 正确形态：主题必须先是「插件优先 / 停用回退」的条件加载版本（`function_exists` 守卫），再发本插件；
 # 反过来（新主题 + 旧插件）是安全的 —— 旧插件缺的符号由主题副本补齐。
-# OA-2503 放宽一档（仍 fail-closed）：主题旧版但 **policy 模块已关**时允许发版 ——
-#   policy 模块的 14 个文件全部经 `includes/load-list.php` 的双钥匙装载（option `tcpc_oa_enable_policy`），
-#   关掉后插件不声明任何 policy 符号 ⇒ 与主题副本不再冲突，功能继续由主题副本提供（与发版前一致）。
-#   这样插件（API/组织契约/收发文/网盘/秘书处）可以先上线，policy 迁移等主题发版后再开。
+# OA-2503（否决「先关 policy 再发插件」的分步路径，仍 fail-closed）：
+#   实测 `tcpc_oa_enable_policy=0` 后，**policy 后台菜单/页面同时消失**——主题侧
+#   `inc/admin/policy-platform-admin.php` 是 shim（插件在且启用才出菜单，插件缺/停用零菜单 + 提示），
+#   所以「先关模块发插件、等主题发版再开」会让 policy 后台在中间窗口不可用（功能降级，不可接受）。
+#   结论：policy 迁移版**必须主题先发**；插件侧不再提供「关模块即放行」的口子。
 # 判据放在**任何生产写入之前**，不满足直接拒发，不交换目录。
 THEME_FUNCTIONS="$THEME_DIR/functions.php"
 [[ -f "$THEME_FUNCTIONS" ]] || fail "读不到在线主题入口：$THEME_FUNCTIONS"
 if ! grep -q "function_exists('zw_policy_platform_cron_mask_webhook'" "$THEME_FUNCTIONS"; then
-  POLICY_LIVE="$(wp option get tcpc_oa_enable_policy --path="$WP_PATH" --allow-root 2>/dev/null | tr -d ' \t\r\n' || true)"
-  if [[ "$POLICY_LIVE" != "0" ]]; then
-    fail "在线主题不兼容（缺插件优先守卫）且插件 policy 模块开启（tcpc_oa_enable_policy=${POLICY_LIVE:-<未设置>}）⇒ 交换后会 Cannot redeclare；先 wp option update tcpc_oa_enable_policy 0（policy 由主题副本提供）或先发主题"
-  fi
-  echo "  ⚠ 在线主题旧版：policy 模块已关（option=0）⇒ 允许发版；policy 由主题副本继续提供，主题发版后再开启"
-else
-  echo "  ✓ 主题兼容：functions.php 含插件优先条件加载守卫"
+  fail "在线主题不兼容（缺插件优先守卫）⇒ 拒发：先发含该守卫的主题版本，再发本插件（关 policy 模块不可行：后台菜单会一并消失）"
 fi
+echo "  ✓ 主题兼容：functions.php 含插件优先条件加载守卫"
 
 # ── ②b 发版互斥（OA-2494）——「前置校验之后、任何生产写入（构建目录 / 备份 / 交换）之前」
 # 两道守卫：① 单实例（flock 仓外锁，第二者 rc=3 并打印持有者，**不动生产目录**）；
@@ -384,8 +383,9 @@ if (function_exists('tcpc_oa_api_manifest')) {
     if ($count !== 11) {
         $errors[] = 'API 清单符号数=' . $count . '（期望 11）';
     }
-    if ((int) ($manifest['version'] ?? 0) !== 1) {
-        $errors[] = 'API 清单版本不是 1';
+    $api_ver = (int) ($manifest['api_version'] ?? 0);
+    if ($api_ver !== 1) {
+        $errors[] = 'API 清单 api_version 不是 1（实际 ' . $api_ver . '）';
     }
 }
 if (function_exists('rest_do_request')) {

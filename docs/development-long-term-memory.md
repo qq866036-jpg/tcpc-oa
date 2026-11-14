@@ -728,14 +728,14 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
   cron / consent / consent-gate / consent-notify / legal-text-source / module-map / rule-engine —— 本单已逐项 grep 通过）；
   ② 在线主题版本必须 ≥ 含守卫的构建（门禁自动判）。
 
-## 2026-11-14 · OA-2503：policy 模块分步发版（主题旧版时先关模块再发插件）
+## 2026-11-14 · OA-2503：分步发版路径**实测否决**（主题必须真先发）
 
-- **问题**：OA-2502 直发 fatal 的根因是「新插件 policy 模块装载全部 7 个文件（含读侧 3 个）」与「主题无限时副本」冲突；
-  而主题发版需要单独窗口。结论：**policy 模块可以后开**，插件其余模块不必被主题发版阻塞。
-- **口径**：发版前把 `tcpc_oa_enable_policy` 置 0 ⇒ 插件不装载任何 policy 文件（不声明任何 policy 符号）⇒
-  与旧主题副本零冲突，policy 功能由主题副本继续提供（与发版前完全一致）。
-- **门禁**：`plugin-switch-oa.sh` 主题兼容门禁改为两段——主题缺守卫时**再读** `tcpc_oa_enable_policy`：
-  非 0 ⇒ 拒发（会 fatal）；=0 ⇒ 放行并打印「policy 由主题副本提供」。
-  这样既不放过真危险组合，也不把「模块可关」的合法分步发版一刀切。
-- **切换**：主题发版（带 9 个插件优先守卫）后 `wp option update tcpc_oa_enable_policy 1` 即切到插件 policy；
-  一键回滚 = 置 0（主题副本自动接管）。
+- **设想**：OA-2502 直发 fatal（新插件 policy 7 文件 + 旧主题无限时副本）。曾设想「先把
+  `tcpc_oa_enable_policy` 置 0 ⇒ 插件不装载 policy 文件 ⇒ 先发插件，主题发版后再开开关」。
+- **实测否决**：置 0 后**policy 后台菜单/页面立即消失**——主题侧 `inc/admin/policy-platform-admin.php`
+  是 shim（存在权在插件，「插件启用才出菜单，插件缺/停用零菜单 + 提示」），主题副本并不接回后台。
+  这不是「等价降级」，而是功能缺失 ⇒ 该路径在生产不可接受，已回滚（0.1.27 → 0.1.26、开关回 1）。
+- **结论**：policy 迁移版**必须主题先发**（主题带 9 个 `function_exists` 条件加载守卫），再发插件；
+  门禁保持 fail-closed（主题缺守卫即拒发），**不保留**「关模块即放行」的口子（并有回归钉住它不复活）。
+- **同批修**：发版冒烟把 manifest 版本键从 `version` 改为真实键 `api_version`（否则恒误报「版本不是 1」）；
+  回滚通道读 `VERSION` 前先判文件存在（该文件 export-ignore，备份里没有）。

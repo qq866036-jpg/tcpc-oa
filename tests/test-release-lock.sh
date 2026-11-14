@@ -120,10 +120,16 @@ grep -qF "function_exists('zw_policy_platform_cron_mask_webhook'" "$SWITCH"
 ck "发版通道含主题守卫探针（插件优先条件加载）" $?
 grep -qF '在线主题不兼容' "$SWITCH"
 ck "主题不兼容时拒发（任何生产写入之前）" $?
-grep -qF 'wp option get tcpc_oa_enable_policy' "$SWITCH"
-ck "主题旧版时按 policy 开关判定（模块可关则放行）" $?
-grep -qF 'policy 模块已关' "$SWITCH"
-ck "policy=0 时放行并提示由主题副本提供" $?
+# OA-2503：分步「关 policy 再发插件」经实测否决（policy 后台菜单会一并消失）——守住这个决定不被悄悄放开
+grep -qF '关 policy 模块不可行' "$SWITCH"
+ck "分步关 policy 路径被显式否决（后台菜单会消失）" $?
+if grep -qF 'wp option get tcpc_oa_enable_policy' "$SWITCH"; then
+  ck "发版通道不得再按 policy 开关放行旧主题（防降级路径复活）" 1
+else
+  ck "发版通道不得再按 policy 开关放行旧主题（防降级路径复活）" 0
+fi
+grep -qF "manifest['api_version']" "$SWITCH"
+ck "结构冒烟按 api_version 判定（manifest 真实键）" $?
 ln_theme_gate="$(grep -n 'THEME_FUNCTIONS=' "$SWITCH" | head -1 | cut -d: -f1)"
 ln_build_swap="$(grep -n 'STAGING="\$PLUGINS_ROOT' "$SWITCH" | head -1 | cut -d: -f1)"
 [ -n "$ln_theme_gate" ] && [ -n "$ln_build_swap" ] && [ "$ln_theme_gate" -lt "$ln_build_swap" ]
