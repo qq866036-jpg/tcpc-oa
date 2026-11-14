@@ -83,6 +83,18 @@ $res = tcpc_oa_legal_content_check('SRC-PRIVACY-POLICY', $oversize);
 oa_rules_chk(empty($res['ok']), '超 22100 字 ⇒ ok=false');
 oa_rules_chk((bool) preg_grep('/超过 22100 字上限/u', $res['errors']), '错误列表点名超长');
 
+echo "== 3c) OA-2510：内联 CSS 不计入正文字数 ==\n";
+$fixture_css = '<style>' . str_repeat('.x{color:#333;margin:0}', 600) . '</style>' . $fixture;
+$res = tcpc_oa_legal_content_check('SRC-PRIVACY-POLICY', $fixture_css);
+oa_rules_chk(!empty($res['ok']), '含大段 CSS 的正文 ⇒ ok=true（CSS 不计字数）');
+oa_rules_chk($res['plainLength'] < 2000, 'plainLength 只含可读正文（实际 ' . $res['plainLength'] . '）');
+if (function_exists('tcpc_oa_legal_content_plain_length')) {
+    oa_rules_chk(
+        tcpc_oa_legal_content_plain_length($fixture_css) === tcpc_oa_legal_content_plain_length($fixture),
+        '含 / 不含 CSS 口径一致'
+    );
+}
+
 echo "== 4) 用户协议：通过 / 禁用词 / 未登记文档 ==\n";
 $agreement = '<h1>用户协议</h1><p>生效日期：2026-11-14</p><p>本会与用户订立本协议。</p>';
 $res = tcpc_oa_legal_content_check('SRC-USER-AGREEMENT', $agreement);

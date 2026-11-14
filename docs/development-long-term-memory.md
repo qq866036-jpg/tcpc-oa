@@ -814,3 +814,14 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
 - **指针纠正**：契约里 `docs/ops/oa-api-registry.yml`（不存在）→ `oa-api-registry.json`（机器读）/
   `oa-api-registry.md`（人读）。
 - **纪律**：文档版本号随生产走；每次发版后 README/AGENTS/契约首段同批复核（本次即因 0.1.28 发版未同批纠偏而返工）。
+
+## 2026-11-14 · OA-2510：政策正文纯文本长度剔除 <style>/<script>（与主题门禁同口径）
+
+- **事实**：`tcpc_oa_legal_content_plain_length()` 用 `strip_tags()` 计字数，`<style>` 内容被当正文
+  ⇒ 隐私政策显示 22051 字（真实可读 15395），文档中心保存 v13 时会以「22143 > 22100」误拒。
+- **修法**：先 `preg_replace('@<(script|style)[^>]*?>.*?</\1>@si','')`，再 strip_tags + `html_entity_decode`
+  + 折叠空白；`max_length` 22100 与必备条款/禁用词规则不变。
+- **判据**：`tests/test-oa-legal-content-rules.php` 新增 3c 段（含大段 CSS 仍 ok、plainLength 只算正文、
+  含/不含 CSS 口径一致）。
+- **可复用**：与主题 `scripts/privacy-policy-content-check.php` 必须保持同一口径；改一处必须同批改另一处，
+  否则「后台能存、仓库门禁判红」或反之。

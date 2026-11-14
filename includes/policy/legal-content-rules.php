@@ -99,11 +99,19 @@ if (!function_exists('tcpc_oa_legal_content_plain_length')) {
     /**
      * 正文纯文本长度（去标签 / 折叠空白），与隐私政策既有口径一致。
      *
+     * OA-2510：先剔除 `<script>/<style>` 块再计数 —— `strip_tags()` 会保留样式表**内容**，
+     * 使内联 CSS 被当成正文（同一份隐私政策 22051 vs DB 归一化 15395），文档中心会误拒合法版本。
+     * 上限 22100 与必备条款/禁用词判据不变。
+     *
      * @param string $html 正文 HTML。
      * @return int
      */
     function tcpc_oa_legal_content_plain_length($html) {
-        $plain = trim((string) preg_replace('/\s+/u', ' ', strip_tags((string) $html)));
+        $src = preg_replace('@<(script|style)[^>]*?>.*?</\1>@si', '', (string) $html);
+        if ($src === null) { $src = (string) $html; }
+        $txt = strip_tags($src);
+        $txt = function_exists('html_entity_decode') ? html_entity_decode($txt, ENT_QUOTES | ENT_HTML5, 'UTF-8') : $txt;
+        $plain = trim((string) preg_replace('/\s+/u', ' ', $txt));
         return function_exists('mb_strlen') ? (int) mb_strlen($plain, 'UTF-8') : (int) floor(strlen($plain) / 3);
     }
 }
