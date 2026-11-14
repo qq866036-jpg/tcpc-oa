@@ -117,7 +117,10 @@ if [[ -n "$ROLLBACK" ]]; then
   src="$BACKUP_ROOT/pre-switch-$ROLLBACK/$PLUGIN_SLUG"
   [[ -d "$src" ]] || fail "备份不存在：$src"
   say "回滚到 $ROLLBACK"
-  RB_VER="$(tr -d ' \t\r\n' < "$src/VERSION" 2>/dev/null || true)"
+  RB_VER=""
+  if [[ -f "$src/VERSION" ]]; then
+    RB_VER="$(tr -d ' \t\r\n' < "$src/VERSION" 2>/dev/null || true)"
+  fi
   if [[ -z "$RB_VER" ]]; then
     # VERSION 是 `export-ignore` 治理文件（不随产物上线）⇒ 线上/备份目录里没有它。
     # 2026-11-14 实测：原实现读不到 VERSION 就把版本记录写成 0.0.0（等于给之后所有版本放行降级）。
@@ -179,11 +182,16 @@ echo "  ✓ 在线主题 $LIVE_THEME >= MIN_THEME $MIN_THEME_FILE"
 # 无条件 require 主题副本），交换后首次加载即 `Cannot redeclare` ⇒ 整站 500，冒烟前就挂。
 # 正确形态：主题必须先是「插件优先 / 停用回退」的条件加载版本（`function_exists` 守卫），再发本插件；
 # 反过来（新主题 + 旧插件）是安全的 —— 旧插件缺的符号由主题副本补齐。
-# 判据放在**任何生产写入之前**，缺守卫直接拒发，不交换目录。
+# OA-2503（否决「先关 policy 再发插件」的分步路径，仍 fail-closed）：
+#   实测 `tcpc_oa_enable_policy=0` 后，**policy 后台菜单/页面同时消失**——主题侧
+#   `inc/admin/policy-platform-admin.php` 是 shim（插件在且启用才出菜单，插件缺/停用零菜单 + 提示），
+#   所以「先关模块发插件、等主题发版再开」会让 policy 后台在中间窗口不可用（功能降级，不可接受）。
+#   结论：policy 迁移版**必须主题先发**；插件侧不再提供「关模块即放行」的口子。
+# 判据放在**任何生产写入之前**，不满足直接拒发，不交换目录。
 THEME_FUNCTIONS="$THEME_DIR/functions.php"
 [[ -f "$THEME_FUNCTIONS" ]] || fail "读不到在线主题入口：$THEME_FUNCTIONS"
 if ! grep -q "function_exists('zw_policy_platform_cron_mask_webhook'" "$THEME_FUNCTIONS"; then
-  fail "在线主题不兼容（$THEME_FUNCTIONS 缺「插件优先」条件加载守卫）⇒ 拒发：先发含该守卫的主题版本，再发本插件"
+  fail "在线主题不兼容（缺插件优先守卫）⇒ 拒发：先发含该守卫的主题版本，再发本插件（关 policy 模块不可行：后台菜单会一并消失）"
 fi
 echo "  ✓ 主题兼容：functions.php 含插件优先条件加载守卫"
 
@@ -375,8 +383,9 @@ if (function_exists('tcpc_oa_api_manifest')) {
     if ($count !== 11) {
         $errors[] = 'API 清单符号数=' . $count . '（期望 11）';
     }
-    if ((int) ($manifest['version'] ?? 0) !== 1) {
-        $errors[] = 'API 清单版本不是 1';
+    $api_ver = (int) ($manifest['api_version'] ?? 0);
+    if ($api_ver !== 1) {
+        $errors[] = 'API 清单 api_version 不是 1（实际 ' . $api_ver . '）';
     }
 }
 if (function_exists('rest_do_request')) {

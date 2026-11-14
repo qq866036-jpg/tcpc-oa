@@ -727,3 +727,15 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
 - **发版前必做的双重验证**：① 主题 9 个守卫哨兵在插件里全部有定义（policy-platform-data / legal-admin-bridge /
   cron / consent / consent-gate / consent-notify / legal-text-source / module-map / rule-engine —— 本单已逐项 grep 通过）；
   ② 在线主题版本必须 ≥ 含守卫的构建（门禁自动判）。
+
+## 2026-11-14 · OA-2503：分步发版路径**实测否决**（主题必须真先发）
+
+- **设想**：OA-2502 直发 fatal（新插件 policy 7 文件 + 旧主题无限时副本）。曾设想「先把
+  `tcpc_oa_enable_policy` 置 0 ⇒ 插件不装载 policy 文件 ⇒ 先发插件，主题发版后再开开关」。
+- **实测否决**：置 0 后**policy 后台菜单/页面立即消失**——主题侧 `inc/admin/policy-platform-admin.php`
+  是 shim（存在权在插件，「插件启用才出菜单，插件缺/停用零菜单 + 提示」），主题副本并不接回后台。
+  这不是「等价降级」，而是功能缺失 ⇒ 该路径在生产不可接受，已回滚（0.1.27 → 0.1.26、开关回 1）。
+- **结论**：policy 迁移版**必须主题先发**（主题带 9 个 `function_exists` 条件加载守卫），再发插件；
+  门禁保持 fail-closed（主题缺守卫即拒发），**不保留**「关模块即放行」的口子（并有回归钉住它不复活）。
+- **同批修**：发版冒烟把 manifest 版本键从 `version` 改为真实键 `api_version`（否则恒误报「版本不是 1」）；
+  回滚通道读 `VERSION` 前先判文件存在（该文件 export-ignore，备份里没有）。
