@@ -114,6 +114,16 @@
 
 **破坏性变更**：改白名单键/option 名/语义 ⇒ `zw_oa_org_data_version` +1、双仓同批、更新本节。
 
+### 发版顺序（2026-11-14 实测固化）
+
+| 步骤 | 动作 | 判据/原因 |
+| --- | --- | --- |
+| ① 主题先发 | 主题版本必须含 9 个「插件优先 / 停用回退」条件加载守卫（`function_exists`）与 `zw_oa_org_data_*` 契约 | 插件 policy 读侧（7 文件）与旧主题副本会同名重复声明 ⇒ `Cannot redeclare`；反向（新主题 + 旧插件）安全 |
+| ② 插件后发 | `scripts/plugin-switch-oa.sh`（含主题兼容门禁 + 六菜单/模块符号/API 清单/REST 冒烟） | 门禁在**任何生产写入前**检查在线主题 `functions.php`，缺守卫即拒发 |
+| ③ 回滚 | 插件 `--rollback <ts>`；主题按 `pre-switch-<ts>` 备份还原 | 两边独立可回；**不要**用「关 policy 模块」当回滚手段（后台菜单会一并消失，2026-11-14 实测） |
+
+**禁止**：新插件 + 旧主题直接发版；把 `tcpc_oa_enable_policy=0` 当作发版旁路或长期回滚态。
+
 ## 只读对账
 
 主题侧 `scripts/oa-contract-shadow-check.php`（`wp eval-file`，只读）比对「契约 vs 旧实现」，
