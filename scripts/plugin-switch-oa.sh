@@ -118,6 +118,11 @@ if [[ -n "$ROLLBACK" ]]; then
   [[ -d "$src" ]] || fail "备份不存在：$src"
   say "回滚到 $ROLLBACK"
   RB_VER="$(tr -d ' \t\r\n' < "$src/VERSION" 2>/dev/null || true)"
+  if [[ -z "$RB_VER" ]]; then
+    # VERSION 是 `export-ignore` 治理文件（不随产物上线）⇒ 线上/备份目录里没有它。
+    # 2026-11-14 实测：原实现读不到 VERSION 就把版本记录写成 0.0.0（等于给之后所有版本放行降级）。
+    RB_VER="$(awk '/^ \* Version:/ {print $3; exit}' "$src/tcpc-oa.php" 2>/dev/null || true)"
+  fi
   # 回滚也是一次**生产写入** ⇒ 同样要单实例锁；版本守卫显式放开（回滚本身就是降级）。
   if [[ "${ZW_RELEASE_LOCK:-1}" != "0" ]]; then
     if ! ZW_RELEASE_ALLOW_DOWNGRADE=1 zwrel_acquire "$PLUGIN_SLUG" "${RB_VER:-0.0.0}" "$TASK_ID"; then
@@ -133,9 +138,15 @@ if [[ -n "$ROLLBACK" ]]; then
   run rm -rf "$PLUGIN_DIR.rollback-$STAMP"
   run wp plugin activate "$PLUGIN_SLUG" --path="$WP_PATH" --allow-root
   if [[ "${ZW_RELEASE_LOCK:-1}" != "0" && "$DRY" -eq 0 ]]; then
-    zwrel_release "$PLUGIN_SLUG" "${RB_VER:-0.0.0}" "$TASK_ID"
-    trap - EXIT INT TERM
-    echo "  ✓ 已释放发版锁并记录回滚到的版本 ${RB_VER:-0.0.0}"
+    if [[ -n "$RB_VER" ]]; then
+      zwrel_release "$PLUGIN_SLUG" "$RB_VER" "$TASK_ID"
+      trap - EXIT INT TERM
+      echo "  ✓ 已释放发版锁并记录回滚到的版本 $RB_VER"
+    else
+      zwrel_unlock "$PLUGIN_SLUG"
+      trap - EXIT INT TERM
+      echo "  ⚠ 取不到回滚版本号（备份缺 VERSION 且插件头解析失败）⇒ 仅解锁，**不写版本记录**" >&2
+    fi
   fi
   say "回滚完成：$( [[ "$DRY" -eq 1 ]] && echo '(dry-run)' || echo "$PLUGIN_DIR" )"
   exit 0
@@ -161,6 +172,20 @@ if [[ "$(printf '%s\n%s\n' "$MIN_THEME_FILE" "$LIVE_THEME" | sort -V | head -1)"
   fail "在线主题 $LIVE_THEME 低于插件要求的 $MIN_THEME_FILE（拒发）"
 fi
 echo "  ✓ 在线主题 $LIVE_THEME >= MIN_THEME $MIN_THEME_FILE"
+
+# ── ②a 主题兼容门禁（OA-2502 事故沉淀：0.1.27 首次发版即 fatal 并回滚）────────────
+# 背景（2026-11-14 实测）：0.1.27 起插件 `policy` 模块与主题 `inc/policy-platform/` 回退副本会声明同名函数
+# （首例 `zw_policy_platform_cron_schedules()`，两处都在第 172 行）。只要在线主题还是**旧版**（functions.php
+# 无条件 require 主题副本），交换后首次加载即 `Cannot redeclare` ⇒ 整站 500，冒烟前就挂。
+# 正确形态：主题必须先是「插件优先 / 停用回退」的条件加载版本（`function_exists` 守卫），再发本插件；
+# 反过来（新主题 + 旧插件）是安全的 —— 旧插件缺的符号由主题副本补齐。
+# 判据放在**任何生产写入之前**，缺守卫直接拒发，不交换目录。
+THEME_FUNCTIONS="$THEME_DIR/functions.php"
+[[ -f "$THEME_FUNCTIONS" ]] || fail "读不到在线主题入口：$THEME_FUNCTIONS"
+if ! grep -q "function_exists('zw_policy_platform_cron_mask_webhook'" "$THEME_FUNCTIONS"; then
+  fail "在线主题不兼容（$THEME_FUNCTIONS 缺「插件优先」条件加载守卫）⇒ 拒发：先发含该守卫的主题版本，再发本插件"
+fi
+echo "  ✓ 主题兼容：functions.php 含插件优先条件加载守卫"
 
 # ── ②b 发版互斥（OA-2494）——「前置校验之后、任何生产写入（构建目录 / 备份 / 交换）之前」
 # 两道守卫：① 单实例（flock 仓外锁，第二者 rc=3 并打印持有者，**不动生产目录**）；
@@ -285,6 +310,93 @@ if [[ -z "$BHZC_BEFORE" ]]; then
 else
   echo "  ✓ /bhzc 正文（DB）未变化（$BHZC_AFTER）"
 fi
+
+# ── OA-2502：结构冒烟扩面（TASK-2306 §10 G3）────────────────────────────────
+# 旧口径只验 /login、/privacy-policy/、/bhzc —— 发版后哪怕六个办公菜单全没注册、API 清单缺失、
+# 模块符号没加载，也会「冒烟通过」。本段把 G3 的「6 菜单 + 模块面」落成可判据：
+#   ① 六个后台菜单 slug 真实注册（以 admin 用户 1 触发 admin_menu，回避 CLI 无 caps 的假阴）；
+#   ② 关键模块符号在场（发文页回调 / 条款读源 / 签署判定 / OA API / 组织写口 / 政策引擎）；
+#   ③ API 清单结构（11 符号 / version=1）与 REST health 可路由；
+#   ④ /userra/ 200（用户协议）。
+# 判别力：旧构建（0.1.26 / OA-2491）没有 `tcpc_oa_api_manifest` ⇒ 本段必红（已实测）。
+say "结构冒烟（六菜单 / 模块符号 / API 清单 / REST）"
+SMOKE_PHP="$(mktemp /tmp/zw-oa-smoke-php.XXXXXX.php)"
+cat > "$SMOKE_PHP" <<'PHP'
+<?php
+$errors = array();
+$need_menus = array('zw-doc', 'zw-receipt', 'zw-org', 'zw-policy-platform', 'zw-org-files', 'zw-secretariat');
+$need_funcs = array(
+    'zw_doc_page_list',
+    'zw_legal_text_current',
+    'zw_legal_consent_enforce_enabled',
+    'tcpc_oa_api_manifest',
+    'zw_oa_org_person_meta_set',
+    'zw_policy_check',
+);
+$need_files = array(
+    'includes/api/oa-api.php',
+    'includes/org/org-contract.php',
+    'includes/policy/legal-text-source.php',
+);
+require_once ABSPATH . 'wp-admin/includes/admin.php';
+do_action('admin_menu');
+global $menu, $submenu;
+$slugs = array();
+foreach ((array) $menu as $m) {
+    if (!empty($m[2])) {
+        $slugs[] = (string) $m[2];
+    }
+}
+foreach ((array) $submenu as $items) {
+    foreach ((array) $items as $it) {
+        if (!empty($it[2])) {
+            $slugs[] = (string) $it[2];
+        }
+    }
+}
+foreach ($need_menus as $slug) {
+    if (!in_array($slug, $slugs, true)) {
+        $errors[] = '菜单缺失：' . $slug;
+    }
+}
+foreach ($need_funcs as $fn) {
+    if (!function_exists($fn)) {
+        $errors[] = '函数缺失：' . $fn;
+    }
+}
+foreach ($need_files as $rel) {
+    if (!is_file(TCPC_OA_DIR . '/' . $rel)) {
+        $errors[] = '文件缺失：' . $rel;
+    }
+}
+if (function_exists('tcpc_oa_api_manifest')) {
+    $manifest = tcpc_oa_api_manifest();
+    $count = isset($manifest['symbols']) && is_array($manifest['symbols']) ? count($manifest['symbols']) : 0;
+    if ($count !== 11) {
+        $errors[] = 'API 清单符号数=' . $count . '（期望 11）';
+    }
+    if ((int) ($manifest['version'] ?? 0) !== 1) {
+        $errors[] = 'API 清单版本不是 1';
+    }
+}
+if (function_exists('rest_do_request')) {
+    $resp = rest_do_request(new WP_REST_Request('GET', '/tcpc-oa/v1/health'));
+    if (is_wp_error($resp)) {
+        $errors[] = 'REST health 错误：' . $resp->get_error_message();
+    }
+}
+if ($errors) {
+    echo "OA_SMOKE_FAIL\n" . implode("\n", $errors) . "\n";
+    exit(1);
+}
+echo 'OA_SMOKE_OK menus=' . count($need_menus) . ' funcs=' . count($need_funcs) . ' files=' . count($need_files) . "\n";
+PHP
+if ! wp eval-file "$SMOKE_PHP" --user="${ZW_OA_SMOKE_USER:-1}" --path="$WP_PATH" --allow-root; then
+  rm -f "$SMOKE_PHP"
+  fail "结构冒烟失败：六菜单 / 模块符号 / API 清单 / REST 未全部就绪"
+fi
+rm -f "$SMOKE_PHP"
+check_url "/userra/"
 
 oa_publish_ok
 say "发版完成：v$VERSION（备份 $BACKUP_DIR）"
