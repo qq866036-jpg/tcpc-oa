@@ -1,11 +1,12 @@
-# tcpc-oa ↔ 主题 契约（唯一出处 · 骨架期指针）
+# tcpc-oa ↔ 主题 契约（唯一出处）
 
 > 主题侧同名文件（`/srv/git/worktrees/dev-tcpc/main/docs/contract-tcpc-oa.md` 若存在）只留指针，正文以**本文件**为准。
 
-## 现状（2026-10-28 · 骨架期）
+## 现状（2026-11-14 · 已全量迁入并生产运行）
 
-契约的**实现侧已在主题内落地**（`inc/oa/contract-legal.php`，TASK-2320 增量三~六），本仓尚未迁入业务代码，
-因此本文件当前只登记**契约面**与版本握手；待 P2/P3 把 provider 落进本仓后，本文件补「插件实现清单」。
+六个办公模块（发文 / 收文 / AI 法务部 / AI 秘书处 / 网盘文件中心 / 组织架构业务）**已全量迁入本仓**并在生产运行
+（`0.1.28` / 主题 `1.2.6`，2026-11-14）。主题侧只保留 parity shim、RBAC 内核与「插件停用回退」读侧副本
+（policy 实现副本已删，仅留 `policy-platform-fallback.php` 静态降级）。本文件登记**契约面**、版本握手与各 provider 的落点。
 
 ## 契约面
 
@@ -98,7 +99,7 @@
 | 主题代理 | `inc/oa/contract-api.php` 的 `zw_oa_api_manifest/version/supports/degrade/call`：插件在 ⇒ 原样投影；插件缺 ⇒ `source=off` 零值 + 按降级语义 |
 
 **消费纪律**：先 `supports` 再 `available` 再 `call`；`ok=false` 必须按 `degrade` 处理，禁止把缺位当成功。
-新增符号只增不改；改版本必须同时更新主题代理与 `docs/ops/oa-api-registry.yml`（后续单）。
+新增符号只增不改；改版本必须同时更新主题代理与 `docs/ops/oa-api-registry.json`（机器读）/ `oa-api-registry.md`（人读）。
 
 ## P-8 · 组织架构数据面（主题契约 · OA-2500 / TASK-2820）
 
