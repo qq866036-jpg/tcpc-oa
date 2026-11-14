@@ -677,3 +677,18 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
 - **回归**：`php tests/test-oa-org-contract.php` 13 项（旧主题回退 / 契约优先 / 源码零直连）；
   主题 `php tests/test-oa-org-data-proxy.php` 17 项。
 - **未验证**：真实 WP 下 option 读写与 autoload 行为（本机无 WP 会话）；分支/证书仓切换契约消费未做。
+
+## 2026-11-14 · OA-2501：组织架构 O2b 人员 meta 写口收口
+
+- **契约**：主题 `inc/oa/contract-org-data.php` 的 `zw_oa_org_data_person_meta_set($person_id,$key,$value)`
+  （TASK-2821）：只收 `zw_person_` 前缀、标量值、`person_id>0`、key ≤64；**主题未提供 delete 口**。
+- **插件消费层**（`includes/org/org-contract.php`）：`zw_oa_org_person_meta_set/delete` 是插件内唯一允许
+  写人员 meta 的入口 —— 契约在场（`function_exists`）走契约，否则回退 `update_post_meta/delete_post_meta`；
+  回退分支保留同一套前缀/标量/ID 校验（fail-closed，非法输入零写入）。
+- **收口**：`org-repository.php` 30 处 `update_post_meta(` + 1 处 `delete_post_meta(` 全量替换
+  （含动态键 `zw_org_migration_set_identity()` 的 `$meta_key`）；文件内直连 = 0。
+  未纳入本单：`zw_file_*` 等非人员命名空间 meta（`includes/files/`、`org-admin.php` 的照片文件反写）。
+- **回归**：`php tests/test-oa-org-contract.php` 38 项（旧主题回退 / 契约优先 / 空串与 0 放行 /
+  非前缀·数组·对象·非法 ID 拒绝 / 源码零直连）；`ci-check` 全绿。
+- **未验证**：真实 WP 下写口与 autoload/meta 缓存行为（本机无 WP 会话）；主题 delete 契约未提供 ⇒
+  删除路径当前恒走回退分支（后续主题补口即可自动切换，无需再改插件）。

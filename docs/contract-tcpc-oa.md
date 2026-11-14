@@ -104,12 +104,13 @@
 
 | 项 | 值 |
 | --- | --- |
-| 唯一写口 | 主题 `inc/oa/contract-org-data.php`；插件只经 `zw_oa_org_data_dict_get/save` 读写 |
+| 唯一写口 | 主题 `inc/oa/contract-org-data.php`；插件字典经 `zw_oa_org_data_dict_get/save`，人员 meta 经 `zw_oa_org_data_person_meta_set` |
 | 白名单 | `departments` / `duties` / `roles` / `data_model` → `zw_org_departments` / `zw_org_duties` / `zw_org_roles` / `zw_org_data_model_version`；未知键 ⇒ `null`/`false`（fail-closed） |
 | 版本握手 | `zw_oa_org_data_version()`（当前 1）；插件侧 `>=1` 才走契约 |
-| 插件消费层 | `includes/org/org-contract.php`：契约优先；旧主题无契约 ⇒ 回落直读**既有** option（过渡，不新增键） |
-| 边界 | 不新建 option、不注册 `zw_org_person` CPT（CPT/schema 仍在主题）；插件内 `get/update/delete_option(ZW_ORG_*)` = 0 |
-| 阶段 | O2a：字典 + 数据模型版本（本单）；O2b：人员 meta 写口（`zw_oa_org_data_person_meta_set`）另行评审 |
+| 人员 meta 写口（O2b） | 主题 `zw_oa_org_data_person_meta_set($person_id,$key,$value)`：只允许 `zw_person_` 前缀 + 标量 + `person_id>0`（key ≤64 字符）；插件消费层 `zw_oa_org_person_meta_set/delete` 契约优先、旧主题回退 `update_post_meta/delete_post_meta`；`org-repository.php` 直连 `update_post_meta/delete_post_meta` = 0 |
+| 插件消费层 | `includes/org/org-contract.php`：契约优先；旧主题无契约 ⇒ 回落直读**既有** option / 直写既有 meta（过渡，不新增键） |
+| 边界 | 不新建 option、不注册 `zw_org_person` CPT（CPT/schema 仍在主题）；插件内 `get/update/delete_option(ZW_ORG_*)` = 0；人员 meta 直连写 = 0 |
+| 阶段 | O2a：字典 + 数据模型版本（OA-2500）；O2b：人员 meta 写口消费（OA-2501，主题契约 TASK-2821） |
 
 **破坏性变更**：改白名单键/option 名/语义 ⇒ `zw_oa_org_data_version` +1、双仓同批、更新本节。
 

@@ -116,6 +116,73 @@ if (!function_exists('zw_oa_org_data_model_save')) {
     }
 }
 
+if (!function_exists('zw_oa_org_person_meta_contract_available')) {
+    /**
+     * 人员 meta 写口契约是否可用（TASK-2821 起主题提供 `zw_oa_org_data_person_meta_set`）。
+     *
+     * @return bool
+     */
+    function zw_oa_org_person_meta_contract_available() {
+        return function_exists('zw_oa_org_data_person_meta_set');
+    }
+}
+
+if (!function_exists('zw_oa_org_person_meta_set')) {
+    /**
+     * 写组织人员 meta（O2b）：契约优先，旧主题回退。
+     *
+     * 纪律（与主题 P-8 写口同口径）：
+     *  - 只允许 `zw_person_` 命名空间，`person_id > 0`，值为标量；
+     *  - 不新建 meta key、不改名；数组/对象由调用方序列化后再传。
+     *
+     * @param int    $person_id 人员文章 ID（>0）。
+     * @param string $key       meta key（必须 `zw_person_` 前缀）。
+     * @param mixed  $value     标量值。
+     * @return bool
+     */
+    function zw_oa_org_person_meta_set($person_id, $key, $value) {
+        $person_id = (int) $person_id;
+        $key       = (string) $key;
+        if ($person_id <= 0 || strpos($key, 'zw_person_') !== 0 || strlen($key) > 64) {
+            return false;
+        }
+        if (!is_scalar($value)) {
+            return false;
+        }
+        if (function_exists('zw_oa_org_data_person_meta_set')) {
+            return (bool) zw_oa_org_data_person_meta_set($person_id, $key, $value);
+        }
+        if (!function_exists('update_post_meta')) {
+            return false;
+        }
+        return (bool) update_post_meta($person_id, $key, $value);
+    }
+}
+
+if (!function_exists('zw_oa_org_person_meta_delete')) {
+    /**
+     * 删除组织人员 meta（O2b）：契约优先（主题若提供 delete 口），旧主题回退。
+     *
+     * @param int    $person_id 人员文章 ID（>0）。
+     * @param string $key       meta key（必须 `zw_person_` 前缀）。
+     * @return bool
+     */
+    function zw_oa_org_person_meta_delete($person_id, $key) {
+        $person_id = (int) $person_id;
+        $key       = (string) $key;
+        if ($person_id <= 0 || strpos($key, 'zw_person_') !== 0 || strlen($key) > 64) {
+            return false;
+        }
+        if (function_exists('zw_oa_org_data_person_meta_delete')) {
+            return (bool) zw_oa_org_data_person_meta_delete($person_id, $key);
+        }
+        if (!function_exists('delete_post_meta')) {
+            return false;
+        }
+        return (bool) delete_post_meta($person_id, $key);
+    }
+}
+
 if (!function_exists('zw_oa_org_contract_diagnostics')) {
     /**
      * 自检快照（只读）。

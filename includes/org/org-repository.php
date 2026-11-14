@@ -1177,7 +1177,7 @@ if (!function_exists('zw_org_link_person_user')) {
         if (preg_match('/^\d{17}[\dX]$/', $person_id_card) && preg_match('/^\d{17}[\dX]$/', $user_id_card) && $person_id_card !== $user_id_card) {
             return new WP_Error('zw_org_user_id_card_mismatch', '所选用户实名身份证号与该人员已填身份证号不一致，请确认后再关联。');
         }
-        update_post_meta($person_id, 'zw_person_user_id', $user_id);
+        zw_oa_org_person_meta_set($person_id, 'zw_person_user_id', $user_id);
         return array('person_id' => $person_id, 'user_id' => $user_id);
     }
 }
@@ -1202,7 +1202,7 @@ if (!function_exists('zw_org_unlink_person_user')) {
         if ($before <= 0) {
             return new WP_Error('zw_org_user_not_linked', '该人员当前未关联用户。');
         }
-        update_post_meta($person_id, 'zw_person_user_id', 0);
+        zw_oa_org_person_meta_set($person_id, 'zw_person_user_id', 0);
         return array('person_id' => $person_id, 'user_id' => $before);
     }
 }
@@ -1841,47 +1841,47 @@ if (!function_exists('zw_org_insert_person')) {
             wp_update_post(array('ID' => $person_id, 'menu_order' => $count + 1));
         }
 
-        update_post_meta($person_id, 'zw_person_org_dept', $dept_key);
+        zw_oa_org_person_meta_set($person_id, 'zw_person_org_dept', $dept_key);
         if ($role_provided || !$is_update) {
-            update_post_meta($person_id, 'zw_person_org_role', $role_key);
+            zw_oa_org_person_meta_set($person_id, 'zw_person_org_role', $role_key);
         }
-        update_post_meta($person_id, 'zw_person_duty', $duty_value);
-        update_post_meta($person_id, 'zw_person_legal_representative', $legal_representative ? '1' : '0');
-        update_post_meta($person_id, 'zw_person_party_secretary', $party_secretary ? '1' : '0');
-        update_post_meta($person_id, 'zw_person_user_id', $user_id);
-        update_post_meta($person_id, 'zw_person_phone', sanitize_text_field((string) $args['phone']));
-        update_post_meta($person_id, 'zw_person_email', $email);
-        update_post_meta($person_id, 'zw_person_address', sanitize_text_field((string) $args['address']));
+        zw_oa_org_person_meta_set($person_id, 'zw_person_duty', $duty_value);
+        zw_oa_org_person_meta_set($person_id, 'zw_person_legal_representative', $legal_representative ? '1' : '0');
+        zw_oa_org_person_meta_set($person_id, 'zw_person_party_secretary', $party_secretary ? '1' : '0');
+        zw_oa_org_person_meta_set($person_id, 'zw_person_user_id', $user_id);
+        zw_oa_org_person_meta_set($person_id, 'zw_person_phone', sanitize_text_field((string) $args['phone']));
+        zw_oa_org_person_meta_set($person_id, 'zw_person_email', $email);
+        zw_oa_org_person_meta_set($person_id, 'zw_person_address', sanitize_text_field((string) $args['address']));
         // TASK-804：身份证落密文 + 查重哈希（不落明文）
         if (function_exists('zw_idcard_store')) {
             zw_idcard_store($person_id, 'zw_person_id_card', $id_card);
         } else {
-            update_post_meta($person_id, 'zw_person_id_card', $id_card);
+            zw_oa_org_person_meta_set($person_id, 'zw_person_id_card', $id_card);
         }
-        update_post_meta($person_id, 'zw_person_political', $political);
-        update_post_meta($person_id, 'zw_person_education', $education);
-        update_post_meta($person_id, 'zw_person_degree', $degree);
-        update_post_meta($person_id, 'zw_person_company', sanitize_text_field((string) $args['company']));
-        update_post_meta($person_id, 'zw_person_company_duty', sanitize_text_field((string) $args['company_duty']));
-        update_post_meta($person_id, 'zw_person_gender', $gender);
-        update_post_meta($person_id, 'zw_person_birthday', $birthday);
-        update_post_meta($person_id, 'zw_person_remark', sanitize_text_field((string) $args['remark']));
-        update_post_meta($person_id, 'zw_person_photo_file_id', (int) $args['photo_file_id']);
-        update_post_meta($person_id, 'zw_person_source', $source);
-        update_post_meta($person_id, 'zw_person_status', 'active');
+        zw_oa_org_person_meta_set($person_id, 'zw_person_political', $political);
+        zw_oa_org_person_meta_set($person_id, 'zw_person_education', $education);
+        zw_oa_org_person_meta_set($person_id, 'zw_person_degree', $degree);
+        zw_oa_org_person_meta_set($person_id, 'zw_person_company', sanitize_text_field((string) $args['company']));
+        zw_oa_org_person_meta_set($person_id, 'zw_person_company_duty', sanitize_text_field((string) $args['company_duty']));
+        zw_oa_org_person_meta_set($person_id, 'zw_person_gender', $gender);
+        zw_oa_org_person_meta_set($person_id, 'zw_person_birthday', $birthday);
+        zw_oa_org_person_meta_set($person_id, 'zw_person_remark', sanitize_text_field((string) $args['remark']));
+        zw_oa_org_person_meta_set($person_id, 'zw_person_photo_file_id', (int) $args['photo_file_id']);
+        zw_oa_org_person_meta_set($person_id, 'zw_person_source', $source);
+        zw_oa_org_person_meta_set($person_id, 'zw_person_status', 'active');
 
         // TASK-1291：任期三键 —— 仅当调用方**显式提供**该参数时才覆盖（未提供保持原值），
         // 与 role/duty 的 *_provided 写法同型，保证既有保存链路与存量数据不被回冲。
         if (in_array('term_name', $provided_keys, true)) {
-            update_post_meta($person_id, 'zw_person_term_name', sanitize_text_field((string) $args['term_name']));
+            zw_oa_org_person_meta_set($person_id, 'zw_person_term_name', sanitize_text_field((string) $args['term_name']));
         }
         if (in_array('term_start', $provided_keys, true)) {
             $term_start = sanitize_text_field((string) $args['term_start']);
-            update_post_meta($person_id, 'zw_person_term_start', zw_org_is_date_value($term_start) ? $term_start : '');
+            zw_oa_org_person_meta_set($person_id, 'zw_person_term_start', zw_org_is_date_value($term_start) ? $term_start : '');
         }
         if (in_array('term_end', $provided_keys, true)) {
             $term_end = sanitize_text_field((string) $args['term_end']);
-            update_post_meta($person_id, 'zw_person_term_end', zw_org_is_date_value($term_end) ? $term_end : '');
+            zw_oa_org_person_meta_set($person_id, 'zw_person_term_end', zw_org_is_date_value($term_end) ? $term_end : '');
         }
 
         // TASK-1598 · T5：`policy` 为**只增键**（不阻断时携带年龄软结论 / 暂缓警告，供展示面消费）。
@@ -1930,7 +1930,7 @@ if (!function_exists('zw_org_migration_set_identity')) {
         if ($holder > 0) {
             return false;
         }
-        update_post_meta($person_id, $meta_key, '1');
+        zw_oa_org_person_meta_set($person_id, $meta_key, '1');
         return true;
     }
 }
@@ -2066,17 +2066,17 @@ if (!function_exists('zw_org_maybe_migrate_data')) {
             if ($target === '会长') {
                 $existing_president = zw_org_find_duty_holder('会长', $person_id);
                 if ($existing_president > 0) {
-                    update_post_meta($person_id, 'zw_person_duty_legacy', '会长');
+                    zw_oa_org_person_meta_set($person_id, 'zw_person_duty_legacy', '会长');
                     $target = '';
                 }
             }
 
             if ($old_duty !== '' && $old_duty !== $target) {
-                update_post_meta($person_id, 'zw_person_duty_legacy', $old_duty);
+                zw_oa_org_person_meta_set($person_id, 'zw_person_duty_legacy', $old_duty);
             }
-            update_post_meta($person_id, 'zw_person_duty', $target);
+            zw_oa_org_person_meta_set($person_id, 'zw_person_duty', $target);
             if ($old_role !== '') {
-                delete_post_meta($person_id, 'zw_person_org_role');
+                zw_oa_org_person_meta_delete($person_id, 'zw_person_org_role');
             }
         }
 
