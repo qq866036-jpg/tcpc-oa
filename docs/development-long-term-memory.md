@@ -707,3 +707,23 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
   `zw_oa_org_person_meta_set` 与三个新文件 ⇒ 冒烟能真正拦住「发了旧构建」。
 - **注意**：菜单探针必须带 `--user=1`（CLI 用户 0 无 caps，菜单回调里的 `current_user_can` 会直接 return，
   造成「菜单缺失」假阴）；该结论已写进脚本注释。
+
+## 2026-11-14 · OA-2502 事故：0.1.27 直发 fatal（已回滚）+ 发版通道加固
+
+- **现象**：`plugin-switch-oa.sh` 交换目录后冒烟第一步 `wp plugin is-active` 即 fatal：
+  `Cannot redeclare zw_policy_platform_cron_schedules()`（插件 `includes/policy/policy-platform-cron.php:172`
+  与主题 `inc/policy-platform/policy-platform-cron.php:172` 同时声明）。原因：**在线主题是旧版**，
+  `functions.php` 无条件 require 主题 policy 副本（没有「插件优先」守卫）；插件 0.1.27 的 policy 模块先加载后，
+  主题副本再加载 ⇒ 同名函数重复声明。已用备份 `pre-switch-20261114-1244` 回滚：插件目录与备份逐字节一致、
+  `TCPC_OA_VERSION=0.1.26`、`/`、`/login`、`/privacy-policy/`、`/userra/`、`/bhzc` 均 200、六后台菜单在位。
+- **顺序铁律**：插件 policy 迁移版**必须主题先发**（或同一发布窗口且主题先行）。
+  反向（新主题 + 旧插件）安全：旧插件缺的符号由主题副本补齐；新插件 + 旧主题 = fatal。
+- **门禁沉淀（本单已是代码）**：`plugin-switch-oa.sh` 新增「②a 主题兼容门禁」——在任何生产写入前
+  检查在线主题 `functions.php` 是否含 `function_exists('zw_policy_platform_cron_mask_webhook')`，
+  缺失即拒发。判别力实测：生产旧主题=拒发、主题 dev=通过。
+- **回滚缺陷修复**：`--rollback` 原从备份目录读 `VERSION`，但 `VERSION` 是 export-ignore（不随产物上线）
+  ⇒ 读不到就把版本记录写成 `0.0.0`（等于对之后所有版本放开降级）。现改为解析备份 `tcpc-oa.php` 的
+  `Version:` 头；仍取不到则**只解锁、不写版本记录**。
+- **发版前必做的双重验证**：① 主题 9 个守卫哨兵在插件里全部有定义（policy-platform-data / legal-admin-bridge /
+  cron / consent / consent-gate / consent-notify / legal-text-source / module-map / rule-engine —— 本单已逐项 grep 通过）；
+  ② 在线主题版本必须 ≥ 含守卫的构建（门禁自动判）。

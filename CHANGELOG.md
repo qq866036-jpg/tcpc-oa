@@ -19,6 +19,13 @@
     REST health + `/userra/`」，改变此前只验登录页/隐私页/章程哈希的窄口径（TASK-2306 §10 G3）。
 - **回滚**：`bash scripts/plugin-switch-oa.sh --rollback <ts>`（发版时自动备份到
   `/root/tcpc-oa-plugin-backups/pre-switch-<ts>/`）。
+- **发版前置（2026-11-14 实测·必须遵守）**：本版**必须主题先发**。0.1.27 首次直发（在线主题仍是旧版、
+  主题 `inc/policy-platform/` 副本无条件加载）在目录交换后触发
+  `Cannot redeclare zw_policy_platform_cron_schedules()`（两处都在第 172 行），冒烟第一步即失败；
+  已用本次备份回滚到 0.1.26（插件目录与备份逐字节一致、站点各 URL 200、六菜单在位）。
+  为此本单同批加固发版通道：① 新增「主题兼容门禁」——在线主题 `functions.php` 缺
+  `function_exists('zw_policy_platform_cron_mask_webhook')` 守卫即**拒发**（在任何生产写入之前）；
+  ② 修复 `--rollback` 在备份无 `VERSION`（export-ignore）时把版本记录写成 `0.0.0` 的缺陷（改读插件头）。
 
 ### Added
 

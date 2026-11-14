@@ -101,8 +101,29 @@ ln_rb_lock="$(grep -n 'ZW_RELEASE_ALLOW_DOWNGRADE=1 zwrel_acquire' "$SWITCH" | h
 ln_rb_restore="$(grep -n 'run cp -a "$src" "$PLUGIN_DIR"' "$SWITCH" | head -1 | cut -d: -f1)"
 [ -n "$ln_rb_lock" ] && [ -n "$ln_rb_restore" ] && [ "$ln_rb_lock" -lt "$ln_rb_restore" ]
 ck "回滚取锁在「还原备份」之前（${ln_rb_lock:-?} < ${ln_rb_restore:-?}）" $?
-grep -qF 'zwrel_release "$PLUGIN_SLUG" "${RB_VER:-0.0.0}" "$TASK_ID"' "$SWITCH"
+grep -qF 'zwrel_release "$PLUGIN_SLUG" "$RB_VER" "$TASK_ID"' "$SWITCH"
 ck "回滚成功后记录「回滚到的版本」（供后续降级守卫）" $?
+# OA-2502：备份目录无 VERSION（export-ignore）⇒ 必须回退到插件头解析，且取不到时**不得**写 0.0.0
+grep -qF 'RB_VER="$(awk ' "$SWITCH"
+grep -qF 'Version:/ {print $3; exit}' "$SWITCH"
+ck "回滚版本号回退到插件头解析（备份无 VERSION）" $?
+grep -qF '仅解锁，**不写版本记录**' "$SWITCH"
+ck "取不到版本时只解锁、不写版本记录（禁止 0.0.0）" $?
+if grep -qF 'zwrel_release "$PLUGIN_SLUG" "${RB_VER:-0.0.0}"' "$SWITCH"; then
+  ck "回滚不得再把版本记录写成 0.0.0" 1
+else
+  ck "回滚不得再把版本记录写成 0.0.0" 0
+fi
+
+echo "== ⑦b 接线：主题兼容门禁（OA-2502 事故：直发 fatal）"
+grep -qF "function_exists('zw_policy_platform_cron_mask_webhook'" "$SWITCH"
+ck "发版通道含主题守卫探针（插件优先条件加载）" $?
+grep -qF '在线主题不兼容' "$SWITCH"
+ck "主题不兼容时拒发（任何生产写入之前）" $?
+ln_theme_gate="$(grep -n 'THEME_FUNCTIONS=' "$SWITCH" | head -1 | cut -d: -f1)"
+ln_build_swap="$(grep -n 'STAGING="\$PLUGINS_ROOT' "$SWITCH" | head -1 | cut -d: -f1)"
+[ -n "$ln_theme_gate" ] && [ -n "$ln_build_swap" ] && [ "$ln_theme_gate" -lt "$ln_build_swap" ]
+ck "主题兼容门禁在「构建/交换」之前（${ln_theme_gate:-?} < ${ln_build_swap:-?}）" $?
 
 echo "== ⑧ 接线：权限回读 fail-closed（不再是只告警）"
 grep -qF 'oa_normalize_perms "$PLUGIN_DIR"' "$SWITCH"; ck "落地后做属主/权限归一" $?

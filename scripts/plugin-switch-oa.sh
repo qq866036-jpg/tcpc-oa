@@ -118,6 +118,11 @@ if [[ -n "$ROLLBACK" ]]; then
   [[ -d "$src" ]] || fail "备份不存在：$src"
   say "回滚到 $ROLLBACK"
   RB_VER="$(tr -d ' \t\r\n' < "$src/VERSION" 2>/dev/null || true)"
+  if [[ -z "$RB_VER" ]]; then
+    # VERSION 是 `export-ignore` 治理文件（不随产物上线）⇒ 线上/备份目录里没有它。
+    # 2026-11-14 实测：原实现读不到 VERSION 就把版本记录写成 0.0.0（等于给之后所有版本放行降级）。
+    RB_VER="$(awk '/^ \* Version:/ {print $3; exit}' "$src/tcpc-oa.php" 2>/dev/null || true)"
+  fi
   # 回滚也是一次**生产写入** ⇒ 同样要单实例锁；版本守卫显式放开（回滚本身就是降级）。
   if [[ "${ZW_RELEASE_LOCK:-1}" != "0" ]]; then
     if ! ZW_RELEASE_ALLOW_DOWNGRADE=1 zwrel_acquire "$PLUGIN_SLUG" "${RB_VER:-0.0.0}" "$TASK_ID"; then
@@ -133,9 +138,15 @@ if [[ -n "$ROLLBACK" ]]; then
   run rm -rf "$PLUGIN_DIR.rollback-$STAMP"
   run wp plugin activate "$PLUGIN_SLUG" --path="$WP_PATH" --allow-root
   if [[ "${ZW_RELEASE_LOCK:-1}" != "0" && "$DRY" -eq 0 ]]; then
-    zwrel_release "$PLUGIN_SLUG" "${RB_VER:-0.0.0}" "$TASK_ID"
-    trap - EXIT INT TERM
-    echo "  ✓ 已释放发版锁并记录回滚到的版本 ${RB_VER:-0.0.0}"
+    if [[ -n "$RB_VER" ]]; then
+      zwrel_release "$PLUGIN_SLUG" "$RB_VER" "$TASK_ID"
+      trap - EXIT INT TERM
+      echo "  ✓ 已释放发版锁并记录回滚到的版本 $RB_VER"
+    else
+      zwrel_unlock "$PLUGIN_SLUG"
+      trap - EXIT INT TERM
+      echo "  ⚠ 取不到回滚版本号（备份缺 VERSION 且插件头解析失败）⇒ 仅解锁，**不写版本记录**" >&2
+    fi
   fi
   say "回滚完成：$( [[ "$DRY" -eq 1 ]] && echo '(dry-run)' || echo "$PLUGIN_DIR" )"
   exit 0
@@ -161,6 +172,20 @@ if [[ "$(printf '%s\n%s\n' "$MIN_THEME_FILE" "$LIVE_THEME" | sort -V | head -1)"
   fail "在线主题 $LIVE_THEME 低于插件要求的 $MIN_THEME_FILE（拒发）"
 fi
 echo "  ✓ 在线主题 $LIVE_THEME >= MIN_THEME $MIN_THEME_FILE"
+
+# ── ②a 主题兼容门禁（OA-2502 事故沉淀：0.1.27 首次发版即 fatal 并回滚）────────────
+# 背景（2026-11-14 实测）：0.1.27 起插件 `policy` 模块与主题 `inc/policy-platform/` 回退副本会声明同名函数
+# （首例 `zw_policy_platform_cron_schedules()`，两处都在第 172 行）。只要在线主题还是**旧版**（functions.php
+# 无条件 require 主题副本），交换后首次加载即 `Cannot redeclare` ⇒ 整站 500，冒烟前就挂。
+# 正确形态：主题必须先是「插件优先 / 停用回退」的条件加载版本（`function_exists` 守卫），再发本插件；
+# 反过来（新主题 + 旧插件）是安全的 —— 旧插件缺的符号由主题副本补齐。
+# 判据放在**任何生产写入之前**，缺守卫直接拒发，不交换目录。
+THEME_FUNCTIONS="$THEME_DIR/functions.php"
+[[ -f "$THEME_FUNCTIONS" ]] || fail "读不到在线主题入口：$THEME_FUNCTIONS"
+if ! grep -q "function_exists('zw_policy_platform_cron_mask_webhook'" "$THEME_FUNCTIONS"; then
+  fail "在线主题不兼容（$THEME_FUNCTIONS 缺「插件优先」条件加载守卫）⇒ 拒发：先发含该守卫的主题版本，再发本插件"
+fi
+echo "  ✓ 主题兼容：functions.php 含插件优先条件加载守卫"
 
 # ── ②b 发版互斥（OA-2494）——「前置校验之后、任何生产写入（构建目录 / 备份 / 交换）之前」
 # 两道守卫：① 单实例（flock 仓外锁，第二者 rc=3 并打印持有者，**不动生产目录**）；
