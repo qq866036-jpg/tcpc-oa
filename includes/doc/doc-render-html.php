@@ -1843,7 +1843,13 @@ if (!function_exists('zw_doc_render_document_html')) {
         $meta   = isset($body['meta']) && is_array($body['meta']) ? $body['meta'] : array();
         $blocks = isset($body['blocks']) && is_array($body['blocks']) ? array_values($body['blocks']) : array();
         $pages  = zw_doc_render_paginate($body, $args);
-        $mode   = isset($meta['page_mode']) ? (string) $meta['page_mode'] : 'standard';
+        // OA-2521：未登记 page_mode 时回落「公文版式」的 `footer.default_mode`（此前写死 standard，
+        // 而该版式键全仓 0 处读取 ⇒ 版式页若改动默认模式不生效）。仍是白名单值，非法值回落到标准。
+        $mode_default = (string) zw_doc_gb9704_get('footer.default_mode', 'standard');
+        if (!in_array($mode_default, array('standard', 'center', 'none'), true)) {
+            $mode_default = 'standard';
+        }
+        $mode   = (isset($meta['page_mode']) && (string) $meta['page_mode'] !== '') ? (string) $meta['page_mode'] : $mode_default;
 
         $html = '';
         foreach ($pages as $page_idx => $indexes) {
