@@ -1143,3 +1143,13 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
   ④ 打印必须 `beforeprint` 撤掉 `transform` 并显示全部页面，否则只印当前页。
 - **回归**：`php tests/test-doc-preview-viewer.php`（44 项）；`php tests/test-doc-preview-print-parity.php`
   仍须全绿（保证默认 continuous 与详情页零变化）。
+
+## 2026-11-18 · OA-2530：发版 0.1.33（C1 一级标题字重改常规上生产）
+
+- 0.1.32 → **0.1.33**（`release-bump-oa.sh patch`），上线 OA-2528（`fonts.h1.weight` 默认 normal）。
+- **教训（重要）**：C1 并入 dev 时**没有升版**，于是出现「仓与生产版本号相同、但内容不同」的状态
+  （生产 h1 仍是 `bold`，dev 已是 `normal`），而 `release-readback-check.sh` 只比版本号 ⇒ 会显示 ok **却漏掉差异**。
+  ⇒ **内容型改动（字重/间距/默认值）合入 dev 后必须尽快升版发布**；收口时除版本号外，还要**实内容抽查**
+  （本次已抽查生产副本 `doc-layout-gb9704.php` 的 `fonts.h1.weight` 是否已是 `normal`）。
+- 发版顺序沿用固定做法：卫星单提交 + OA 侧 finish → 载体单标题不带「发版」词（不触发回读）→ 先合并载体 →
+  再合并插件 → 切生产 → 最后收卫星单（此时按仓回读真实一致，不需要逃生口）。
