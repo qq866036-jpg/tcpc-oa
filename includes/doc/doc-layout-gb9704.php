@@ -414,7 +414,11 @@ if (!function_exists('zw_doc_gb9704_spec')) {
                     'gb'     => '黑体',
                     'local'  => array('黑体', 'SimHei', 'Heiti SC', 'Noto Sans CJK SC', 'Source Han Sans CN', '思源黑体 CN'),
                     'hosted' => '',
-                    'weight' => 'bold',
+                    // OA-2528（用户 2026-11-18 拍板「改为常规」）：**黑体本身即粗面**，再叠 `font-weight:bold`
+                    // 就是双重加粗（笔画发糊）。GB §7.3.3 只要求「第一层用黑体字」，未要求再加粗。
+                    // 影响面：一级标题（一、）与**版头标记**（份号/密级/紧急程度，共用 h1 字重槽）都会变常规；
+                    // 标题（title）字重不动（小标宋口径另表）。版式页仍可一键改回「加粗」。
+                    'weight' => 'normal',
                     'approx' => false,
                 ),
                 'h2' => array(

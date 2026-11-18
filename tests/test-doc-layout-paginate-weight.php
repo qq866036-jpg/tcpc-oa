@@ -39,15 +39,29 @@ function zw_doc_layout_get_overrides() {
     return $GLOBALS['zw_lw_ov'];
 }
 function zw_doc_layout_apply_overrides($spec) {
+    // OA-2528：支持**任意层级**键（`fonts.h1.weight` 是 3 层）；旧桩只写 2 层会静默失效。
     foreach ((array) $GLOBALS['zw_lw_ov'] as $path => $value) {
         $parts = explode('.', (string) $path);
         if (count($parts) < 2) {
             continue;
         }
-        if (!isset($spec[$parts[0]]) || !is_array($spec[$parts[0]])) {
-            continue;
+        $ref = &$spec;
+        $ok  = true;
+        $n   = count($parts);
+        foreach ($parts as $i => $seg) {
+            if ($i === $n - 1) {
+                break;
+            }
+            if (!is_array($ref) || !array_key_exists($seg, $ref) || !is_array($ref[$seg])) {
+                $ok = false;
+                break;
+            }
+            $ref = &$ref[$seg];
         }
-        $spec[$parts[0]][$parts[1]] = $value;
+        if ($ok && is_array($ref)) {
+            $ref[end($parts)] = $value;
+        }
+        unset($ref);
     }
 
     return $spec;
@@ -146,7 +160,11 @@ oa_lw_chk(strpos($html, '<p class="tco-doc-record-cc">抄送：') !== false, '�
 echo "\n== 3) 字重：由「公文版式」决定，不再写死 ==\n";
 $GLOBALS['zw_lw_ov'] = array();
 $css_default = zw_doc_render_style_block('');
-oa_lw_chk(strpos($css_default, '.tco-doc-h1{font-family:"ZW-DOC-H1",serif;font-weight:bold') !== false, '默认（版式表 h1 字重 = 加粗）仍输出 bold —— 观感零回归');
+// OA-2528（C1）后默认值改为「常规」：断言随之更新为 normal —— 判据仍是「默认值来自版式表」，
+// 不是「永远是 bold」。要验可配性，看下面显式注入 bold 的那两条。
+oa_lw_chk(strpos($css_default, '.tco-doc-h1{font-family:"ZW-DOC-H1",serif;font-weight:normal') !== false, '默认（C1 后 h1 字重 = 常规）输出 normal');
+$GLOBALS['zw_lw_ov'] = array('fonts.h1.weight' => 'bold');
+oa_lw_chk(strpos(zw_doc_render_style_block(''), '.tco-doc-h1{font-family:"ZW-DOC-H1",serif;font-weight:bold') !== false, '版式改成「加粗」后 h1 输出 bold（配置真的生效）');
 $GLOBALS['zw_lw_ov'] = array('fonts.h1.weight' => 'normal', 'fonts.title.weight' => 'normal');
 $css_normal = zw_doc_render_style_block('');
 oa_lw_chk(strpos($css_normal, '.tco-doc-h1{font-family:"ZW-DOC-H1",serif;font-weight:normal') !== false, '版式改成「常规」后 h1 输出 normal（修复前写死 bold ⇒ 必红）');
