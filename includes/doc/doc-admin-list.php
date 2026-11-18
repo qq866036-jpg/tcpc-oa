@@ -428,6 +428,21 @@ if (!function_exists('zw_doc_handle_create_document')) {
                     zw_doc_copy_number_release_doc((int) $doc_id, '正文保存失败');
                 }
             }
+            // OA-2515（GB/T 9704-2012 §7.3.4）：**附件说明条数 ⇄ 实际上传附件数**一致性提示 ——
+            // 说明写了 N 条却只传了 M 个（或反之），纸面清单与附件实体就对不上。不阻断建单，
+            // 但必须**可见、可改正**（写明"请核对"与去哪改），不得静默。
+            if (!empty($body['meta']['attach_note']) && is_array($body['meta']['attach_note'])
+                && function_exists('zw_doc_get_document')) {
+                $attach_expected = count((array) $body['meta']['attach_note']);
+                $attach_doc      = zw_doc_get_document((int) $doc_id);
+                $attach_actual   = (is_array($attach_doc) && !empty($attach_doc['attachment_ids']))
+                    ? count((array) $attach_doc['attachment_ids'])
+                    : 0;
+                if ($attach_expected > 0 && $attach_actual !== $attach_expected) {
+                    $extra .= '；附件提示：附件说明写了 ' . (int) $attach_expected . ' 条，实际上传 '
+                        . (int) $attach_actual . ' 个 —— 请在编辑页核对后再用印';
+                }
+            }
         }
         $extra .= !empty($upload['errors']) ? '；附件提示：' . implode('；', array_map('sanitize_text_field', $upload['errors'])) : '';
 
