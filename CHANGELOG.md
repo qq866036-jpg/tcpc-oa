@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **分页估算补标题上/下间距 + 抄送悬挂对齐 + 字重改由版式决定（OA-2516）**：
+  - **分页**：首页占用此前只算「版头 + 标题行数 + 主送」，漏了 CSS 里 `.tco-doc-title` 的上/下间距
+    （`title.gap_below_rule_lines` 与无主送时的 `title.gap_below_title_lines` 各 1 正文行）⇒ 首页偏乐观
+    1~2 行（28~56pt ≈ 9.9~19.8mm），正文密集时把末页/版记顶出纸面。现按同一批版式常量补算；
+    有主送机关时标题下间距由主送承担，**不重复计**（差分判据：2+2 vs 0+0 首页块数差 4，有主送时差 2）；
+  - **抄送**：`.tco-doc-record-cc{padding-left:3em;text-indent:-3em}` ⇒ 回行与「抄送：」后的首字对齐（GB §7.4.1）；
+  - **字重**：新增唯一出处 `zw_doc_render_font_weight($slot)`，标题 / 一级标题 / 版头标记改读
+    `fonts.<slot>.weight` —— 版式页自 TASK-2007 起就能选「标题字重 / 一级标题字重」，但渲染层把
+    `font-weight:bold` **写死** ⇒ 改设置**不生效**；默认值保持原样（观感零回归），非法值回落 normal；
+  - **追溯修复 OA-2515**：附件说明渲染在无 `attach_note` 的公文上会抛「Undefined array key」Warning（先判存在再取）。
+
 ### Changed
 
 - **附件说明按国标重组（OA-2515，行为变化）**：GB/T 9704-2012 §7.3.4 ——

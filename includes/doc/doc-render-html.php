@@ -176,7 +176,7 @@ if (!function_exists('zw_doc_render_style_block')) {
         $css .= '.tco-doc-body p{margin:0;}';
         $css .= '.tco-doc-p{text-indent:' . (int) $text['indent_chars'] . 'em;}';
         $css .= '.tco-doc-h1,.tco-doc-h2,.tco-doc-h3,.tco-doc-h4{text-indent:' . (int) $text['indent_chars'] . 'em;}';
-        $css .= '.tco-doc-h1{font-family:' . zw_doc_render_font_family('h1') . ';font-weight:bold;}';
+        $css .= '.tco-doc-h1{font-family:' . zw_doc_render_font_family('h1') . ';font-weight:' . zw_doc_render_font_weight('h1') . ';}';
         $css .= '.tco-doc-h2{font-family:' . zw_doc_render_font_family('h2') . ';font-weight:normal;}';
         $css .= '.tco-doc-h3,.tco-doc-h4{font-family:' . zw_doc_render_font_family('h3') . ';font-weight:normal;}';
         // TASK-1340 阶段三（用户口径）：「红线和公文标题 以及 公文标题和正文第一行 各留一行」⇒
@@ -188,7 +188,7 @@ if (!function_exists('zw_doc_render_style_block')) {
         $title_below_pt    = $body_line_pt * $title_below_lines;
         $css .= '.tco-doc-title{font-family:' . zw_doc_render_font_family('title') . ';'
               . 'font-size:' . (float) $title['pt'] . 'pt;line-height:' . (float) $title['line_pt'] . 'pt;'
-              . 'font-weight:bold;text-align:center;text-indent:0;margin:' . $title_gap_pt . 'pt 0 ' . $title_below_pt . 'pt;}';
+              . 'font-weight:' . zw_doc_render_font_weight('title') . ';text-align:center;text-indent:0;margin:' . $title_gap_pt . 'pt 0 ' . $title_below_pt . 'pt;}';
         $css .= '.tco-doc-letterhead{position:relative;width:' . (float) $box['w_mm'] . 'mm;text-align:center;}';
         $css .= '.tco-doc-letterhead img{display:block;width:' . (float) $box['w_mm'] . 'mm;height:auto;}';
         // TASK-1276（CHG-155）：版头标记三要素（份号 / 密级和保密期限 / 紧急程度，GB/T 9704-2012 §7.2.1~7.2.3）。
@@ -201,7 +201,7 @@ if (!function_exists('zw_doc_render_style_block')) {
         $css .= '.tco-doc-marks{margin:0 0 ' . $mark_gap . 'pt;}';
         $css .= '.tco-doc-mark{font-family:' . zw_doc_render_font_family($mark_slot) . ';'
               . 'font-size:' . $mark_pt . 'pt;line-height:' . $mark_line . 'pt;'
-              . 'font-weight:bold;text-align:left;text-indent:0;margin:0;}';
+              . 'font-weight:' . zw_doc_render_font_weight($mark_slot) . ';text-align:left;text-indent:0;margin:0;}';
         // TASK-1278（CHG-156）：`.tco-doc-org` 加 `white-space:nowrap` —— 无论红头多长都**不允许折行**
         // （硬保证；字号/字距的每篇适配见 `zw_doc_head_fit()`，以元素**内联样式**落到具体公文上）。
         // TASK-1282（CHG-158）：红头**垂直拉长**（只改高度、**宽度不变**）。
@@ -372,6 +372,11 @@ if (!function_exists('zw_doc_render_style_block')) {
         $css .= '.tco-doc-record{font-family:' . zw_doc_render_font_family('note') . ';'
               . 'font-size:' . (float) $record['pt'] . 'pt;line-height:' . ((float) $record['pt'] * 1.6) . 'pt;'
               . 'padding:0 ' . $record_side . 'em;}';
+        // OA-2516（GB/T 9704-2012 §7.4.1）：抄送机关**回行时与冒号后的首字对齐** ——
+        // 「抄送：」占 3 个字宽，故用「左内边距 3em + 首行负缩进 3em」做悬挂：
+        // 首行仍从版记的左空一字处起排，回行落在「抄送：」之后（即第一个机关名的首字）对齐。
+        // 只作用于抄送行（印发机关/印发日期是同一行两端分置，不吃这条规则）。
+        $css .= '.tco-doc-record-cc{padding-left:3em;text-indent:-3em;}';
         // TASK-1338 批次二 ①：版记分隔线**三条**（首条粗 0.35mm、中间细 0.25mm、末条粗 0.35mm，GB/T 9704-2012 §7.4.1）。
         // 基础类为**粗线**（首/末条），附加类为中间**细线**；线宽取同一批版式常量，禁止硬编码。
         $css .= '.tco-doc-record-block{margin-top:auto;}';
@@ -481,6 +486,33 @@ if (!function_exists('zw_doc_render_font_family')) {
         $family = 'ZW-DOC-' . strtoupper($slot);
 
         return '"' . $family . '",serif';
+    }
+}
+
+if (!function_exists('zw_doc_render_font_weight')) {
+    /**
+     * 字体字重（唯一出处）—— OA-2516：读「公文版式」的 `fonts.<slot>.weight`。
+     *
+     * 为什么需要它：版式页自 TASK-2007 起就把「标题字重 / 一级标题字重」做成了可选项，
+     * 但渲染层此前把 `font-weight:bold` **写死**在 CSS 里 ⇒ 版式里改成「常规」**不生效**
+     * （这是「设置有入口、实现没接线」的又一例）。改由本函数取值后，版式页的字重才真正上纸。
+     *
+     * @param string $slot 版式位（title / h1 / h2 / h3 / h4 / body / page / note）。
+     * @return string 'bold' | 'normal'（非法值一律回落 normal，不输出第三态）。
+     */
+    function zw_doc_render_font_weight($slot) {
+        $slot = (string) $slot;
+        if ($slot === 'note') {
+            $slot = 'body';
+        }
+        if (!in_array($slot, array('title', 'h1', 'h2', 'h3', 'h4', 'body', 'page'), true)) {
+            $slot = 'body';
+        }
+        $weight = function_exists('zw_doc_gb9704_get')
+            ? (string) zw_doc_gb9704_get('fonts.' . $slot . '.weight', 'normal')
+            : 'normal';
+
+        return ($weight === 'bold') ? 'bold' : 'normal';
     }
 }
 
@@ -871,6 +903,15 @@ if (!function_exists('zw_doc_render_paginate')) {
         if (!empty($meta['title'])) {
             $title_chars_line = max(1, (int) floor($chars_line * 16 / max(1, (int) zw_doc_gb9704_get('title.pt', 22))));
             $used            += zw_doc_render_lines_of_text($meta['title'], $title_chars_line);
+            // OA-2516：**首页占用必须含标题上/下间距**，否则分页偏乐观 ——
+            // CSS 里 `.tco-doc-title` 有 `margin: 红线→标题(gap_below_rule_lines 行) 0 标题→正文(gap_below_title_lines 行)`，
+            // 而本估算此前只算标题行数 ⇒ 首面少算 1~2 行（28~56pt ≈ 9.9~19.8mm），正文密集时把末页/版记顶出纸面。
+            $used += max(0, (int) zw_doc_gb9704_get('title.gap_below_rule_lines', 1));
+            if (empty($meta['receiver'])) {
+                // 有主送机关时该间距由主送机关自身的上间距承担（CSS 外边距合并取 max / DOCX 通道按"无主送才插空段"），
+                // 故**只在无主送**时另计一次，避免重复。
+                $used += max(0, (int) zw_doc_gb9704_get('title.gap_below_title_lines', 1));
+            }
         }
         if (!empty($meta['receiver'])) {
             $used += max(1, (int) zw_doc_gb9704_get('main.receiver_gap_lines', 1))
@@ -1714,7 +1755,7 @@ if (!function_exists('zw_doc_render_record_html')) {
         // ② 抄送行（文本末尾句号已在上面经唯一实现取得）。
         $rows = array();
         if ($has_cc) {
-            $rows[] = '<div class="tco-doc-record"><p>抄送：' . esc_html($cc_text) . '</p></div>';
+            $rows[] = '<div class="tco-doc-record"><p class="tco-doc-record-cc">抄送：' . esc_html($cc_text) . '</p></div>';
         }
         if ($has_print) {
             // ③ 印发机关左空一字（容器左内边距）、印发日期右空一字（容器右内边距 + 两端分置）。
@@ -1736,7 +1777,7 @@ if (!function_exists('zw_doc_render_record_html')) {
         $html = '<div class="tco-doc-record-block">';
         if ($rules_scope === 'print_only' && $has_cc && $has_print) {
             // 抄送提到横线之外（在首条粗线之前）。
-            $html .= '<div class="tco-doc-record is-outside-rules"><p>抄送：' . esc_html($cc_text) . '</p></div>';
+            $html .= '<div class="tco-doc-record is-outside-rules"><p class="tco-doc-record-cc">抄送：' . esc_html($cc_text) . '</p></div>';
             $html .= '<div class="tco-doc-record-rule"></div>';
             $html .= '<div class="tco-doc-record"><p class="tco-doc-record-print">'
                 . '<span class="tco-doc-record-org">' . esc_html($print_org) . '</span>'
@@ -1831,7 +1872,9 @@ if (!function_exists('zw_doc_render_document_html')) {
                 // TASK-1333 ②：附件说明**移到落款之前**（正文下空一行），
                 // 纸面顺序固定为 正文 → 空一行 → 附件说明 → 空一行 → 署名 → 成文日期 → 附注 → 版记。
                 // OA-2515：行文由 `zw_doc_body_attach_plan()` 统一重组（自动「附件：」/顺序号/悬挂对齐）。
-                $attach_rows = function_exists('zw_doc_body_attach_plan')
+                // OA-2516 追溯修复：OA-2515 初版在这里直接读 `$meta['attach_note']`，无附件说明的公文
+                // （绝大多数）会抛「Undefined array key」Warning —— 必须先判存在再取（渲染通道零噪声）。
+                $attach_rows = (function_exists('zw_doc_body_attach_plan') && isset($meta['attach_note']))
                     ? (array) zw_doc_body_attach_plan($meta['attach_note'])
                     : array();
                 foreach ($attach_rows as $attach_index => $attach_row) {
