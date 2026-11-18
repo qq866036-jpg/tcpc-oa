@@ -1288,10 +1288,43 @@ if (!function_exists('zw_doc_render_composer_page')) {
         <div class="wrap tco-doc-composer">
             <?php echo zw_doc_admin_ui_style(); // 唯一出处：SPEC-10 §1.9 卡片范式（TASK-778） ?>
             <style>
-            .tco-doc-composer .zwc-grid{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;width:100%}
-            /* 左栏限宽：页面虽为 100% 宽，但表单列过宽会让输入框难以阅读（100% 宽控件在 1500px 下可达 1400px） */
-            .tco-doc-composer .zwc-left{flex:1 1 640px;min-width:0;max-width:980px}
-            .tco-doc-composer .zwc-right{flex:1 1 400px;min-width:0;max-width:100%;overflow:auto;background:#f0f0f1;border:1px solid #e5e7eb;border-radius:12px;padding:10px}
+            /* OA-2529（用户 2026-11-18 截图指令）：左右改为**可拖拽分栏**（比例写入 localStorage，下次进入即默认值）；
+               右栏预览 `position:sticky` **不随页面滚动**；窄屏（<1100px）回落上下堆叠并隐藏分隔条。 */
+            .tco-doc-composer .zwc-grid{display:flex;align-items:flex-start;flex-wrap:nowrap;width:100%;gap:0;--zwc-split:60%}
+            .tco-doc-composer .zwc-left{flex:0 0 calc(var(--zwc-split,60%) - 7px);min-width:0;max-width:none;padding-right:14px}
+            .tco-doc-composer .zwc-splitter{flex:0 0 14px;align-self:flex-start;position:sticky;top:40px;height:calc(100vh - 52px);min-height:320px;cursor:col-resize;background:transparent;outline:none;touch-action:none}
+            .tco-doc-composer .zwc-splitter::before{content:"";position:absolute;top:0;bottom:0;left:50%;width:1px;transform:translateX(-50%);background:#dcdcde}
+            .tco-doc-composer .zwc-splitter::after{content:"";position:absolute;top:50%;left:50%;width:4px;height:34px;transform:translate(-50%,-50%);border-radius:2px;background:#c3c4c7}
+            .tco-doc-composer .zwc-splitter:focus::after,.tco-doc-composer .zwc-splitter.is-dragging::after{background:#2271b1}
+            @media(hover:hover){.tco-doc-composer .zwc-splitter:hover::after{background:#2271b1}}
+            .tco-doc-composer .zwc-splitter:focus-visible{box-shadow:0 0 0 2px #2271b1;border-radius:2px}
+            .tco-doc-composer .zwc-splitter.is-dragging+.zwc-right{pointer-events:none}
+            .tco-doc-composer .zwc-right{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;position:sticky;top:40px;align-self:flex-start;box-sizing:border-box;background:#f0f0f1;border:1px solid #e5e7eb;border-radius:12px;padding:8px 10px 10px}
+            /* 页头图标工具栏（参考 PDF 阅读器）：功能全在页头，预览内不放按钮与说明。 */
+            .tco-doc-composer .zwc-pv-head{display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:0 0 auto;padding:0 0 8px;margin:0 0 8px;border-bottom:1px solid #e0e3e8}
+            .tco-doc-composer .zwc-pv-title{font-size:14px;font-weight:600;color:#1d2327;white-space:nowrap;margin:0}
+            .tco-doc-composer .zwc-pv-tools{display:flex;align-items:center;gap:2px;flex-wrap:wrap;margin-left:auto}
+            .tco-doc-composer .zwc-pv-btn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;min-height:32px;padding:0;border:1px solid transparent;border-radius:6px;background:transparent;color:#50575e;cursor:pointer;box-sizing:border-box;line-height:1}
+            .tco-doc-composer .zwc-pv-btn svg{display:block;width:18px;height:18px}
+            .tco-doc-composer .zwc-pv-btn:disabled{opacity:.4;cursor:default}
+            @media(hover:hover){.tco-doc-composer .zwc-pv-btn:hover:not(:disabled){background:#fff;border-color:#dcdcde;color:#1d2327}}
+            .tco-doc-composer .zwc-pv-btn:active:not(:disabled){background:#e8eaed}
+            .tco-doc-composer .zwc-pv-btn:focus-visible{outline:2px solid #2271b1;outline-offset:1px}
+            .tco-doc-composer .zwc-pv-sep{flex:0 0 auto;width:1px;height:18px;background:#dcdcde;margin:0 4px}
+            .tco-doc-composer .zwc-pv-page,.tco-doc-composer .zwc-pv-zoom{flex:0 0 auto;min-width:46px;text-align:center;font-size:12px;color:#50575e;font-variant-numeric:tabular-nums;white-space:nowrap}
+            .tco-doc-composer .zwc-pv-box{flex:1 1 auto;min-height:240px;border:1px solid #dcdcde;border-radius:6px;background:#e9e9ec;overflow:hidden;position:relative}
+            .tco-doc-composer .zwc-pv-box iframe{display:block;width:100%;height:100%;border:0;background:#e9e9ec}
+            .tco-doc-composer .zwc-pv-foot{flex:0 0 auto;padding:8px 0 0}
+            .tco-doc-composer .zwc-pv-state{display:block;min-height:16px;margin:0 0 2px;font-size:12px;line-height:1.5;color:#646970}
+            .tco-doc-composer .zwc-pv-note{margin:0;font-size:12px;line-height:1.6;color:#646970}
+            @media(pointer:coarse){.tco-doc-composer .zwc-pv-btn{width:44px;height:44px;min-height:44px}.tco-doc-composer .zwc-pv-btn svg{width:22px;height:22px}}
+            @media (max-width:1099px){
+                .tco-doc-composer .zwc-grid{flex-wrap:wrap}
+                .tco-doc-composer .zwc-splitter{display:none}
+                .tco-doc-composer .zwc-left{flex:1 1 100%;max-width:100%;padding-right:0}
+                .tco-doc-composer .zwc-right{position:static;flex:1 1 100%;margin-top:16px;height:auto!important;max-height:none}
+                .tco-doc-composer .zwc-pv-box{height:70vh}
+            }
             .tco-doc-composer .zwc-step{display:inline-block;background:var(--primary-color,#d80505);color:#fff;border-radius:10px;padding:1px 9px;font-size:12px;margin-right:6px}
             .tco-doc-composer .zwc-blocks{width:100%;border-collapse:collapse}
             .tco-doc-composer .zwc-blocks td{border-bottom:1px solid #f0f1f3;padding:6px 4px;vertical-align:top}
@@ -1453,7 +1486,7 @@ if (!function_exists('zw_doc_render_composer_page')) {
                     <input type="hidden" name="zw_doc_idempotency_key" value="<?php echo esc_attr(wp_generate_uuid4()); ?>">
                 <?php endif; ?>
 
-                <div class="zwc-grid">
+                <div class="zwc-grid" id="zwc-grid">
                     <div class="zwc-left">
                         <ol class="zwc-stepbar" id="zwc-stepbar">
                             <li><button type="button" class="zwc-tab is-active" data-zw-goto="1"><b>①</b> 公文要素<span class="zwc-tab-note"></span></button></li>
@@ -2126,56 +2159,86 @@ if (!function_exists('zw_doc_render_composer_page')) {
                         <?php endif; ?>
                     </div>
 
-                    <div class="zwc-right">
-                        <h3 style="margin-top:0">版式预览</h3>
-                        <p>
-                            <?php
-                            // TASK-1987：`name="zw_doc_preview" value="1"` 是**预览语义的显式标记** ——
-                            // 它随本次提交一起到达服务端，通用分发器（`zw_doc_handle_admin_post()`）见到即跳过，
-                            // 保证「预览」永远不会被当成「保存正文 / 新建发文」（否则会跳详情页）。
-                            // `formaction + formtarget + formmethod` 让整张表单 POST 到预览端点并在新窗口打开。
-                            ?>
-                            <button type="submit" class="button" name="zw_doc_preview" value="1" formaction="<?php echo esc_url(zw_doc_composer_preview_url()); ?>" formtarget="_blank" formmethod="post">预览当前内容</button>
-                        </p>
-                        <p class="tco-doc-muted" style="max-width:420px">
-                            预览使用与打印/DOCX <strong>同一个渲染器</strong>，按当前输入内容渲染，<strong>不保存、不占号</strong>。
-                            下方预览会**随输入自动更新**（停手 0.9 秒后），也可手动刷新。
-                        </p>
-                        <p>
-                            <button type="button" class="button button-small" id="zwc-preview-refresh">刷新预览</button>
-                            <span class="tco-doc-muted" id="zwc-preview-state" style="font-size:12px;margin-left:8px"></span>
-                        </p>
+                    <?php // OA-2529：左右分栏分隔条（鼠标 / 触摸 / 键盘 ←→；38%~78% 夹紧，比例记 localStorage）。 ?>
+                    <div id="zwc-splitter" class="zwc-splitter" role="separator" aria-orientation="vertical"
+                         aria-label="拖拽调整编辑区与预览区宽度" aria-valuemin="38" aria-valuemax="78" aria-valuenow="60" tabindex="0"
+                         title="拖拽调整左右占比（聚焦后可用 ← → 微调）"></div>
+
+                    <?php
+                    // OA-2529（用户 2026-11-18 截图指令）：「快捷功能…图标化，都放在页头（参考 pdf 编辑器）；
+                    // 注释放在版式预览下方，即预览中不放功能和注释」。故右栏 = 页头图标工具栏 + 预览框（只放纸面）
+                    // + 页脚状态/说明；按钮一律 `type="button"`（不触发表单提交），唯一例外是「新窗口打开」。
+                    // 图标用内联 SVG（本仓无图标字体依赖，避免与主题 ceofont 耦合）；16~18px 线稿，hot area ≥32px。
+                    $zwc_pv_icon = array(
+                        'refresh'  => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v4h-4"/></svg>',
+                        'open'     => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14 4h6v6"/><path d="M20 4l-8 8"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
+                        'prev'     => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 15l6-6 6 6"/></svg>',
+                        'next'     => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6"/></svg>',
+                        'zoom_out' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/><path d="M8 11h6"/></svg>',
+                        'zoom_in'  => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/><path d="M8 11h6"/><path d="M11 8v6"/></svg>',
+                        'fit'      => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 9V4h5"/><path d="M20 9V4h-5"/><path d="M4 15v5h5"/><path d="M20 15v5h-5"/></svg>',
+                        'print'    => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M7 9V3h10v6"/><rect x="4" y="9" width="16" height="8" rx="1.5"/><path d="M7 17h10v4H7z"/></svg>',
+                        'save'     => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3v11"/><path d="M8 10l4 4 4-4"/><path d="M5 20h14"/></svg>',
+                    );
+                    ?>
+                    <aside class="zwc-right" id="zwc-prev-card" aria-label="版式预览">
+                        <div class="zwc-pv-head">
+                            <h3 class="zwc-pv-title">版式预览</h3>
+                            <div class="zwc-pv-tools" role="toolbar" aria-label="预览工具栏">
+                                <button type="button" class="zwc-pv-btn" id="zwc-preview-refresh" title="刷新预览" aria-label="刷新预览"><?php echo $zwc_pv_icon['refresh']; // phpcs:ignore WordPress.Security.EscapeOutput -- 模块内固定 SVG 字符串 ?></button>
+                                <?php
+                                // TASK-1987：`name="zw_doc_preview" value="1"` 是**预览语义的显式标记** ——
+                                // 它随本次提交一起到达服务端，通用分发器（`zw_doc_handle_admin_post()`）见到即跳过，
+                                // 保证「预览」永远不会被当成「保存正文 / 新建发文」（否则会跳详情页）。
+                                // `formaction + formtarget + formmethod` 让整张表单 POST 到预览端点并在新窗口打开。
+                                ?>
+                                <button type="submit" class="zwc-pv-btn" name="zw_doc_preview" value="1" formaction="<?php echo esc_url(zw_doc_composer_preview_url()); ?>" formtarget="_blank" formmethod="post" title="在新窗口打开完整预览" aria-label="在新窗口打开完整预览"><?php echo $zwc_pv_icon['open']; // phpcs:ignore WordPress.Security.EscapeOutput -- 模块内固定 SVG 字符串 ?></button>
+                                <span class="zwc-pv-sep" aria-hidden="true"></span>
+                                <button type="button" class="zwc-pv-btn" data-zw-pv="prev" title="上一页" aria-label="上一页" disabled><?php echo $zwc_pv_icon['prev']; // phpcs:ignore WordPress.Security.EscapeOutput -- 模块内固定 SVG 字符串 ?></button>
+                                <span class="zwc-pv-page" id="zwc-pv-page" aria-live="polite">1 / 1</span>
+                                <button type="button" class="zwc-pv-btn" data-zw-pv="next" title="下一页" aria-label="下一页" disabled><?php echo $zwc_pv_icon['next']; // phpcs:ignore WordPress.Security.EscapeOutput -- 模块内固定 SVG 字符串 ?></button>
+                                <span class="zwc-pv-sep" aria-hidden="true"></span>
+                                <button type="button" class="zwc-pv-btn" data-zw-pv="zoom-out" title="缩小" aria-label="缩小"><?php echo $zwc_pv_icon['zoom_out']; // phpcs:ignore WordPress.Security.EscapeOutput -- 模块内固定 SVG 字符串 ?></button>
+                                <span class="zwc-pv-zoom" id="zwc-pv-zoom">100%</span>
+                                <button type="button" class="zwc-pv-btn" data-zw-pv="zoom-in" title="放大" aria-label="放大"><?php echo $zwc_pv_icon['zoom_in']; // phpcs:ignore WordPress.Security.EscapeOutput -- 模块内固定 SVG 字符串 ?></button>
+                                <button type="button" class="zwc-pv-btn" data-zw-pv="fit" title="适应页面（显示整页）" aria-label="适应页面"><?php echo $zwc_pv_icon['fit']; // phpcs:ignore WordPress.Security.EscapeOutput -- 模块内固定 SVG 字符串 ?></button>
+                                <span class="zwc-pv-sep" aria-hidden="true"></span>
+                                <button type="button" class="zwc-pv-btn" data-zw-pv="print" title="打印 / 另存为 PDF" aria-label="打印"><?php echo $zwc_pv_icon['print']; // phpcs:ignore WordPress.Security.EscapeOutput -- 模块内固定 SVG 字符串 ?></button>
+                                <button type="button" class="zwc-pv-btn" data-zw-pv="save" title="另存为 HTML 文件" aria-label="另存为 HTML 文件"><?php echo $zwc_pv_icon['save']; // phpcs:ignore WordPress.Security.EscapeOutput -- 模块内固定 SVG 字符串 ?></button>
+                            </div>
+                        </div>
                         <?php
-                        // TASK-2014：与「公文版式」同源的**内嵌等比预览**（整页缩放、不裁切、固定面板）。
+                        // TASK-2014：与「公文版式」同源的**内嵌预览**；OA-2529 起内嵌口径为**单页整页（fit-page）**，
                         // 初始为空，由脚本按当前表单内容 POST 到预览端点后写入 srcdoc（不刷新页面、不占号）。
                         ?>
-                        <?php
-                        // TASK-2018（用户问「页面是不是变长了？」）：预览框高度**设上限 560px** ——
-                        // 原来按 `calc(100vh - 320px)` 会随窗口变高（1000px 视口下 ≈680px），比换掉前的
-                        // 46% 缩略图（A4 297mm×0.46 ≈ 516px）**更高**，把撰写页整体撑长了。
-                        // 现改为 `min(calc(100vh - 320px), 560px)`：高窗口不再无限变高，也不再比旧版更长。
-                        ?>
-                        <div id="zwc-preview-box" style="width:100%;height:min(calc(100vh - 320px), 560px);min-height:360px;border:1px solid #dcdcde;border-radius:4px;background:#f0f0f1;overflow:hidden">
-                            <iframe id="zwc-preview-frame" title="版式预览" style="width:100%;height:100%;border:0;background:#fff"></iframe>
+                        <div class="zwc-pv-box" id="zwc-preview-box">
+                            <iframe id="zwc-preview-frame" title="版式预览" style="width:100%;height:100%;border:0;background:#e9e9ec"></iframe>
                         </div>
-                    </div>
+                        <div class="zwc-pv-foot">
+                            <span class="zwc-pv-state" id="zwc-preview-state"></span>
+                            <p class="zwc-pv-note">预览与打印 / DOCX 同一渲染器，按当前输入生成，不保存、不占号；停手 0.9 秒自动更新。</p>
+                        </div>
+                    </aside>
                 </div>
             </form>
             <script>
-            // ===== TASK-2014：标题手动折行（≤3 行） + 内嵌预览自动刷新 =====
+            // ===== TASK-2014 / OA-2529：标题手动折行（≤3 行） + 内嵌单页预览 + 页头图标工具栏 =====
             (function () {
                 var ta = document.getElementById('zwc-title');
                 var counter = document.getElementById('zwc-title-lines');
                 var frame = document.getElementById('zwc-preview-frame');
-                var box = document.getElementById('zwc-preview-box');
-                var state = document.getElementById('zwc-preview-state');
-                var btn = document.getElementById('zwc-preview-refresh');
+                var stateEl = document.getElementById('zwc-preview-state');
+                var refreshBtn = document.getElementById('zwc-preview-refresh');
+                var pageEl = document.getElementById('zwc-pv-page');
+                var zoomEl = document.getElementById('zwc-pv-zoom');
+                var prevBtn = document.querySelector('[data-zw-pv="prev"]');
+                var nextBtn = document.querySelector('[data-zw-pv="next"]');
                 var form = ta ? ta.form : null;
-                var previewUrl = (btn && btn.dataset.zwPreviewUrl)
-                    ? btn.dataset.zwPreviewUrl
-                    : <?php echo wp_json_encode(zw_doc_composer_preview_url()); ?>;
+                var previewUrl = <?php echo wp_json_encode(zw_doc_composer_preview_url()); ?>;
+                var lastHtml = '';
+                var pv = { page: 1, pages: 1, zoom: 1, ready: false };
+
                 if (ta) {
-                    btn = btn || document.getElementById('zwc-preview-refresh');
                     ta.addEventListener('input', function () {
                         var lines = String(ta.value).replace(/\r/g, '').split('\n');
                         if (lines.length > 3) {
@@ -2185,22 +2248,80 @@ if (!function_exists('zw_doc_render_composer_page')) {
                         if (counter) { counter.textContent = String(lines.length); }
                     });
                 }
+
+                function setState(t) { if (stateEl) { stateEl.textContent = t || ''; } }
+                function paint() {
+                    if (pageEl) { pageEl.textContent = pv.page + ' / ' + pv.pages; }
+                    if (zoomEl) { zoomEl.textContent = Math.round(pv.zoom * 100) + '%'; }
+                    if (prevBtn) { prevBtn.disabled = !pv.ready || pv.page <= 1; }
+                    if (nextBtn) { nextBtn.disabled = !pv.ready || pv.page >= pv.pages; }
+                }
+                function send(action, value) {
+                    if (!frame || !frame.contentWindow) { return; }
+                    frame.contentWindow.postMessage({ type: 'zw-pdf-command', action: action, value: value }, '*');
+                }
+                // 预览页（paged 模式）在翻页 / 缩放后回传状态 —— 页码与缩放百分比只由它给出，父页不自算。
+                window.addEventListener('message', function (e) {
+                    if (!frame || e.source !== frame.contentWindow) { return; }
+                    var d = e.data || {};
+                    if (d.type !== 'zw-pdf-state') { return; }
+                    pv.ready = true;
+                    pv.page = parseInt(d.page, 10) || 1;
+                    pv.pages = parseInt(d.pages, 10) || 1;
+                    pv.zoom = parseFloat(d.zoom) || 1;
+                    paint();
+                });
+
+                function saveHtml() {
+                    if (!lastHtml) { setState('预览尚未生成，稍候再点「另存为」'); return; }
+                    var d = new Date();
+                    function p2(n) { return (n < 10 ? '0' : '') + n; }
+                    var name = '公文预览-' + d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate())
+                        + '-' + p2(d.getHours()) + p2(d.getMinutes()) + '.html';
+                    var blob = new Blob([lastHtml], { type: 'text/html;charset=utf-8' });
+                    var url = URL.createObjectURL(blob);
+                    var a = document.createElement('a');
+                    a.href = url;
+                    a.download = name;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+                    setState('已另存为 ' + name);
+                }
+
+                document.querySelectorAll('[data-zw-pv]').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var act = btn.getAttribute('data-zw-pv');
+                        if (act === 'save') { saveHtml(); return; }
+                        send(act); // prev / next / zoom-in / zoom-out / fit / print 一律交给预览页执行
+                    });
+                });
+
                 if (!frame || !form) { return; }
                 var timer = null, inflight = false, pending = false;
-                function setState(t) { if (state) { state.textContent = t; } }
                 function render() {
                     if (inflight) { pending = true; return; }
                     inflight = true;
                     setState('更新中…');
                     var data = new FormData(form);
                     data.set('zw_doc_preview', '1');
+                    data.set('zw_doc_preview_mode', 'paged');
                     fetch(previewUrl, { method: 'POST', body: data, credentials: 'same-origin' })
-                        .then(function (r) { return r.text(); })
+                        .then(function (r) {
+                            if (!r.ok) { throw new Error('HTTP ' + r.status); }
+                            return r.text();
+                        })
                         .then(function (html) {
+                            lastHtml = html;
+                            pv.ready = false; pv.page = 1; pv.pages = 1; pv.zoom = 1;
+                            paint();
                             frame.srcdoc = html;
                             setState('已按当前输入更新（' + new Date().toLocaleTimeString() + '）');
                         })
-                        .catch(function () { setState('预览更新失败，可点「刷新预览」重试'); })
+                        .catch(function () {
+                            setState('预览更新失败：可点页头「刷新预览」重试；仍失败请用「在新窗口打开」核对正文。');
+                        })
                         .finally(function () {
                             inflight = false;
                             if (pending) { pending = false; render(); }
@@ -2212,9 +2333,84 @@ if (!function_exists('zw_doc_render_composer_page')) {
                 }
                 form.addEventListener('input', schedule);
                 form.addEventListener('change', schedule);
-                if (btn) { btn.addEventListener('click', function (e) { e.preventDefault(); render(); }); }
+                if (refreshBtn) { refreshBtn.addEventListener('click', function (e) { e.preventDefault(); render(); }); }
+                paint();
                 // 首屏渲染一次（拿到「已保存内容」的版式，再随输入更新）。
                 setTimeout(render, 250);
+            })();
+            // ===== OA-2529：左右分栏（可拖拽 / 比例持久化） + 预览卡高度自适应（sticky 时铺满视口） =====
+            (function () {
+                var grid = document.getElementById('zwc-grid');
+                var splitter = document.getElementById('zwc-splitter');
+                var card = document.getElementById('zwc-prev-card');
+                if (!grid || !splitter) { return; }
+                var SPLIT_KEY = 'zwDocComposerSplitPct';
+                var MIN = 38, MAX = 78;
+                function clampPct(pct) { return Math.max(MIN, Math.min(MAX, pct)); }
+                function applySplit(pct, persist) {
+                    pct = clampPct(pct);
+                    grid.style.setProperty('--zwc-split', pct.toFixed(2) + '%');
+                    splitter.setAttribute('aria-valuenow', String(Math.round(pct)));
+                    if (persist) { try { localStorage.setItem(SPLIT_KEY, pct.toFixed(2)); } catch (e) {} }
+                }
+                try {
+                    var saved = parseFloat(localStorage.getItem(SPLIT_KEY) || '0');
+                    if (saved >= MIN && saved <= MAX) { applySplit(saved, false); }
+                } catch (e) {}
+                var dragging = false;
+                function pctFromX(x) {
+                    var r = grid.getBoundingClientRect();
+                    return ((x - r.left) / r.width) * 100;
+                }
+                function onDown(e) {
+                    dragging = true;
+                    splitter.classList.add('is-dragging');
+                    document.body.style.cursor = 'col-resize';
+                    document.body.style.userSelect = 'none';
+                    if (e.cancelable) { e.preventDefault(); }
+                }
+                function onMove(e) {
+                    if (!dragging) { return; }
+                    var x = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
+                    applySplit(pctFromX(x), false);
+                }
+                function onUp() {
+                    if (!dragging) { return; }
+                    dragging = false;
+                    splitter.classList.remove('is-dragging');
+                    document.body.style.cursor = '';
+                    document.body.style.userSelect = '';
+                    var cur = parseFloat(getComputedStyle(grid).getPropertyValue('--zwc-split')) || 60;
+                    applySplit(cur, true); // 松手即把当前比例记为默认值
+                }
+                splitter.addEventListener('mousedown', onDown);
+                splitter.addEventListener('touchstart', onDown, { passive: false });
+                window.addEventListener('mousemove', onMove);
+                window.addEventListener('touchmove', onMove, { passive: false });
+                window.addEventListener('mouseup', onUp);
+                window.addEventListener('touchend', onUp);
+                splitter.addEventListener('keydown', function (e) {
+                    var cur = parseFloat(getComputedStyle(grid).getPropertyValue('--zwc-split')) || 60;
+                    if (e.key === 'ArrowLeft') { applySplit(cur - 2, true); e.preventDefault(); }
+                    if (e.key === 'ArrowRight') { applySplit(cur + 2, true); e.preventDefault(); }
+                    if (e.key === 'Home') { applySplit(60, true); e.preventDefault(); }
+                });
+                if (!card) { return; }
+                var raf = 0, lastH = 0;
+                function sizeCard() {
+                    raf = 0;
+                    if (window.innerWidth < 1100) { card.style.height = ''; lastH = 0; return; }
+                    // sticky 生效后卡片顶边固定在 40px ⇒ 高度按「当前可见顶边」算，滚到哪都铺满视口。
+                    var top = Math.max(40, card.getBoundingClientRect().top);
+                    var h = Math.floor(window.innerHeight - top - 12);
+                    h = Math.max(420, Math.min(h, window.innerHeight));
+                    if (Math.abs(h - lastH) > 1) { card.style.height = h + 'px'; lastH = h; }
+                }
+                function scheduleSize() { if (!raf) { raf = window.requestAnimationFrame(sizeCard); } }
+                window.addEventListener('scroll', scheduleSize, { passive: true });
+                window.addEventListener('resize', scheduleSize);
+                window.addEventListener('load', scheduleSize);
+                scheduleSize();
             })();
             function zwcEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
             // ===== TASK-1291（SPEC-87 §20.12）：「任」字文种 人员任命配置（JS 前缀 zwcAp*）=====
@@ -2991,16 +3187,182 @@ if (!function_exists('zw_doc_render_composer_page')) {
 
 if (!function_exists('zw_doc_preview_fit_script')) {
     /**
-     * 预览页「A4 等比缩放」片段（TASK-2012 / TASK-2014，唯一出处）。
+     * 预览页「A4 等比缩放」片段（TASK-2012 / TASK-2014 / OA-2529，唯一出处）。
      *
-     * 把整页内容整体 `transform:scale(min(容器宽/A4宽, 容器高/A4高))`，居中、不裁切、无横向滚动；
-     * **设计器**与**新建发文撰写页**的内嵌预览都注入这一段 ⇒ 同样的观感，不再各写一套。
+     * **两种模式，同一入口**（调用方只选模式，禁止另写第二套脚本）：
+     *   - `continuous`（默认）：fit-width + 多页纵向连续 + 容器内滚动。详情页 embed 预览、版式设计器、
+     *     「预览当前内容」新窗口继续用它 —— 打印稿要能连续读；
+     *   - `paged`：**单页整页（fit-page）** + 翻页 + 缩放（100% = 适应页面） + 打印态复位。
+     *     撰写页内嵌预览用它：父页页头图标工具栏经 `postMessage` 驱动，预览页把「第几页 / 共几页 / 缩放」
+     *     回传父页（`zw-pdf-state`），父页不自算分页 —— 页码唯一出处仍是渲染器的 `.tco-doc-sheet`。
      *
+     * @param string $mode continuous|paged。
      * @return string HTML（含 <style> 与 <script>）。
      */
-    function zw_doc_preview_fit_script() {
+    function zw_doc_preview_fit_script($mode = 'continuous') {
+        if ((string) $mode === 'paged') {
+            // OA-2529（用户 2026-11-18 截图指令）：「版式预览 区域始终要显示完整的第一页」+
+            // 「快捷功能图标化放在页头」「预览中不放功能和注释」。
+            // 因此预览页自身**只画纸面**：一次只显示一整页（fit-page），翻页/缩放只由父页页头工具栏驱动；
+            // 缩放 > 100% 时容器内滚动（页面大于视口），打印前把全部页面复位成静态 A4（否则只印当前页）。
+            return <<<'ZWJS'
+<style>
+html,body{margin:0;padding:0;height:100%;background:#e9e9ec;}
+body{overflow:hidden;}
+#zw-pdf-view{position:fixed;inset:0;box-sizing:border-box;padding:10px 10px 20px;overflow:auto;background:#e9e9ec;}
+#zw-pdf-stage{display:flex;justify-content:center;align-items:flex-start;width:max-content;min-width:100%;}
+#zw-pdf-stage .zw-pdf-page{position:relative;flex:0 0 auto;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.18);}
+#zw-pdf-stage .zw-pdf-page[hidden]{display:none;}
+#zw-pdf-stage .zw-pdf-page > .tco-doc-sheet{position:absolute;top:0;left:0;transform-origin:top left;}
+/* 渲染器的「排版预览说明」块属出件免责说明，内嵌预览只看版式（出件仍完整保留）。 */
+#zw-pdf-stage .tco-doc-notice,body > .tco-doc-notice{display:none;}
+/* 打印态：撤掉单页视口与缩放，全部页面按 A4 静态输出（否则只印当前页）。 */
+body.zw-printing{overflow:visible;background:#fff;}
+body.zw-printing #zw-pdf-view{position:static;overflow:visible;padding:0;}
+body.zw-printing #zw-pdf-stage{display:block;width:auto;min-width:0;}
+body.zw-printing .zw-pdf-page{display:block!important;margin:0;box-shadow:none;}
+body.zw-printing .zw-pdf-page > .tco-doc-sheet{position:static;transform:none!important;}
+</style>
+<script>
+(function(){
+  var PAD = 20;
+  var pages = [];
+  var cur = 0;
+  var zoom = 1;
+  var view = null;
+  var stage = null;
+
+  function post(){
+    try { window.parent.postMessage({ type: 'zw-pdf-state', page: cur + 1, pages: pages.length, zoom: zoom }, '*'); } catch (e) {}
+  }
+
+  function build(){
+    if (view) { return; }
+    view = document.createElement('div');
+    view.id = 'zw-pdf-view';
+    stage = document.createElement('div');
+    stage.id = 'zw-pdf-stage';
+    view.appendChild(stage);
+    var sheets = Array.prototype.slice.call(document.querySelectorAll('.tco-doc-sheet'));
+    document.body.insertBefore(view, document.body.firstChild);
+    if (!sheets.length) {
+      var only = document.createElement('div');
+      only.className = 'tco-doc-sheet';
+      while (document.body.childNodes.length > 1) {
+        only.appendChild(document.body.childNodes[1]);
+      }
+      sheets = [only];
+    }
+    sheets.forEach(function (sheet) {
+      var box = document.createElement('div');
+      box.className = 'zw-pdf-page';
+      box.setAttribute('hidden', '');
+      stage.appendChild(box);
+      box.appendChild(sheet);
+      pages.push({ box: box, sheet: sheet });
+    });
+  }
+
+  function layout(){
+    if (!pages.length) { build(); }
+    var availW = Math.max(120, window.innerWidth - PAD * 2);
+    var availH = Math.max(120, window.innerHeight - PAD * 2 - 10);
+    pages.forEach(function (p) {
+      // 隐藏页（display:none）量不到尺寸 ⇒ 量之前临时显示本页，量完复原（同一帧内完成，不会闪）。
+      var hidden = p.box.hasAttribute('hidden');
+      if (hidden) { p.box.removeAttribute('hidden'); }
+      p.sheet.style.transform = 'none';
+      p.sheet.style.width = '';
+      var w = p.sheet.offsetWidth  || 794;
+      var h = p.sheet.offsetHeight || 1123;
+      var fit = Math.min(availW / w, availH / h);
+      if (!isFinite(fit) || fit <= 0) { fit = 1; }
+      var s = fit * zoom;
+      p.box.style.width  = Math.round(w * s) + 'px';
+      p.box.style.height = Math.round(h * s) + 'px';
+      p.sheet.style.transform = 'scale(' + s + ')';
+      if (hidden) { p.box.setAttribute('hidden', ''); }
+    });
+  }
+
+  function show(i){
+    if (!pages.length) { build(); }
+    if (!pages.length) { return; }
+    cur = Math.max(0, Math.min(pages.length - 1, i));
+    pages.forEach(function (p, idx) {
+      if (idx === cur) { p.box.removeAttribute('hidden'); } else { p.box.setAttribute('hidden', ''); }
+    });
+    if (view) { view.scrollTop = 0; view.scrollLeft = 0; }
+    post();
+  }
+
+  function setZoom(z){
+    zoom = Math.max(0.4, Math.min(4, Math.round(z * 100) / 100));
+    layout();
+    if (view) { view.scrollTop = 0; view.scrollLeft = 0; }
+    post();
+  }
+
+  function reset(){
+    zoom = 1;
+    layout();
+    if (view) { view.scrollTop = 0; view.scrollLeft = 0; }
+    post();
+  }
+
+  window.addEventListener('message', function (e) {
+    if (e.source !== window.parent) { return; }
+    var d = e.data || {};
+    if (d.type !== 'zw-pdf-command') { return; }
+    switch (d.action) {
+      case 'next': show(cur + 1); break;
+      case 'prev': show(cur - 1); break;
+      case 'zoom-in': setZoom(zoom * 1.25); break;
+      case 'zoom-out': setZoom(zoom / 1.25); break;
+      case 'fit': reset(); break;
+      case 'goto': show((parseInt(d.value, 10) || 1) - 1); break;
+      case 'print': window.print(); break;
+    }
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) { return; }
+    if (e.key === 'ArrowDown' || e.key === 'PageDown') { show(cur + 1); e.preventDefault(); }
+    else if (e.key === 'ArrowUp' || e.key === 'PageUp') { show(cur - 1); e.preventDefault(); }
+    else if (e.key === '+' || e.key === '=') { setZoom(zoom * 1.25); e.preventDefault(); }
+    else if (e.key === '-') { setZoom(zoom / 1.25); e.preventDefault(); }
+    else if (e.key === '0') { reset(); e.preventDefault(); }
+  });
+
+  window.addEventListener('beforeprint', function () {
+    document.body.classList.add('zw-printing');
+    pages.forEach(function (p) {
+      p.box.removeAttribute('hidden');
+      p.box.style.width = '';
+      p.box.style.height = '';
+      p.sheet.style.transform = 'none';
+    });
+  });
+  window.addEventListener('afterprint', function () {
+    document.body.classList.remove('zw-printing');
+    layout();
+    show(cur);
+  });
+
+  build();
+  layout();
+  show(0);
+  window.addEventListener('resize', function () { layout(); });
+  window.addEventListener('load', function () { layout(); show(cur); });
+  setTimeout(function () { layout(); show(cur); }, 80);
+  setTimeout(function () { layout(); show(cur); }, 400);
+})();
+</script>
+ZWJS;
+        }
+
         // TASK-2060（用户「修改预览窗口 对齐 pdf 预览能力」）：
-        //   **改为 PDF 阅读器式**：按**宽度**等比缩放（fit-width）+ 多页**纵向连续** + 页间留缝 +
+        //   **continuous**：按**宽度**等比缩放（fit-width）+ 多页**纵向连续** + 页间留缝 +
         //   容器内**纵向滚动**。旧版是"整篇内容缩放到一屏"（fit-both）⇒ 多页时页面被压得很小、
         //   超出部分不可见，读起来不像 PDF。
         return <<<'ZWJS'
@@ -3074,11 +3436,12 @@ if (!function_exists('zw_doc_preview_fit_html')) {
      * 给整页 HTML 注入等比缩放片段（无 `</body>` 时追加到末尾）。
      *
      * @param string $html 完整 HTML。
+     * @param string $mode continuous|paged（默认 continuous：详情页 / 设计器 / 新窗口零变化）。
      * @return string
      */
-    function zw_doc_preview_fit_html($html) {
+    function zw_doc_preview_fit_html($html, $mode = 'continuous') {
         $html = (string) $html;
-        $fit  = zw_doc_preview_fit_script();
+        $fit  = zw_doc_preview_fit_script($mode);
         if (strpos($html, '</body>') !== false) {
             return str_replace('</body>', $fit . '</body>', $html);
         }
@@ -3211,18 +3574,23 @@ if (!function_exists('zw_doc_handle_composer_preview')) {
                 $preview_doc = $preview_doc_row;
             }
         }
+        // OA-2529：内嵌预览走**单页整页（paged）**模式；「预览当前内容」新窗口不带此标记 ⇒ 仍是连续多页可打印稿。
+        // 模式由父页脚本显式传 `zw_doc_preview_mode=paged`，服务端只按白名单取值（其它值一律回落 continuous）。
+        $zw_preview_mode  = isset($post['zw_doc_preview_mode']) ? sanitize_key((string) $post['zw_doc_preview_mode']) : '';
+        $zw_preview_paged = ($zw_preview_mode === 'paged');
         $preview_overrides = array(
             'doc_number'     => $number,
             'base_url'       => get_template_directory_uri(),
-            'show_toolbar'   => true,
+            // 预览页内不放功能按钮（页头工具栏在撰写页一侧，见 OA-2529）。
+            'show_toolbar'   => !$zw_preview_paged,
             'auto_print'     => false,
             'document_title' => '公文版式预览（未保存）',
         );
         $preview_args = function_exists('zw_doc_build_render_args')
             ? zw_doc_build_render_args($preview_doc, $preview_overrides)
             : zw_doc_letterhead_render_args($preview_doc, $preview_overrides);
-        // TASK-2014：与「公文版式」同一段等比缩放（内嵌 iframe 里整页自适应、不裁切）。
-        echo zw_doc_preview_fit_html(zw_doc_render_standalone_html($body, $preview_args)); // phpcs:ignore WordPress.Security.EscapeOutput -- 渲染器内部逐字段转义；fit 片段为本模块内固定字符串
+        // TASK-2014 / OA-2529：撰写页内嵌预览用 paged（单页整页 + 父页工具栏驱动）；新窗口保持 continuous。
+        echo zw_doc_preview_fit_html(zw_doc_render_standalone_html($body, $preview_args), $zw_preview_paged ? 'paged' : 'continuous'); // phpcs:ignore WordPress.Security.EscapeOutput -- 渲染器内部逐字段转义；fit 片段为本模块内固定字符串
         exit;
     }
 }

@@ -1119,3 +1119,27 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
 - **测试坑**：注入版式覆盖的测试桩必须支持**任意层级键**（`fonts.h1.weight` 是 3 层），
   只写两层会静默失败（本次实测踩到，已修）。
 - **回归**：`php tests/test-doc-h1-weight-default.php`（10 项：默认值/影响面/可配性/纸面回归；撤默认值改动 rc=1）。
+
+## 2026-11-18 · OA-2529：撰写页「编辑正文 / 版式预览」分栏 + 单页整页预览 + 页头图标工具栏
+
+- **用户口径（2026-11-18 截图指令）**：① 中间分割线可左右拖拽、比例作为默认值；② 预览区**始终完整显示第一页**；
+  ③ 翻页 / 缩放 / 打印 / 另存为等快捷功能**图标化放页头**（参考 PDF 编辑器）；④ 注释放预览**下方**，
+  预览内不放功能与注释；⑤ 预览**不随页面滚动**。
+- **两种预览模式的唯一入口**：`zw_doc_preview_fit_script($mode)` / `zw_doc_preview_fit_html($html, $mode)`
+  （`doc-composer.php`）。默认 `continuous`（fit-width + 多页纵向连续）= 详情页 embed / 版式设计器 /
+  「预览当前内容」新窗口，**零变化**；`paged` = 撰写页内嵌（fit-page 单页 + 打印复位）。
+  **禁止**再写第二套预览脚本；新增预览面只选模式。
+- **paged 协议**：父页 → iframe `{type:'zw-pdf-command', action: next|prev|zoom-in|zoom-out|fit|goto|print}`；
+  iframe → 父页 `{type:'zw-pdf-state', page, pages, zoom}`（页码唯一出处是渲染器输出的 `.tco-doc-sheet` 数）。
+  `zoom = 1` 即「适应页面」，百分比只用于显示。
+- **分栏持久化**：`localStorage['zwDocComposerSplitPct']`（左栏占比，38%~78% 夹紧，默认 60）。
+  松手 / 键盘 ←→ / Home 时写入；**没有服务端用户偏好**（换浏览器不继承，这是刻意的最小实现）。
+- **sticky 契约**：`.zwc-right{position:sticky;top:40px}`；**祖先不得有 `overflow:hidden/auto`**，
+  否则 sticky 静默失效（本页 `.zwc-grid` 已无 overflow）。卡片高度由 `sizeCard()` 按
+  `max(stickyTop, rect.top)` 实时算 ⇒ 滚动时底边恒定、预览始终铺满视口；<1100px 堆叠并清掉 inline height。
+- **本次踩到的坑（写进回归）**：① `display:none` 的预览页**量不到宽高** ⇒ paged 的 `layout()` 必须先临时
+  解除 `[hidden]` 再量；② 预览 iframe 是 `srcdoc`（同源）但**功能按钮必须在父页**，预览页只画纸面；
+  ③ 表单内图标按钮一律 `type="button"`，唯一 `type="submit"` 是「新窗口打开」（`formaction` + `target=_blank`）；
+  ④ 打印必须 `beforeprint` 撤掉 `transform` 并显示全部页面，否则只印当前页。
+- **回归**：`php tests/test-doc-preview-viewer.php`（44 项）；`php tests/test-doc-preview-print-parity.php`
+  仍须全绿（保证默认 continuous 与详情页零变化）。
