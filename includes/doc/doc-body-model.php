@@ -255,6 +255,8 @@ if (!function_exists('zw_doc_body_normalize')) {
      * 归一化：白名单过滤 + 清洗 + 截断，输出永远安全可存。
      *
      * 幂等：`normalize(normalize(x)) === normalize(x)`。
+     * —— 含 OA-2513 的 `meta.title_lines`（手动断行）：二次归一时**沿用**而非清空，
+     *    因为写读链路（`zw_doc_update_body()` / `zw_doc_body_parse()` / `zw_doc_body_to_json()`）都会再归一。
      *
      * @param mixed $raw 原始结构。
      * @return array
@@ -275,6 +277,12 @@ if (!function_exists('zw_doc_body_normalize')) {
             if ($key === 'appointments') {
                 continue; // 受控结构化 meta，禁止走纯文本清洗（否则 JSON 被 strip_tags / 200 字截断破坏）
             }
+            // OA-2513：`title_lines`（TASK-2014 手动断行结果）同样是**受控数组 meta**，走下方专用分支。
+            // 若在此当普通 meta 处理，会被 `implode('、')` 拍平成一行文本（随后又被覆盖），
+            // 与「断行」语义完全不符。
+            if ($key === 'title_lines') {
+                continue;
+            }
             // TASK-2002：`cc`（抄送机关）允许数组 —— 早前直接进 `zw_doc_body_clean_text()` 的 `(string)` 强转，
             // 数组会变成字面量「Array」并写进版记（设计器预览实测「抄送：Array」）。
             // 数组一律以「、」连接为一行（GB §7.4：抄送机关同行排列）。
@@ -290,7 +298,14 @@ if (!function_exists('zw_doc_body_normalize')) {
         // TASK-2014：**标题手动折行** —— 作者在输入框里用换行决定断行位置（最多 3 行）。
         // 口径：`meta.title` 仍保存**单行**（列表、文件名、检索不受影响）；
         //      断行结果存 `meta.title_lines`（≤3 行、逐行清洗、去空行）；无换行时为空数组 ⇒ 渲染层走自动回行。
-        $zw_raw_title = isset($raw_meta['title']) ? (string) $raw_meta['title'] : '';
+        //
+        // OA-2513（用户报障「新建发文 公文标题 手动换行后不生效」）：**本函数必须对 `title_lines` 幂等**。
+        // 第一遍归一后 `meta.title` 已是单行（断行被空格拼回）⇒ 第二遍进来**已无换行可切**，
+        // 旧实现此时无条件把 `title_lines` 重置为 `[]` ⇒ 断行丢失。而写读两条链路都在再归一：
+        //   `zw_doc_update_body()` / `zw_doc_create_document()`（写）· `zw_doc_body_parse()` / `zw_doc_body_to_json()`（读/序列化）。
+        // 撰写页内嵌预览只用第一遍结果、不落库 ⇒ 表现为「预览有手动换行、保存后没有」。
+        // 修法：无换行时**沿用入参 `title_lines`**（逐行同样清洗、去空行、≤3 行）；两者都没有才是空数组。
+        $zw_raw_title   = isset($raw_meta['title']) ? (string) $raw_meta['title'] : '';
         $zw_title_lines = array();
         if (strpos($zw_raw_title, "\n") !== false || strpos($zw_raw_title, "\r") !== false) {
             foreach (preg_split('/\r\n|\r|\n/', $zw_raw_title) as $zw_ln) {
@@ -302,9 +317,23 @@ if (!function_exists('zw_doc_body_normalize')) {
                     break;
                 }
             }
+        } elseif (isset($raw_meta['title_lines']) && is_array($raw_meta['title_lines'])) {
+            foreach ($raw_meta['title_lines'] as $zw_ln) {
+                // 只接受标量：`(string)` 强转数组/对象会得到字面量「Array」并伴随 Warning 噪声。
+                if (!is_scalar($zw_ln)) {
+                    continue;
+                }
+                $zw_ln = zw_doc_body_truncate(zw_doc_body_clean_text($zw_ln), $limits['max_title_chars']);
+                if ($zw_ln !== '') {
+                    $zw_title_lines[] = $zw_ln;
+                }
+                if (count($zw_title_lines) >= 3) {
+                    break;
+                }
+            }
         }
         if (!empty($zw_title_lines)) {
-            $body['meta']['title_lines'] = $zw_title_lines;
+            $body['meta']['title_lines'] = array_values($zw_title_lines);
             $body['meta']['title']       = zw_doc_body_truncate(implode(' ', $zw_title_lines), $limits['max_title_chars']);
         } else {
             $body['meta']['title_lines'] = array();
