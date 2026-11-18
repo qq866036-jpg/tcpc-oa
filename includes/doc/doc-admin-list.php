@@ -441,6 +441,18 @@ if (!function_exists('zw_doc_handle_create_document')) {
                 if ($attach_expected > 0 && $attach_actual !== $attach_expected) {
                     $extra .= '；附件提示：附件说明写了 ' . (int) $attach_expected . ' 条，实际上传 '
                         . (int) $attach_actual . ' 个 —— 请在编辑页核对后再用印';
+                } elseif ($attach_expected > 0 && $attach_expected === $attach_actual
+                    && function_exists('zw_doc_attach_name_mismatch') && function_exists('zw_doc_attachment_names')) {
+                    // OA-2526：数量相等时再比**名称**（软匹配：去扩展名/去序号/去分隔符后双向包含算一致）。
+                    // 只提示不阻断——名称是公文语言、文件名常带版本号，硬匹配必然误报。
+                    $attach_mismatch = (array) zw_doc_attach_name_mismatch(
+                        (array) $body['meta']['attach_note'],
+                        (array) zw_doc_attachment_names($attach_doc)
+                    );
+                    if (!empty($attach_mismatch)) {
+                        $extra .= '；附件提示：附件说明「' . implode('」「', array_map('sanitize_text_field', $attach_mismatch))
+                            . '」在附件里找不到同名文件 —— 请在编辑页核对名称后再用印';
+                    }
                 }
             }
         }

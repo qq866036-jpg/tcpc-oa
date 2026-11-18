@@ -781,6 +781,88 @@ if (!function_exists('zw_doc_body_attach_plan')) {
     }
 }
 
+if (!function_exists('zw_doc_attach_name_mismatch')) {
+    /**
+     * 附件说明名称 ⇄ 实际附件文件名的**软匹配**（OA-2526，唯一判据；纯函数、可单测）。
+     *
+     * 为什么"软"：说明里是**公文语言**（「预算明细表」），实际文件往往带扩展名、版本号、扫描件前缀
+     * （`预算明细表_v2.pdf` / `扫描件-预算明细表.pdf`）⇒ 严格相等必然误报，用户会学会无视提示。
+     * 判据：双方都归一化（去扩展名、去手打「附件：/序号」、去空白与常见分隔符、ASCII 转小写）后
+     * **双向包含即算一致**。
+     *
+     * 返回「说明里有、附件里找不到」的名称清单（最多 3 条，供建单提示用；空数组 = 全部匹配）。
+     *
+     * @param mixed $notes      附件说明行（`meta.attach_note`，逐行文本）。
+     * @param array $file_names 实际附件文件名（不含路径，可带扩展名）。
+     * @return string[] 未匹配上的说明名称（原始写法，便于提示里原样回显）。
+     */
+    function zw_doc_attach_name_mismatch($notes, $file_names = array()) {
+        $norm = function ($text) {
+            $text = (string) $text;
+            // ① 去扩展名（只去最后一个 `.xxx`，且要求后缀 ≤5 位字母数字，避免误吃「1.预算」里的点）
+            $text = preg_replace('/\.[A-Za-z0-9]{1,5}$/u', '', $text);
+            if (!is_string($text)) {
+                $text = '';
+            }
+            // ② 去手打的「附件：」与序号（与 `zw_doc_body_attach_plan()` 同口径）
+            $text = preg_replace('/^附\s*件\s*[：:]\s*/u', '', $text);
+            if (!is_string($text)) {
+                $text = '';
+            }
+            $text = preg_replace('/^\d+\s*[.．、)）]\s*/u', '', (string) $text);
+            if (!is_string($text)) {
+                $text = '';
+            }
+            // ③ 去空白与常见分隔符（下划线/连字符/中点/全角空格）
+            $text = preg_replace('/[\s　_\-—–·．.]+/u', '', (string) $text);
+            if (!is_string($text)) {
+                $text = '';
+            }
+
+            return function_exists('mb_strtolower') ? mb_strtolower((string) $text, 'UTF-8') : strtolower((string) $text);
+        };
+
+        $files = array();
+        foreach ((array) $file_names as $one) {
+            if (!is_scalar($one)) {
+                continue;
+            }
+            $n = $norm($one);
+            if ($n !== '') {
+                $files[] = $n;
+            }
+        }
+        if (empty($files)) {
+            return array();
+        }
+
+        $rows     = function_exists('zw_doc_body_attach_plan') ? (array) zw_doc_body_attach_plan($notes) : array();
+        $mismatch = array();
+        foreach ($rows as $row) {
+            $name = (string) $row['name'];
+            $key  = $norm($name);
+            if ($key === '') {
+                continue;
+            }
+            $hit = false;
+            foreach ($files as $file_key) {
+                if (strpos($file_key, $key) !== false || strpos($key, $file_key) !== false) {
+                    $hit = true;
+                    break;
+                }
+            }
+            if (!$hit) {
+                $mismatch[] = $name;
+                if (count($mismatch) >= 3) {
+                    break;
+                }
+            }
+        }
+
+        return $mismatch;
+    }
+}
+
 if (!function_exists('zw_doc_body_ordinal_cn')) {
     /**
      * 阿拉伯数字 → 中文序数（1→一、21→二十一）。
