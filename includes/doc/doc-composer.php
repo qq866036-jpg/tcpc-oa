@@ -651,6 +651,9 @@ if (!function_exists('zw_doc_composer_body_from_post')) {
                 // 「新建无条件 / 编辑仅在值变化时」施加，避免编辑旧记录时截断超长的存量值。
                 'receiver'    => zw_doc_composer_receiver_normalize($get('zwc_receiver', '')),
                 'sign_org'    => $sign,
+                // OA-2514（GB/T 9704-2012 §7.2.4）：签发人 —— 「渲染层已支持、白名单也有此键，但撰写页没映射」
+                // 是本次缺口的真正断点：不补这一行，即便表单加了 `zwc_signer` 也进不了 meta。
+                'signer'      => $get('zwc_signer', ''),
                 'date'        => $date,
                 'note'        => $get('zwc_note', ''),
                 'cc'          => $get('zwc_cc', ''),
@@ -1563,6 +1566,14 @@ if (!function_exists('zw_doc_render_composer_page')) {
                                 <input type="text" name="zwc_secret_period" id="zwc-secret-period" maxlength="20" value="<?php echo esc_attr($secret_period); ?>" placeholder="1年">
                                 <div class="tco-doc-muted">与密级同行显示为「密级★期限」（分隔符取自版式常量）；留空则只标注密级。</div>
                             </div>
+                            <?php // OA-2514（GB/T 9704-2012 §7.2.4）：**签发人** —— 上行文（请示、报告等）应标注。
+                                  // 渲染层与 DOCX 早已支持（与发文字号同一行：文号居左空一字、签发人居右空一字），
+                                  // 版式侧也有 `header.show_signer` 开关；但撰写页此前**没有输入控件** ⇒ 上行文永远出不了签发人。 ?>
+                            <div class="tco-doc-field is-half">
+                                <label>签发人</label>
+                                <input type="text" name="zwc_signer" id="zwc-signer" maxlength="60" value="<?php echo esc_attr((string) $body['meta']['signer']); ?>" placeholder="如：张三">
+                                <div class="tco-doc-muted">上行文（请示、报告等）应标注签发人姓名，与发文字号同一行排布；<strong>留空则纸面不显示</strong>。</div>
+                            </div>
 
                                 </div><!-- /.zwc-section-body -->
                                 </section>
@@ -1784,6 +1795,14 @@ if (!function_exists('zw_doc_render_composer_page')) {
                                         <button type="button" class="button button-small" id="zwc-copy-date">同发文日期带入成文日期</button>
                                     </div>
                                 <?php endif; ?>
+                            </div>
+                            <?php // OA-2514（GB/T 9704-2012 §7.3.5）：**附注** —— 渲染层与 DOCX 早已支持
+                                  // （自动加圆括号、左空二字、排在成文日期下一行），但撰写页此前**没有输入控件**
+                                  // ⇒ `meta.note` 永远为空，纸面永远缺这一项。放在「落款与日期」区，与纸面顺序一致。 ?>
+                            <div class="tco-doc-field is-wide">
+                                <label>附注</label>
+                                <input type="text" name="zwc_note" id="zwc-note" maxlength="200" value="<?php echo esc_attr((string) $body['meta']['note']); ?>" placeholder="如：此件公开发布">
+                                <div class="tco-doc-muted">需要说明的事项写在成文日期下一行，<strong>圆括号由系统自动补齐</strong>（左空二字）；留空则纸面不显示。</div>
                             </div>
                                 </div><!-- /.zwc-section-body -->
                                 </section>
