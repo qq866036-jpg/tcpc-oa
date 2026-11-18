@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **详情页预览统一为「PDF 阅读器式」+ 打印与预览显式对齐（OA-2518）**：
+  - 详情页「版式预览」改为 **iframe 内嵌 `?embed=1` 的打印视图**：同一个渲染器、同一个
+    `zw_doc_build_render_args()`、同一份 `zw_doc_preview_fit_html()` 缩放脚本（按宽等比 + 多页纵向连续 +
+    页间留缝 + 可滚动）⇒ 与打印 A4 **1:1 同源**，多页不再溢出/重叠；
+  - **删除**旧的 `zw_doc_render_preview_html()`（62% `transform:scale()` + 固定单页高盒子）：
+    `transform` 不改变布局高度、盒子高度只等于一页且无 overflow 规则 ⇒ 多页公文从第 2 页起视觉溢出卡片，
+    这是「预览混乱 / 和打印对不上」的根因；
+  - 预览标题给出「**A4 1:1 · 共 N 页**」（页数取同一分页估算），并写明**不要直接 Ctrl+P**；
+  - 详情页加**误打印防护**：`@media print` 隐藏全部后台内容，改为输出一句
+    「这是后台管理页，不是公文件，请用『打印 / 另存为 PDF』（A4 1:1）」；
+  - 回归 `tests/test-doc-preview-print-parity.php`（22 项；撤回本次改动后 5 项判红）。
+
 ### Added
 
 - **「标题上/下间距」进公文版式页（OA-2517）**：`title.gap_below_rule_lines`（红线→标题）与

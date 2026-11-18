@@ -1966,33 +1966,10 @@ if (!function_exists('zw_doc_render_standalone_html')) {
     }
 }
 
-if (!function_exists('zw_doc_render_preview_html')) {
-    /**
-     * 后台详情页内的「版式预览」区块（按容器宽度缩放）。
-     *
-     * @param array $body 正文 AST。
-     * @param array $args 渲染参数。
-     * @param int   $scale 缩放百分比。
-     * @return string
-     */
-    function zw_doc_render_preview_html($body, $args = array(), $scale = 62) {
-        $scale = max(30, min(100, (int) $scale));
-        $html  = '<div class="tco-doc-preview">';
-        $html .= zw_doc_render_notice_html($args);
-        // **必须以 mm 显式收外框**（TASK-780）：`transform:scale()` 只做视觉缩放，**不改变布局尺寸**。
-        // 早期实现外层声明 `width:21000/scale mm`（scale=46 时约 457mm≈1728px），
-        // 导致右栏布局宽度远超可视宽度、两栏相加超容器而换行（预览被挤到下一行）。
-        // 现外层盒子 = 视觉尺寸（210×scale%），内层仍为 210mm 宽内容并按 origin 左上角缩小。
-        $box_w = (int) round(210 * $scale / 100);
-        $box_h = (int) round(297 * $scale / 100);
-        $html .= '<div class="tco-doc-preview-box" style="width:' . $box_w . 'mm;height:' . $box_h . 'mm;">';
-        $html .= '<div class="tco-doc-scaled" style="transform:scale(' . ($scale / 100) . ');transform-origin:top left;width:210mm;">';
-        $html .= zw_doc_render_document_html($body, $args);
-        $html .= '</div></div></div>';
-
-        return $html;
-    }
-}
+// OA-2518：**已删除** 旧的 `zw_doc_render_preview_html()`（62% 固定单页盒子）。
+// 删除理由：`transform:scale()` 不改变布局高度，而盒子高度只等于一页且无 overflow 规则 ⇒
+// 多页公文从第 2 页起视觉溢出卡片；且它与撰写页/设计器的 PDF 阅读器式预览（`zw_doc_preview_fit_html()`）
+// 形成第二套呈现，导致「预览乱、和打印对不上」。现详情页统一用 `?embed=1` 的打印视图 + 同一 fit 脚本。
 
 if (!function_exists('zw_doc_print_url')) {
     /**
@@ -2005,6 +1982,27 @@ if (!function_exists('zw_doc_print_url')) {
         $url = add_query_arg(array(
             'action' => 'zw_doc_print',
             'doc_id' => (int) $document_id,
+        ), admin_url('admin-post.php'));
+
+        return wp_nonce_url($url, 'zw_doc_print_' . (int) $document_id);
+    }
+}
+
+if (!function_exists('zw_doc_embed_url')) {
+    /**
+     * 详情页内嵌预览 URL（OA-2518）—— **同一个打印端点**，只是加 `embed=1`：
+     * 不出工具栏、不自动弹打印框，并在服务端注入 `zw_doc_preview_fit_html()` 的等比/多页连续脚本。
+     *
+     * 复用同一 `zw_doc_print_<id>` nonce ⇒ 鉴权口径零变化（不为预览新开一条鉴权通路）。
+     *
+     * @param int $document_id 发文 ID。
+     * @return string
+     */
+    function zw_doc_embed_url($document_id) {
+        $url = add_query_arg(array(
+            'action' => 'zw_doc_print',
+            'doc_id' => (int) $document_id,
+            'embed'  => '1',
         ), admin_url('admin-post.php'));
 
         return wp_nonce_url($url, 'zw_doc_print_' . (int) $document_id);
@@ -2198,17 +2196,26 @@ if (!function_exists('zw_doc_handle_print')) {
             wp_die(esc_html($lh_gate->get_error_message()), '红头素材缺失', array('response' => 409));
         }
 
+        // OA-2518：`embed=1` = **详情页内嵌预览**模式 —— 同一个渲染器、同一份 args 构造器、同一个 fit 脚本，
+        // 只是不出工具栏、不自动弹打印框（避免在 iframe 里弹「打印」对话框）。纸面与打印 1:1 同源。
+        $embed = isset($_GET['embed']) && (string) wp_unslash($_GET['embed']) === '1';
+
         $args = zw_doc_build_render_args($doc, array(
-            'show_toolbar'   => true,
-            'auto_print'     => true,
-            'document_title' => (string) $doc['title'] . ' · 打印预览',
+            'show_toolbar'   => !$embed,
+            'auto_print'     => !$embed,
+            'document_title' => (string) $doc['title'] . ($embed ? ' · 版式预览' : ' · 打印预览'),
         ));
 
         nocache_headers();
         header('Content-Type: text/html; charset=utf-8');
         header('X-Content-Type-Options: nosniff');
         header('X-Robots-Tag: noindex, nofollow');
-        echo zw_doc_render_standalone_html($doc['body'], $args); // phpcs:ignore WordPress.Security.EscapeOutput -- 渲染器内部逐字段转义
+        $zw_print_html = zw_doc_render_standalone_html($doc['body'], $args);
+        if ($embed && function_exists('zw_doc_preview_fit_html')) {
+            // 与撰写页 / 「公文版式」设计器**同一份**缩放片段：按宽等比 + 多页纵向连续 + 页间留缝。
+            $zw_print_html = zw_doc_preview_fit_html($zw_print_html);
+        }
+        echo $zw_print_html; // phpcs:ignore WordPress.Security.EscapeOutput -- 渲染器内部逐字段转义
         exit;
     }
 }

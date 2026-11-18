@@ -1032,7 +1032,18 @@ if (!function_exists('zw_doc_render_detail_page')) {
             <style>
             .tco-doc-detail .tco-doc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
             .tco-doc-detail .tco-doc-status{display:inline-block;padding:2px 8px;border-radius:999px;background:#f0f0f1}
+            /* OA-2518：**误打印防护** —— 本页是后台管理页，直接 Ctrl+P 会连卡片/按钮一起打印。
+               打印时隐藏全部后台内容，只留一句「请用打印按钮（A4 1:1）」；真正的出件在 ?action=zw_doc_print。 */
+            .tco-doc-print-guard{display:none}
+            @media print{
+                .tco-doc-detail > *{display:none !important}
+                .tco-doc-detail .tco-doc-print-guard{display:block !important;font-size:16px;line-height:1.6;padding:12px 0}
+            }
             </style>
+            <div class="tco-doc-print-guard" role="note">
+                <strong>这是后台管理页，不是公文件。</strong>
+                打印请返回页面点击「打印 / 另存为 PDF」（新窗口 A4 1:1，自动调起打印框）；本页其余内容不会被打印。
+            </div>
             <?php
             // TASK-2008：文件默认打开动作 canonical 资源（doc-viewer 弹层/图片灯箱 + file-icon + 本控件样式）。
             if (function_exists('zw_control_file_open_assets')) {
@@ -1493,12 +1504,17 @@ if (!function_exists('zw_doc_render_detail_page')) {
             <?php endif; ?>
 
             <?php
-            // 版式预览（TASK-767）：只有在线撰写的正文才渲染；旧记录无 body 时不显示本区块。
-            if (!empty($doc['body']) && function_exists('zw_doc_render_preview_html')) :
+            // 版式预览（TASK-767 / OA-2518）：只有在线撰写的正文才渲染；旧记录无 body 时不显示本区块。
+            // OA-2518：预览改为**内嵌 `?embed=1` 的打印视图**（同一渲染器 + 同一 args 构造器 + 同一 fit 脚本）
+            // ⇒ 按宽等比、多页纵向连续、页间留缝、可滚动，与打印 A4 1:1 同源；旧 62% 单页盒子已删除。
+            if (!empty($doc['body']) && function_exists('zw_doc_embed_url')) :
                 $preview_args = zw_doc_build_render_args($doc);
+                $preview_pages = function_exists('zw_doc_render_paginate')
+                    ? count((array) zw_doc_render_paginate($doc['body'], $preview_args))
+                    : 0;
                 ?>
-                <div class="tco-doc-card">
-                    <h2>版式预览</h2>
+                <div class="tco-doc-card" id="tco-doc-preview">
+                    <h2>版式预览 <span class="tco-doc-muted" style="font-weight:400">（与打印同源 · A4 1:1<?php echo $preview_pages > 0 ? ' · 共 ' . (int) $preview_pages . ' 页' : ''; ?>）</span></h2>
                     <p>
                         <a class="button button-primary" target="_blank" rel="noopener"
                            href="<?php echo esc_url(zw_doc_print_url($doc['id'])); ?>">打印 / 另存为 PDF</a>
@@ -1506,7 +1522,7 @@ if (!function_exists('zw_doc_render_detail_page')) {
                         <?php if (function_exists('zw_doc_can_edit_doc') && zw_doc_can_edit_doc($doc)) : ?>
                             <a class="button" href="<?php echo esc_url(zw_doc_admin_url(array('view' => 'compose', 'doc_id' => (int) $doc['id']))); ?>">编辑正文</a>
                         <?php endif; ?>
-                        <span class="tco-doc-muted">打印视图在新窗口打开并自动调起打印对话框；DOCX 为可编辑排版件（<strong>不含印章</strong>，用印请走正式用印件流程），且<strong>只写入国标字体名</strong> —— 本机未安装 仿宋_GB2312 / 方正小标宋简体 时，Word/WPS 会用替代字体显示。</span>
+                        <span class="tco-doc-muted">下方预览与「打印 / 另存为 PDF」<strong>同一份渲染、同一比例</strong>；打印请用该按钮（新窗口 A4 1:1，自动调起打印框），<strong>不要直接对本后台页按 Ctrl+P</strong>。DOCX 为可编辑排版件（<strong>不含印章</strong>），且只写入国标字体名 —— 本机未装 仿宋_GB2312 / 方正小标宋简体 时 Word/WPS 会替代显示。</span>
                     </p>
                     <?php if (function_exists('zw_doc_letterhead_registry')) : ?>
                         <?php
@@ -1559,8 +1575,11 @@ if (!function_exists('zw_doc_render_detail_page')) {
                             </p>
                         <?php endif; ?>
                     <?php endif; ?>
-                    <div style="overflow:auto;max-height:720px;border:1px solid #dcdcde;background:#f0f0f1;padding:12px;">
-                        <?php echo zw_doc_render_preview_html($doc['body'], $preview_args); // phpcs:ignore WordPress.Security.EscapeOutput -- 渲染器内部逐字段转义 ?>
+                    <div class="tco-doc-prevwrap" style="border:1px solid #dcdcde;background:#e9e9ec;padding:0;">
+                        <iframe class="tco-doc-prev-frame"
+                                src="<?php echo esc_url(zw_doc_embed_url($doc['id'])); ?>"
+                                title="版式预览（与打印同源，A4 1:1，可滚动）"
+                                style="display:block;width:100%;height:min(72vh,760px);border:0;background:#e9e9ec"></iframe>
                     </div>
                 </div>
             <?php endif; ?>
