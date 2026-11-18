@@ -1186,6 +1186,26 @@ if (!function_exists('zw_doc_render_detail_page')) {
                 } elseif (!$zw_step_pdf) {
                     $zw_next = array('text' => '下一步是「完成文件」：生成加密 PDF 后即为正式用印件', 'anchor' => '#tco-doc-files', 'action' => '去生成');
                 }
+                // OA-2523：**目标存在性守卫** —— `$zw_next` 的锚点必须与目标卡片的渲染门控
+                // （`$ov_has_legal_card` / `$ov_has_seal_card` / `$ov_has_files_card`，均含 `$ov_has_body`）
+                // 逐字对齐。此前只对「快速跳转」`$ov_jump` 做了门控，`$zw_next` 没有 ⇒ 正文为空的记录会输出
+                // `href="#tco-doc-legal"` 而法务卡根本不渲染 = 点了没反应（TASK-1412 同类死锚点，主题
+                // `test-doc-detail-anchors` 的运行时断言当场抓到；OA 自家静态测试只 grep 字符串，抓不到）。
+                $zw_next_targets = array(
+                    '#tco-doc-face'    => true,             // 纸面要素卡常驻
+                    '#tco-doc-flow'    => true,             // 流转卡常驻
+                    '#tco-doc-preview' => !empty($doc['body']),
+                    '#tco-doc-legal'   => $ov_has_legal_card,
+                    '#tco-doc-seal'    => $ov_has_seal_card,
+                    '#tco-doc-files'   => $ov_has_files_card,
+                );
+                if (empty($zw_next_targets[$zw_next['anchor']])) {
+                    $zw_next = array(
+                        'text'   => '先补正文：正文为空时不进入法务与用印',
+                        'anchor' => '#tco-doc-face',
+                        'action' => '去补正文',
+                    );
+                }
                 ?>
                 <p style="margin:10px 0 0;font-size:14px">
                     <strong>下一步：</strong><?php echo esc_html($zw_next['text']); ?>
