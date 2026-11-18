@@ -92,6 +92,9 @@ if (!function_exists('zw_doc_body_meta_keys')) {
             // 手动折行后的**标题行数组**（受控数组，专用分支清洗，见下方 title_lines 处理）。
             'title_lines',
             'copy_no', 'secret', 'urgency', 'signer', 'cc', 'print_org', 'print_date',
+            // OA-2522：密级与保密期限**结构化双写**（`secret` 仍存合成串供纸面渲染，二者并存、不互相取代）——
+            // 此前只有合成串，回填要反向解析，改一项得整串重算。
+            'secret_level', 'secret_period',
             'page_mode',
             // 「任」字文种人员任命配置（受控结构化 meta，专用分支，禁止走纯文本清洗）。
             'appointments',

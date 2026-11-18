@@ -288,19 +288,19 @@ if (!function_exists('zw_doc_dict_field_rows')) {
                 'reader' => '`zw_doc_copy_number_resolve_for_save()` / `zw_doc_composer_body_from_post()` / 版头渲染', 'source' => 'derived',
             ),
             array(
-                'group' => 'compose', 'field' => '密级', 'meta' => 'body.meta.secret（密级部分）',
+                'group' => 'compose', 'field' => '密级', 'meta' => 'body.meta.secret_level（纸面见 body.meta.secret 合成串）',
                 'type' => '文本（枚举）', 'enum' => array('绝密', '机密', '秘密'),
                 'default' => "''（不标注）",
                 'visibility' => '发起人 / 审核人 / 管理人',
                 'step' => '第 1 步 公文要素（版头标记）', 'control' => '`select`（`name=zwc_secret_level`）',
-                'reader' => '`zw_doc_composer_secret_parse()` / 版头渲染', 'source' => 'derived',
+                'reader' => '`zw_doc_composer_secret_parse()` / `zw_doc_composer_secret_build()` / 版头渲染', 'source' => 'derived',
             ),
             array(
-                'group' => 'compose', 'field' => '保密期限', 'meta' => 'body.meta.secret（期限部分）',
+                'group' => 'compose', 'field' => '保密期限', 'meta' => 'body.meta.secret_period（纸面见 body.meta.secret 合成串）',
                 'type' => '文本', 'enum' => array(), 'default' => "''",
                 'visibility' => '发起人 / 审核人 / 管理人',
                 'step' => '第 1 步 公文要素（版头标记）', 'control' => '`input[type=text]`（`name=zwc_secret_period`）',
-                'reader' => '`zw_doc_composer_secret_parse()`', 'source' => 'derived',
+                'reader' => '`zw_doc_composer_secret_parse()` / `zw_doc_composer_secret_build()`', 'source' => 'derived',
             ),
             array(
                 'group' => 'compose', 'field' => '紧急程度', 'meta' => 'body.meta.urgency',

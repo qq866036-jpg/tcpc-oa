@@ -607,7 +607,11 @@ if (!function_exists('zw_doc_composer_body_from_post')) {
         if (!in_array($copy_mode, array('auto', 'none'), true)) {
             $copy_no = zw_doc_composer_copy_no($get('zwc_copy_no', ''));
         }
-        $secret  = zw_doc_composer_secret_build($get('zwc_secret_level', ''), $get('zwc_secret_period', ''));
+        // OA-2522：密级/期限**结构化留存**（`secret_level` / `secret_period`），与合成串 `secret` 双写；
+        // 合成串仍是纸面渲染的唯一口径（版头「密级★期限」原样），结构化只解决回填与单改一项的问题。
+        $secret_level_value  = $get('zwc_secret_level', '');
+        $secret_period_value = $get('zwc_secret_period', '');
+        $secret  = zw_doc_composer_secret_build($secret_level_value, $secret_period_value);
         $urgency = zw_doc_composer_urgency($get('zwc_urgency', ''));
 
         // TASK-1291（SPEC-87 §20.12）：②.5 人员任命配置 —— 收 POST、服务端推导 type、结构清洗。
@@ -664,6 +668,13 @@ if (!function_exists('zw_doc_composer_body_from_post')) {
                 'attach_note' => $attach,
                 'copy_no'     => $copy_no,
                 'secret'      => $secret,
+                // OA-2522：结构化双写（回填优先读它们，渲染仍读 `secret` 合成串）。
+                'secret_level'  => $secret_level_value,
+                'secret_period' => $secret_period_value,
+                // OA-2522：`meta.doc_type` 线上也写（导入件一直写、线上不写 ⇒ 两个入口口径不一致）。
+                // 取值用文种**简称**（与导入件 `$entry['type']` 同口径）；任命类型判定仍有「文种兜底」，
+                // 本行属**统一写法**，不改变既有判定结果。
+                'doc_type'    => $get('num_type', ''),
                 'urgency'     => $urgency,
                 // TASK-1291：受控结构化 meta（专用分支编码；**不得**走纯文本清洗/截断）。
                 'appointments' => $appointments,
@@ -1054,6 +1065,13 @@ if (!function_exists('zw_doc_render_composer_page')) {
         $secret_split  = zw_doc_composer_secret_parse($secret_raw);
         $secret_level  = (string) $secret_split['level'];
         $secret_period = (string) $secret_split['period'];
+        // OA-2522：**回填优先结构化字段**（新单都写了）；只有存量（无结构化键）才回落到解析合成串。
+        if (isset($body['meta']['secret_level']) && (string) $body['meta']['secret_level'] !== '') {
+            $secret_level = (string) $body['meta']['secret_level'];
+        }
+        if (isset($body['meta']['secret_period']) && (string) $body['meta']['secret_period'] !== '') {
+            $secret_period = (string) $body['meta']['secret_period'];
+        }
         $secret_levels = array_map('strval', (array) zw_doc_gb9704_get('header.secret_levels', array()));
         $secret_legacy = ($secret_level !== '' && !in_array($secret_level, $secret_levels, true));
         $secret_unsafe = (strpos($secret_level, '<') !== false || strpos($secret_level, '>') !== false);
