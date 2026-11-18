@@ -139,8 +139,8 @@ if (!function_exists('zw_doc_admin_menu')) {
 
         add_submenu_page(
             'zw-doc',
-            '红头与印章',
-            '红头与印章',
+            '印章管理',
+            '印章管理',
             'tcpc_perm_doc',
             'zw-doc-assets',
             'zw_doc_page_assets'

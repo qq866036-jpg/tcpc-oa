@@ -438,11 +438,12 @@ if (!function_exists('zw_doc_letterhead_mode_state')) {
         $message = '';
         if ($blocked) {
             // fail-closed 文案（**唯一出处**）：明说「不静默回落、不渲染空白」，并给出可操作引导。
+            // OA-2531：红头配置界面已下线（红头模板 Tab 删除）⇒ 文案不再指向不存在的页面，
+            // 改为「联系系统管理员」的就地说明（渲染与素材逻辑本身保留）。
             $message = '当前红头生成方式为「' . zw_doc_letterhead_mode_label(ZW_DOC_LETTERHEAD_MODE_IMAGE)
                      . '」，但系统内没有「已启用」的红头文件，已按 fail-closed 停止生成红头：'
                      . '不会静默改回「' . zw_doc_letterhead_mode_label(ZW_DOC_LETTERHEAD_MODE_AUTO)
-                     . '」，也不会渲染空白红头。请先到「红头与印章 → 红头模板」上传并启用红头文件，'
-                     . '或把生成方式切回「' . zw_doc_letterhead_mode_label(ZW_DOC_LETTERHEAD_MODE_AUTO) . '」。';
+                     . '」，也不会渲染空白红头。界面已不再提供红头配置，请联系系统管理员检查红头素材与生成方式。';
         }
 
         return array(
@@ -450,7 +451,7 @@ if (!function_exists('zw_doc_letterhead_mode_state')) {
             'ready'      => $ready,
             'blocked'    => $blocked,
             'message'    => $message,
-            'assets_url' => function_exists('zw_doc_assets_admin_url') ? zw_doc_assets_admin_url(array('tab' => 'letterhead')) : '',
+            'assets_url' => function_exists('zw_doc_assets_admin_url') ? zw_doc_assets_admin_url() : '',
         );
     }
 }
@@ -493,7 +494,7 @@ if (!function_exists('zw_doc_letterhead_mode_save')) {
 
         if ($mode === ZW_DOC_LETTERHEAD_MODE_IMAGE && !zw_doc_letterhead_mode_material_ready()) {
             $msg = '无法切换为「' . zw_doc_letterhead_mode_label(ZW_DOC_LETTERHEAD_MODE_IMAGE)
-                 . '」：系统内没有「已启用」的红头文件。请先到「红头与印章 → 红头模板」上传并启用红头文件，再切换；'
+                 . '」：系统内没有「已启用」的红头文件。界面已不再提供红头配置，请联系系统管理员检查红头素材；'
                  . '当前生成方式保持为「' . zw_doc_letterhead_mode_label(zw_doc_letterhead_mode()) . '」。';
 
             return class_exists('WP_Error') ? new WP_Error('zw_doc_lh_mode_no_material', $msg) : false;
@@ -702,7 +703,7 @@ if (!function_exists('zw_doc_letterhead_handle_post')) {
      */
     function zw_doc_letterhead_handle_post($action) {
         $notice = '';
-        $back   = zw_doc_assets_admin_url(array('tab' => 'letterhead'));
+        $back   = zw_doc_assets_admin_url();
 
         if ($action === 'letterhead_upload' || $action === 'letterhead_attach') {
             $attachment_id = 0;
@@ -784,7 +785,7 @@ if (!function_exists('zw_doc_letterhead_handle_post')) {
 
 if (!function_exists('zw_doc_render_letterhead_admin_section')) {
     /**
-     * 红头模板管理区块（「红头与印章 → 红头模板」Tab）。
+     * 红头模板管理区块（OA-2531 起**不再有界面入口**；函数保留仅为兼容历史调用与素材管理脚本）。
      *
      * @return void
      */

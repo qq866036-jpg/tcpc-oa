@@ -83,14 +83,17 @@ oa_pp_chk(strpos($src_render, 'tco-doc-preview-box') === false, '不再生成固
 oa_pp_chk(strpos($src_render, 'transform:scale(62%)') === false && strpos($src_render, "'tco-doc-scaled'") === false, '不再用 62% transform 包裹整篇');
 
 echo "\n== 2) 预览 = 同一个打印端点 + 同一 fit 脚本 ==\n";
+$src_composer = (string) file_get_contents(ABSPATH . 'includes/doc/doc-composer.php');
 oa_pp_chk(strpos($src_list, 'zw_doc_embed_url($doc[\'id\'])') !== false, '详情页 iframe 指向 embed 预览 URL');
-oa_pp_chk(strpos($src_list, '<iframe') !== false && strpos($src_list, 'tco-doc-prev-frame') !== false, '预览用 iframe 承载（与后台页样式隔离）');
+oa_pp_chk(strpos($src_list, 'zw_doc_preview_panel_html(') !== false && strpos($src_list, '<iframe') === false, '详情页复用统一预览面板（iframe 由面板组件输出，本页不再自带第二套）');
 $embed_url = zw_doc_embed_url(123);
 oa_pp_chk(strpos($embed_url, 'action=zw_doc_print') !== false && strpos($embed_url, 'embed=1') !== false, 'embed URL 指向既有打印端点（不新开鉴权通路）');
+oa_pp_chk(strpos($embed_url, 'mode=paged') !== false, 'embed URL 声明单页整页（与撰写页同一 paged 脚本）');
 oa_pp_chk(strpos($embed_url, '_wpnonce=test') !== false, '沿用打印端点同一 nonce');
 oa_pp_chk(strpos($src_render, "'show_toolbar'   => !\$embed") !== false, 'embed 模式下不出工具栏');
 oa_pp_chk(strpos($src_render, "'auto_print'     => !\$embed") !== false, 'embed 模式下不自动弹打印框');
 oa_pp_chk(strpos($src_render, 'zw_doc_preview_fit_html($zw_print_html)') !== false, 'embed 输出前注入 fit 脚本（与撰写页同一份）');
+oa_pp_chk(strpos($src_render, 'name="zw-doc-preview-fit" content="paged"') !== false, 'paged 意图由文档头 meta 声明（单参调用零改动）');
 
 $sample = '<!doctype html><html><body><div class="tco-doc-sheet">P1</div></body></html>';
 $fitted = function_exists('zw_doc_preview_fit_html') ? zw_doc_preview_fit_html($sample) : '';
@@ -101,8 +104,9 @@ oa_pp_chk(strpos($fitted, '</body>') !== false && strpos($fitted, 'id="zw-pdf-vi
 echo "\n== 3) 打印与预览的纸面参数同源 ==\n";
 oa_pp_chk(substr_count($src_render, 'zw_doc_build_render_args($doc') === 2, '打印与 embed 两处都经 `zw_doc_build_render_args($doc)`（唯一构造器）');
 oa_pp_chk(strpos($src_list, 'zw_doc_render_document_html(') === false, '详情页不再自行渲染纸面（只交给打印端点）');
-oa_pp_chk(strpos($src_list, 'zw_doc_render_paginate(') !== false, '详情页用同一分页估算给出「共 N 页」');
-oa_pp_chk(strpos($src_list, 'A4 1:1') !== false && strpos($src_list, '共 ') !== false, '预览标题写明「A4 1:1 · 共 N 页」');
+oa_pp_chk(strpos($src_list, 'zw_doc_render_paginate(') === false, '详情页不再自行分页估算（页码交给预览页）');
+oa_pp_chk(strpos($src_composer, 'zw-pdf-state') !== false && strpos($src_composer, 'zwc-pv-page') !== false, '页码/缩放由预览页回传（`zw-pdf-state` → 面板页码）');
+oa_pp_chk(strpos($src_list, 'zw_doc_preview_panel_script(') !== false, '详情页预览由统一面板脚本驱动（翻页/缩放/打印/另存为同一套）');
 
 echo "\n== 4) 后台页误打印防护 ==\n";
 oa_pp_chk(strpos($src_list, '.tco-doc-print-guard{display:none}') !== false, '防护提示块默认隐藏');

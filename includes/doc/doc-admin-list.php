@@ -1047,6 +1047,19 @@ if (!function_exists('zw_doc_render_detail_page')) {
             /* OA-2518：**误打印防护** —— 本页是后台管理页，直接 Ctrl+P 会连卡片/按钮一起打印。
                打印时隐藏全部后台内容，只留一句「请用打印按钮（A4 1:1）」；真正的出件在 ?action=zw_doc_print。 */
             .tco-doc-print-guard{display:none}
+            /* OA-2531（用户 2026-11-18 指令）：「概览」通栏；其下左栏 = 其余设置卡片，右栏 = 版式预览，
+               预览右侧**固定不随页面滚动**（`sticky`）。面板样式与撰写页**同一出处**
+               `zw_doc_preview_panel_css()`，保证「版式和样式完全对齐」。 */
+            .tco-doc-detail .tco-doc-detail-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,42%);gap:16px;align-items:start}
+            .tco-doc-detail .tco-doc-detail-main{min-width:0}
+            .tco-doc-detail .tco-doc-detail-side{position:sticky;top:40px;align-self:start;min-width:0}
+            .tco-doc-detail .tco-doc-detail-side .zwc-pv-card{position:static}
+            <?php echo zw_doc_preview_panel_css(); // phpcs:ignore WordPress.Security.EscapeOutput -- 模块内固定 CSS（与撰写页同一出处） ?>
+            @media (max-width:1199px){
+                .tco-doc-detail .tco-doc-detail-grid{grid-template-columns:minmax(0,1fr)}
+                .tco-doc-detail .tco-doc-detail-side{position:static}
+                .tco-doc-detail .tco-doc-detail-side .zwc-pv-box{height:70vh}
+            }
             @media print{
                 .tco-doc-detail > *{display:none !important}
                 .tco-doc-detail .tco-doc-print-guard{display:block !important;font-size:16px;line-height:1.6;padding:12px 0}
@@ -1227,6 +1240,13 @@ if (!function_exists('zw_doc_render_detail_page')) {
                     快速跳转：<?php echo implode(' ｜ ', $ov_jump); // phpcs:ignore WordPress.Security.EscapeOutput -- 静态锚点，逐项按目标存在性渲染 ?>
                 </p>
             </div>
+            <?php
+            // OA-2531：概览之后进入左右分栏 —— 左栏放全部设置卡片，右栏只放版式预览（sticky）。
+            // 无正文时右栏不渲染，左栏自然占满（不会有空列）。
+            $ov_has_preview = (!empty($doc['body']) && function_exists('zw_doc_embed_url'));
+            ?>
+            <div class="tco-doc-detail-grid">
+            <div class="tco-doc-detail-main">
             <div class="tco-doc-card" id="tco-doc-face">
                 <h2>纸面要素</h2>
                 <div class="tco-doc-grid">
@@ -1602,85 +1622,10 @@ if (!function_exists('zw_doc_render_detail_page')) {
             <?php endif; ?>
 
             <?php
-            // 版式预览（TASK-767 / OA-2518）：只有在线撰写的正文才渲染；旧记录无 body 时不显示本区块。
-            // OA-2518：预览改为**内嵌 `?embed=1` 的打印视图**（同一渲染器 + 同一 args 构造器 + 同一 fit 脚本）
-            // ⇒ 按宽等比、多页纵向连续、页间留缝、可滚动，与打印 A4 1:1 同源；旧 62% 单页盒子已删除。
-            if (!empty($doc['body']) && function_exists('zw_doc_embed_url')) :
-                $preview_args = zw_doc_build_render_args($doc);
-                $preview_pages = function_exists('zw_doc_render_paginate')
-                    ? count((array) zw_doc_render_paginate($doc['body'], $preview_args))
-                    : 0;
-                ?>
-                <div class="tco-doc-card" id="tco-doc-preview">
-                    <h2>版式预览 <span class="tco-doc-muted" style="font-weight:400">（与打印同源 · A4 1:1<?php echo $preview_pages > 0 ? ' · 共 ' . (int) $preview_pages . ' 页' : ''; ?>）</span></h2>
-                    <p>
-                        <a class="button button-primary" target="_blank" rel="noopener"
-                           href="<?php echo esc_url(zw_doc_print_url($doc['id'])); ?>">打印 / 另存为 PDF</a>
-                        <a class="button" href="<?php echo esc_url(zw_doc_docx_export_url($doc['id'])); ?>">导出 DOCX</a>
-                        <?php if (function_exists('zw_doc_can_edit_doc') && zw_doc_can_edit_doc($doc)) : ?>
-                            <a class="button" href="<?php echo esc_url(zw_doc_admin_url(array('view' => 'compose', 'doc_id' => (int) $doc['id']))); ?>">编辑正文</a>
-                        <?php endif; ?>
-                        <span class="tco-doc-muted">下方预览与「打印 / 另存为 PDF」<strong>同一份渲染、同一比例</strong>；打印请用该按钮（新窗口 A4 1:1，自动调起打印框），<strong>不要直接对本后台页按 Ctrl+P</strong>。DOCX 为可编辑排版件（<strong>不含印章</strong>），且只写入国标字体名 —— 本机未装 仿宋_GB2312 / 方正小标宋简体 时 Word/WPS 会替代显示。</span>
-                    </p>
-                    <?php if (function_exists('zw_doc_letterhead_registry')) : ?>
-                        <?php
-                        $lh_list   = zw_doc_letterhead_registry();
-                        $lh_now    = zw_doc_letterhead_resolve($doc);
-                        // TASK-1422：全局「红头生成方式」——`auto`（默认，系统自动生成红头）时
-                        // 「本篇单独指定 / 文种映射 / 默认红头」都**不生效**，必须在下方向用户说明；
-                        // `blocked`（切到图片模式却无可用已启用红头）时给出 fail-closed 提示与引导。
-                        $lh_is_auto = function_exists('zw_doc_letterhead_mode_is_auto') ? zw_doc_letterhead_mode_is_auto() : false;
-                        $lh_labels = array(
-                            'document' => '本篇单独指定',
-                            'doc_type' => '按文种映射',
-                            'default'  => '默认红头',
-                            'none'     => ($lh_is_auto ? '系统自动生成红头（全局默认）' : '未使用红头素材（回退文字机关标志）'),
-                        );
-                        ?>
-                        <form method="post" action="<?php echo esc_url(zw_doc_assets_admin_url(array('tab' => 'letterhead'))); ?>" style="margin:0 0 12px">
-                            <?php wp_nonce_field('zw_doc_assets'); ?>
-                            <input type="hidden" name="zw_doc_assets_action" value="letterhead_pick">
-                            <input type="hidden" name="doc_id" value="<?php echo (int) $doc['id']; ?>">
-                            <label>红头
-                                <select name="letterhead_id">
-                                    <option value="0">跟随默认 / 文种映射</option>
-                                    <?php foreach ($lh_list as $lid => $lmeta) : ?>
-                                        <option value="<?php echo (int) $lid; ?>"<?php selected((int) $doc['letterhead_id'], (int) $lid); ?>>
-                                            <?php echo esc_html((string) $lmeta['name']); ?>（<?php echo (int) $lmeta['dpi']; ?>dpi）
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </label>
-                            <button class="button button-small" type="submit">保存红头</button>
-                            <span class="tco-doc-muted">
-                                当前：<?php echo esc_html(isset($lh_labels[$lh_now['source']]) ? $lh_labels[$lh_now['source']] : $lh_now['source']); ?>
-                                <?php if ($lh_now['name'] !== '') : ?>（<?php echo esc_html($lh_now['name']); ?>，<?php echo (int) $lh_now['dpi']; ?>dpi）<?php endif; ?>
-                                <?php if ($lh_now['low']) : ?><span class="tco-doc-badge is-warn">低清</span><?php endif; ?>
-                            </span>
-                        </form>
-                        <?php if (!empty($lh_now['blocked'])) : ?>
-                            <p class="tco-doc-muted" style="color:#b30404">
-                                <strong>红头 fail-closed：</strong><?php echo esc_html((string) $lh_now['reason']); ?>
-                                <?php if (!empty($lh_now['assets_url'])) : ?>
-                                    <a href="<?php echo esc_url((string) $lh_now['assets_url']); ?>">前往「红头与印章 → 红头模板」</a>
-                                <?php endif; ?>
-                            </p>
-                        <?php elseif ($lh_is_auto) : ?>
-                            <p class="tco-doc-muted">
-                                全局红头生成方式为「系统自动生成红头」（默认）：本页「红头」选择与「文种映射」<strong>当前不生效</strong>，
-                                仅在「红头与印章 → 红头模板」把生成方式切为「使用上传的红头文件（图片）」后生效。
-                                <a href="<?php echo esc_url(zw_doc_assets_admin_url(array('tab' => 'letterhead'))); ?>">前往设置</a>
-                            </p>
-                        <?php endif; ?>
-                    <?php endif; ?>
-                    <div class="tco-doc-prevwrap" style="border:1px solid #dcdcde;background:#e9e9ec;padding:0;">
-                        <iframe class="tco-doc-prev-frame"
-                                src="<?php echo esc_url(zw_doc_embed_url($doc['id'])); ?>"
-                                title="版式预览（与打印同源，A4 1:1，可滚动）"
-                                style="display:block;width:100%;height:min(72vh,760px);border:0;background:#e9e9ec"></iframe>
-                    </div>
-                </div>
-            <?php endif; ?>
+            // OA-2531（用户 2026-11-18 指令）：版式预览已从纵向卡片流中移出，改到右栏（sticky）；
+            // 同时删除本页的「红头」下拉与 fail-closed 提示（红头改为系统自动生成，界面不再提供配置）。
+            // 预览的 DOM 与样式唯一出处 = `zw_doc_preview_panel_html()` / `_css()`（与撰写页同一份）。
+            ?>
 
             <?php
             // 法务（TASK-771）：仅对「有正文」的发文展示；结论决定用印门禁 G2 是否放行。
@@ -1836,7 +1781,7 @@ if (!function_exists('zw_doc_render_detail_page')) {
                             </ul>
                         <?php endif; ?>
                         <?php if ($can_seal && empty($seal_opts)) : ?>
-                            <p class="tco-doc-muted">尚未上传可用印章，请先到「<a href="<?php echo esc_url(zw_doc_assets_admin_url()); ?>">红头与印章</a>」上传。</p>
+                            <p class="tco-doc-muted">尚未上传可用印章，请先到「<a href="<?php echo esc_url(zw_doc_assets_admin_url()); ?>">印章管理</a>」上传。</p>
                         <?php endif; ?>
                         <form method="post" action="<?php echo esc_url(zw_doc_assets_admin_url()); ?>">
                             <?php wp_nonce_field('zw_doc_assets'); ?>
@@ -1955,6 +1900,41 @@ if (!function_exists('zw_doc_render_detail_page')) {
                 </table>
                 </div>
             </div>
+            </div><!-- /.tco-doc-detail-main -->
+            <?php if ($ov_has_preview) : ?>
+            <aside class="tco-doc-detail-side" aria-label="版式预览">
+                <div class="zwc-pv-card" id="tco-doc-preview">
+                    <?php
+                    // OA-2531：预览面板与撰写页**同一出处**（`zw_doc_preview_panel_html()`）——
+                    // 页头图标工具栏 / 单页整页 / 说明在下方 / 打印与另存为全部一致；
+                    // 详情页只多「导出 DOCX」「编辑正文」两个图标。
+                    $zw_pv_extra = array(
+                        array('url' => zw_doc_docx_export_url($doc['id']), 'label' => '导出 DOCX（可编辑排版件，不含印章）', 'icon' => 'docx'),
+                    );
+                    if (function_exists('zw_doc_can_edit_doc') && zw_doc_can_edit_doc($doc)) {
+                        $zw_pv_extra[] = array('url' => zw_doc_admin_url(array('view' => 'compose', 'doc_id' => (int) $doc['id'])), 'label' => '编辑正文', 'icon' => 'edit');
+                    }
+                    echo zw_doc_preview_panel_html(array(
+                        'iframe_src' => zw_doc_embed_url($doc['id']),
+                        'open'       => array('type' => 'link', 'url' => zw_doc_embed_url($doc['id']), 'label' => '在新窗口打开完整预览'),
+                        'print'      => array('url' => zw_doc_print_url($doc['id']), 'label' => '打印 / 另存为 PDF'),
+                        'save'       => true,
+                        'extra'      => $zw_pv_extra,
+                        'note'       => '与打印 / DOCX 同一渲染器；打印请用页头按钮（新窗口 A4 1:1），不要直接对本后台页按 Ctrl+P。DOCX 不含印章。',
+                    )); // phpcs:ignore WordPress.Security.EscapeOutput -- 组件内部逐字段转义
+                    ?>
+                </div>
+            </aside>
+            <?php endif; ?>
+            </div><!-- /.tco-doc-detail-grid -->
+            <?php if ($ov_has_preview) : ?>
+            <script><?php echo zw_doc_preview_panel_script(array(
+                'mode'      => 'url',
+                'card_id'   => 'tco-doc-preview',
+                'save_url'  => zw_doc_embed_url($doc['id']),
+                'min_width' => 1200,
+            )); // phpcs:ignore WordPress.Security.EscapeOutput -- 组件内固定 JS + JSON 编码参数 ?></script>
+            <?php endif; ?>
             <p><a class="button" href="<?php echo esc_url(zw_doc_admin_url()); ?>">返回列表</a></p>
         </div>
         <?php

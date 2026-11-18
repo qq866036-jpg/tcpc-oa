@@ -1153,3 +1153,29 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
   （本次已抽查生产副本 `doc-layout-gb9704.php` 的 `fonts.h1.weight` 是否已是 `normal`）。
 - 发版顺序沿用固定做法：卫星单提交 + OA 侧 finish → 载体单标题不带「发版」词（不触发回读）→ 先合并载体 →
   再合并插件 → 切生产 → 最后收卫星单（此时按仓回读真实一致，不需要逃生口）。
+
+## 2026-11-18 · OA-2531：发文详情左右布局（预览右侧固定）+ 红头界面配置下线 + 栏目改「印章管理」
+
+- **预览面板只有一个出处**：`zw_doc_preview_panel_css()` / `zw_doc_preview_panel_html()` /
+  `zw_doc_preview_panel_script()`（`doc-composer.php`）。撰写页（form 模式，POST + srcdoc）与
+  详情页（url 模式，iframe src + 重载）都调它；**禁止**再在任一页面写第二套工具栏/样式。
+  元素 id 固定（`zwc-preview-*` / `zwc-pv-*`）——一页只放一个面板。
+- **详情页布局**：「概览」通栏；`.tco-doc-detail-grid` = 左 `.tco-doc-detail-main`（设置卡片流）+
+  右 `.tco-doc-detail-side`（`sticky;top:40px`，只放预览）。**sticky 必须挂在 grid item（side）上**，
+  挂在 `.zwc-pv-card` 上会因父级高度=自身而失效（本页已用 `.tco-doc-detail-side .zwc-pv-card{position:static}` 覆盖）。
+  卡片高度仍由共享脚本按可见顶边计算（`min_width=1200` 与页面断点一致）。
+- **内嵌 paged 的接线（保持单参调用）**：`zw_doc_embed_url()` 默认加 `mode=paged`；打印端点据此在
+  `<head>` 写 `<meta name="zw-doc-preview-fit" content="paged">`；`zw_doc_preview_fit_html()` 读该 meta 选
+  paged 脚本。这样主题跨仓测试锁的 `zw_doc_preview_fit_html($zw_print_html)` 字面调用不用改，
+  也不会出现「第二个 fit 入口」。
+- **红头口径（用户 2026-11-18 拍板「只删界面配置」）**：`zw_doc_letterhead_resolve()` / 门禁 / 素材登记表
+  全部保留（渲染仍可系统自动生成）；**界面**只删三处 —— 详情页「红头」下拉、数据字典「红头生成方式（只读）」卡、
+  「红头与印章」页的红头模板 Tab（页面/菜单改名「印章管理」，不再受理 `letterhead_*` 写动作）。
+  已上传素材保留、不再有入口；fail-closed 文案改为「联系系统管理员」，不得再指向已删除页面（死链）。
+- **本次同步的主题跨仓断言（10 个文件）**：`test-doc-admin-ui` / `test-doc-letterhead` /
+  `test-doc-letterhead-mode` / `test-doc-detail-anchors` / `test-doc-pdf` / `test-doc-composer` /
+  `test-doc-composer-preview` / `test-doc-composer-steps` / `test-doc-render-html` / `test-doc-acceptance`。
+  其中 `test-doc-composer-steps` 的表单 name 扫描收紧为「完整字段名」形态（组件生成式属性不计入），
+  `test-doc-render-html` / `test-doc-acceptance` 的 h1 字重断言跟上 OA-2528（normal）。
+- **回归**：`php tests/test-doc-detail-preview-panel.php`（38 项）、
+  `php tests/test-doc-preview-print-parity.php`（25 项）、`php tests/test-doc-preview-viewer.php`（44 项）。

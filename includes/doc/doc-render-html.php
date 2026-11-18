@@ -1114,13 +1114,12 @@ if (!function_exists('zw_doc_render_letterhead_html')) {
         // 输出**明确提示 + 引导**替代版头；**绝不静默回落「系统自动生成红头」，也绝不渲染空白红头**
         // （文案唯一出处 `zw_doc_letterhead_mode_state()`，经 `zw_doc_letterhead_render_args()` 下发）。
         if ((string) $args['letterhead_blocked'] !== '') {
-            $hint = (string) $args['letterhead_assets_url'];
+            // OA-2531：红头配置界面已下线 ⇒ 不再输出「前往红头模板」链接（死链），只保留原因说明。
             $html = '<div class="tco-doc-letterhead is-blocked" data-zw-note="letterhead-mode-blocked"'
                   . ' style="width:' . (float) zw_doc_gb9704_get('header.letterhead_width_mm', 156.0) . 'mm;'
                   . 'box-sizing:border-box;border:1px dashed #b30404;padding:6mm;color:#b30404;'
                   . 'font-size:10.5pt;line-height:1.7;text-align:left">'
                   . '<strong>红头未生成（fail-closed）：</strong>' . esc_html((string) $args['letterhead_blocked'])
-                  . ($hint !== '' ? '<br>前往设置：<a href="' . esc_url($hint) . '">红头与印章 → 红头模板</a>' : '')
                   . '</div>';
 
             return $html;
@@ -1945,10 +1944,16 @@ if (!function_exists('zw_doc_render_standalone_html')) {
     function zw_doc_render_standalone_html($body, $args = array()) {
         $args  = array_merge(zw_doc_render_defaults(), is_array($args) ? $args : array());
         $title = (string) $args['document_title'];
+        // OA-2531：文档级声明「内嵌预览要单页整页」——`zw_doc_preview_fit_html()` 据此选 paged 脚本，
+        // 从而保持「同一份打印端点 / 同一个 fit 入口」的单参调用不变（跨仓测试与既有调用零改动）。
+        $fit_meta = (isset($args['preview_fit']) && (string) $args['preview_fit'] === 'paged')
+            ? '<meta name="zw-doc-preview-fit" content="paged">'
+            : '';
 
         $head  = '<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">'
                . '<meta name="viewport" content="width=device-width,initial-scale=1">'
                . '<meta name="robots" content="noindex,nofollow">'
+               . $fit_meta
                . '<title>' . esc_html($title) . '</title>'
                . zw_doc_render_style_block((string) $args['base_url'])
                . '</head><body class="tco-doc-wrap">';
@@ -2004,12 +2009,18 @@ if (!function_exists('zw_doc_embed_url')) {
      * @param int $document_id 发文 ID。
      * @return string
      */
-    function zw_doc_embed_url($document_id) {
-        $url = add_query_arg(array(
+    function zw_doc_embed_url($document_id, $mode = 'paged') {
+        $embed_args = array(
             'action' => 'zw_doc_print',
             'doc_id' => (int) $document_id,
             'embed'  => '1',
-        ), admin_url('admin-post.php'));
+        );
+        // OA-2531：详情页预览改为**单页整页**（与撰写页同一面板 / 同一 paged 脚本）；
+        // `continuous` 仍保留给需要连续多页的嵌入场景（默认值对既有内部调用是 paged，故显式传参即可回退）。
+        if ((string) $mode === 'paged') {
+            $embed_args['mode'] = 'paged';
+        }
+        $url = add_query_arg($embed_args, admin_url('admin-post.php'));
 
         return wp_nonce_url($url, 'zw_doc_print_' . (int) $document_id);
     }
@@ -2123,7 +2134,7 @@ if (!function_exists('zw_doc_build_render_args')) {
 
         // TASK-1340 批次三（用户 2026-10-09 拍板「所有公文都盖章」）：
         // 上面两条只在「已正式用印」或「显式指定预览印章」时取章。现补**默认印章回退**——
-        // 未指定印章时取「红头与印章」页设为默认的那一枚（`zw_doc_default_seal_id`），
+        // 未指定印章时取「印章管理」页设为默认的那一枚（`zw_doc_default_seal_id`），
         // 使**任何公文渲染都带章**，无需逐篇操作。显式指定者优先（前面两条已返回，不受影响）。
         if (empty($args['seal_url']) && function_exists('zw_doc_seal_data_uri')) {
             $default_seal_id = (string) get_option('zw_doc_default_seal_id', '');
@@ -2205,12 +2216,19 @@ if (!function_exists('zw_doc_handle_print')) {
         // OA-2518：`embed=1` = **详情页内嵌预览**模式 —— 同一个渲染器、同一份 args 构造器、同一个 fit 脚本，
         // 只是不出工具栏、不自动弹打印框（避免在 iframe 里弹「打印」对话框）。纸面与打印 1:1 同源。
         $embed = isset($_GET['embed']) && (string) wp_unslash($_GET['embed']) === '1';
+        // OA-2531：`mode=paged` = 详情页「单页整页」内嵌预览（与撰写页同一面板脚本）。
+        $zw_preview_paged = $embed
+            && isset($_GET['mode'])
+            && sanitize_key(wp_unslash($_GET['mode'])) === 'paged';
 
         $args = zw_doc_build_render_args($doc, array(
             'show_toolbar'   => !$embed,
             'auto_print'     => !$embed,
             'document_title' => (string) $doc['title'] . ($embed ? ' · 版式预览' : ' · 打印预览'),
         ));
+        if ($zw_preview_paged) {
+            $args['preview_fit'] = 'paged';
+        }
 
         nocache_headers();
         header('Content-Type: text/html; charset=utf-8');
