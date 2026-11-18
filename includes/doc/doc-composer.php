@@ -1906,9 +1906,9 @@ if (!function_exists('zw_doc_render_composer_page')) {
                                 <div class="zwc-section-head zwc-group" data-zwc-section-head="attach"><span class="zwc-group-t">附件</span><span class="tco-badge is-on">附件说明·上纸面</span><span class="tco-badge">附件文件·仅台账</span></div>
                                 <div class="zwc-section-body">
                                     <div class="tco-doc-field is-wide">
-                                        <label>附件说明（每行一条，名称后不加标点）</label>
+                                        <label>附件说明（每行一条；只填名称，「附件：」与序号由系统生成；名称后不加标点）</label>
                                         <textarea name="zwc_attach_note" rows="2"><?php echo esc_textarea(implode("\n", (array) $body['meta']['attach_note'])); ?></textarea>
-                                        <div class="tco-doc-muted">出现在<strong>正文下空一行、左空二字「附件：」</strong>，且<strong>必须排在落款之前</strong>（国标口径）。</div>
+                                        <div class="tco-doc-muted">纸面位置：<strong>正文下空一行、左空二字「附件：」</strong>，排在落款之前；<strong>多条自动编号、各条序号对齐，名称回行时与名称首字对齐</strong>。条数应与下方实际上传的附件个数一致。</div>
                                     </div>
                                     <div class="tco-doc-field is-wide">
                                         <label>公文附件</label>

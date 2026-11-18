@@ -358,7 +358,15 @@ if (!function_exists('zw_doc_render_style_block')) {
         // TASK-1333 ②：附件说明正文下空一行，条目标题左空二字。
         // 选择器必须比正文段落归零规则（正文容器下的段落）更具体，否则上间距会被归零覆盖
         // —— TASK-1333 实渲染量测实测：旧写法上间距实测 0px（本次修正为 37.33px = 1 正文行）。
-        $css .= '.tco-doc-body p.tco-doc-attach{margin-top:' . $attach_gap_pt . 'pt;text-indent:' . $attach_indent . 'em;}';
+        //
+        // OA-2515（GB/T 9704-2012 §7.3.4）：附件说明改为 **mark + name 两段**（`zw_doc_body_attach_plan()`
+        // 是唯一出处），从而：① 「附件：」与顺序号由系统生成；② 名称较长回行时**自动与名称首字对齐**
+        // （flex 的第二段自成列，回行落在该列内 ⇒ 无需按字数算悬挂缩进，也不受字体度量影响）。
+        // 「空一行」只在**首条**上（旧实现每行都吃一次 margin-top ⇒ 多条附件之间会多出整行空白）。
+        $css .= '.tco-doc-body p.tco-doc-attach{padding-left:' . $attach_indent . 'em;display:flex;align-items:baseline;}';
+        $css .= '.tco-doc-body p.tco-doc-attach.is-first{margin-top:' . $attach_gap_pt . 'pt;}';
+        $css .= '.tco-doc-attach-mark{flex:0 0 auto;white-space:pre;}';
+        $css .= '.tco-doc-attach-name{flex:1 1 auto;}';
         // TASK-1333 ④：附注居左空二字（脱离落款容器的右对齐），位置仍在成文日期下一行。
         $css .= '.tco-doc-note{text-align:left;text-indent:' . $note_indent . 'em;}';
         $css .= '.tco-doc-record{font-family:' . zw_doc_render_font_family('note') . ';'
@@ -1822,10 +1830,15 @@ if (!function_exists('zw_doc_render_document_html')) {
             if ($page_idx === count($pages) - 1) {
                 // TASK-1333 ②：附件说明**移到落款之前**（正文下空一行），
                 // 纸面顺序固定为 正文 → 空一行 → 附件说明 → 空一行 → 署名 → 成文日期 → 附注 → 版记。
-                if (!empty($meta['attach_note']) && is_array($meta['attach_note'])) {
-                    foreach ($meta['attach_note'] as $note) {
-                        $html .= '<p class="tco-doc-attach">' . esc_html((string) $note) . '</p>';
-                    }
+                // OA-2515：行文由 `zw_doc_body_attach_plan()` 统一重组（自动「附件：」/顺序号/悬挂对齐）。
+                $attach_rows = function_exists('zw_doc_body_attach_plan')
+                    ? (array) zw_doc_body_attach_plan($meta['attach_note'])
+                    : array();
+                foreach ($attach_rows as $attach_index => $attach_row) {
+                    $html .= '<p class="tco-doc-attach' . ($attach_index === 0 ? ' is-first' : '') . '">'
+                          . '<span class="tco-doc-attach-mark">' . esc_html((string) $attach_row['mark']) . '</span>'
+                          . '<span class="tco-doc-attach-name">' . esc_html((string) $attach_row['name']) . '</span>'
+                          . '</p>';
                 }
                 $html .= zw_doc_render_sign_html($meta, $args);
             }

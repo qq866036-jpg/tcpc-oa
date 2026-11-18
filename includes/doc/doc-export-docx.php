@@ -285,7 +285,9 @@ if (!function_exists('zw_doc_docx_para')) {
               . ' w:after="' . (int) round((float) $opts['space_after_pt'] * 20) . '"'
               . ' w:line="' . (int) $line_twips . '" w:lineRule="exact"/>';
         $ind_attrs = '';
-        if ((int) $opts['indent_chars'] > 0) {
+        // OA-2515：允许**负值** —— 负数即「悬挂缩进」（`firstLineChars` 取负 = 首行回缩），
+        // 附件说明「回行与名称首字对齐」用它表达；正值仍是首行缩进（正文两字）。
+        if ((int) $opts['indent_chars'] !== 0) {
             $ind_attrs .= ' w:firstLineChars="' . ((int) $opts['indent_chars'] * 100) . '"'
                         . ' w:firstLine="' . ((int) $opts['indent_chars'] * $pt_twips) . '"';
         }
@@ -716,12 +718,19 @@ if (!function_exists('zw_doc_docx_body_xml')) {
                 ));
             }
             $attach_indent = max(0, (int) zw_doc_gb9704_get('main.attach_indent_chars', 2));
-            foreach ($attach_notes as $attach_line) {
-                $xml .= zw_doc_docx_para((string) $attach_line, array(
+            // OA-2515（GB/T 9704-2012 §7.3.4）：与 HTML 通道**同一行计划**（`zw_doc_body_attach_plan()`）——
+            // 「附件：」/顺序号由系统生成，名称较长回行时与名称首字对齐（DOCX 用「左缩进 + 负首行缩进」表达悬挂）。
+            $attach_rows = function_exists('zw_doc_body_attach_plan')
+                ? (array) zw_doc_body_attach_plan($attach_notes)
+                : array();
+            foreach ($attach_rows as $attach_row) {
+                $attach_prefix = (int) $attach_row['prefix_chars'];
+                $xml .= zw_doc_docx_para((string) $attach_row['mark'] . (string) $attach_row['name'], array(
                     'slot'         => 'body',
                     'pt'           => $body_pt,
                     'line_pt'      => $line_pt,
-                    'indent_chars' => $attach_indent,
+                    'left_chars'   => $attach_indent + $attach_prefix,
+                    'indent_chars' => 0 - $attach_prefix, // 负数 = 悬挂：首行回缩到名称首字，回行自动对齐
                 ));
             }
         }

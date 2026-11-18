@@ -701,6 +701,83 @@ if (!function_exists('zw_doc_body_add_block')) {
     }
 }
 
+if (!function_exists('zw_doc_body_attach_plan')) {
+    /**
+     * 附件说明的**行计划**（唯一出处；HTML / DOCX / 加密 PDF 三通道同源）—— OA-2515 / GB/T 9704-2012 §7.3.4。
+     *
+     * 国标口径：
+     * - 正文下空一行、**左空二字**编排「附件」二字，后标**全角冒号**和附件名称；
+     * - 有**多个**附件时，用阿拉伯数字标注顺序号（「附件：1.×××」），后续条目 `2.` `3.` 与第一行序号**对齐**；
+     * - 附件名称后**不加标点**；名称较长需回行时，**与上一行名称的首字对齐**（悬挂缩进，由渲染侧的 mark/name 两段实现）；
+     * - **单个**附件**不加**顺序号。
+     *
+     * 兼容存量：`meta.attach_note` 每项是作者**手打的一整行**（可能自带「附件：」「1.」），
+     * 本函数逐行剥掉这些前缀后只保留名称，再由渲染侧统一重组 ⇒ 存量「附件：1.×××」**逐字还原**；
+     * 只有「纯名称、无前缀」的旧行会被补出「附件：」（这正是 OA-2515 要修的不一致）。
+     * 用户手打的序号**不采信**（按位置重新连续编号）—— 手打序号漏号/跳号会让纸面与清单不一致。
+     *
+     * @param mixed $notes `meta.attach_note`（数组；单行字符串亦可）。
+     * @return array 行计划：`array( array('mark'=>'附件：1.', 'name'=>'×××', 'prefix_chars'=>5), … )`
+     */
+    function zw_doc_body_attach_plan($notes) {
+        $items = array();
+        foreach ((array) $notes as $raw) {
+            if (!is_scalar($raw)) {
+                continue;
+            }
+            $line = trim((string) $raw);
+            if ($line === '') {
+                continue;
+            }
+            // ① 剥掉作者手打的「附件：」（全角/半角冒号皆可，允许「附 件」中间有空格）
+            $line = preg_replace('/^附\s*件\s*[：:]\s*/u', '', $line);
+            if (!is_string($line)) {
+                $line = '';
+            }
+            $line = trim($line);
+            // ② 剥掉作者手打的序号（1. / 1．/ 1、 / 1)），序号一律由纸面规则重新生成
+            $line = preg_replace('/^\d+\s*[.．、)）]\s*/u', '', $line);
+            if (!is_string($line)) {
+                $line = '';
+            }
+            $line = trim($line);
+            if ($line === '') {
+                continue;
+            }
+            $items[] = $line;
+        }
+
+        $count = count($items);
+        if ($count === 0) {
+            return array();
+        }
+
+        $rows = array();
+        foreach ($items as $index => $name) {
+            if ($count === 1) {
+                // 单附件：只写「附件：名称」，不加顺序号（GB §7.3.4）。
+                $rows[] = array(
+                    'mark'         => '附件：',
+                    'name'         => $name,
+                    'prefix_chars' => 3, // 「附件：」= 2 个汉字 + 1 个全角冒号，共 3 字宽
+                );
+                continue;
+            }
+            $seq = (string) ($index + 1);
+            // 第 2 条起用「全角空格 × 3」补足「附件：」的宽度，使各条序号左缘对齐（GB 观感）。
+            $mark = ($index === 0 ? '附件：' : '　　　') . $seq . '.';
+            $rows[] = array(
+                'mark'         => $mark,
+                'name'         => $name,
+                // 悬挂缩进字符数 = 「附件：」3 字 + 「序号.」（半角按字宽折算：两位以内各占 1 字）。
+                'prefix_chars' => 3 + (int) ceil(((function_exists('mb_strlen') ? (int) mb_strlen($seq, 'UTF-8') : strlen($seq)) + 1) / 2),
+            );
+        }
+
+        return $rows;
+    }
+}
+
 if (!function_exists('zw_doc_body_ordinal_cn')) {
     /**
      * 阿拉伯数字 → 中文序数（1→一、21→二十一）。
