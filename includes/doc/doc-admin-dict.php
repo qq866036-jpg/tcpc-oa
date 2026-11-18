@@ -1106,53 +1106,9 @@ if (!function_exists('zw_doc_page_dict')) {
             </div>
 
             <?php
-            // TASK-1422：全局「红头生成方式」本页**只读展示**（统一查阅）；
-            // 唯一可写入口在「红头与印章 → 红头模板」页（写函数 `zw_doc_letterhead_mode_save()`）。
-            $dict_lh_state = function_exists('zw_doc_letterhead_mode_state')
-                ? zw_doc_letterhead_mode_state()
-                : array('mode' => 'auto', 'ready' => false, 'blocked' => false, 'message' => '', 'assets_url' => '');
+            // OA-2531（用户 2026-11-18 指令）：红头改为系统自动生成，界面不再提供「红头生成方式」配置
+            // ⇒ 本页原来的「红头生成方式（只读）」卡一并下线（避免指向已删除的「红头模板」入口）。
             ?>
-            <div class="tco-doc-card">
-                <?php echo zw_doc_admin_card_head('红头生成方式（只读）', '全局默认', true, 'ceoicon-book-2-line'); ?>
-                <p class="tco-doc-muted">
-                    唯一取值出处 <code>zw_doc_letterhead_mode()</code>（option <code>zw_doc_letterhead_mode</code>，默认 <code>auto</code>）；
-                    版式预览与出件（HTML 打印 / DOCX / 加密 PDF）<strong>同源</strong>使用该值。
-                    本页<strong>只读展示、不提供编辑</strong>；切换请在「红头与印章 → 红头模板」页
-                    （唯一写入口 <code>zw_doc_letterhead_mode_save()</code>）。
-                </p>
-                <!-- TASK-1633（TASK-1579 P1-6 第四批）：宽表落 canonical 横滑包裹。
-                     规则由本模块唯一出处 zw_doc_admin_ui_style()（本页 :935 输出）提供 ⇒ 本页不新增 <style>。 -->
-                <div class="tco-table-wrap">
-                <table class="zw-dict-table widefat striped">
-                    <thead>
-                    <tr><th>设置项</th><th>取值</th><th>说明</th><th>写入入口</th></tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                        <td><strong>红头生成方式</strong></td>
-                        <td>
-                            <?php echo esc_html(function_exists('zw_doc_letterhead_mode_label') ? zw_doc_letterhead_mode_label($dict_lh_state['mode']) : $dict_lh_state['mode']); ?>
-                            <span class="zw-dict-badge"><?php echo esc_html((string) $dict_lh_state['mode']); ?></span>
-                        </td>
-                        <td>
-                            <?php if (!empty($dict_lh_state['blocked'])) : ?>
-                                <span style="color:#b30404">fail-closed：已切到「使用上传的红头文件（图片）」但无已启用红头 —— 预览与出件给出明确提示，不静默回落、不渲染空白红头。</span>
-                            <?php else : ?>
-                                <span class="tco-doc-muted">「系统自动生成红头」不需要图片素材；「使用上传的红头文件（图片）」按「单篇指定 → 文种映射 → 默认红头」取已启用图片。</span>
-                            <?php endif; ?>
-                        </td>
-                        <td>
-                            <?php if (!empty($dict_lh_state['assets_url'])) : ?>
-                                <a href="<?php echo esc_url((string) $dict_lh_state['assets_url']); ?>">红头与印章 → 红头模板</a>
-                            <?php else : ?>
-                                —
-                            <?php endif; ?>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
-                </div>
-            </div>
 
             <div class="tco-grid is-2">
                 <div class="tco-doc-card">

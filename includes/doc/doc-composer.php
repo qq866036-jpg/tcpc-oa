@@ -1299,25 +1299,10 @@ if (!function_exists('zw_doc_render_composer_page')) {
             @media(hover:hover){.tco-doc-composer .zwc-splitter:hover::after{background:#2271b1}}
             .tco-doc-composer .zwc-splitter:focus-visible{box-shadow:0 0 0 2px #2271b1;border-radius:2px}
             .tco-doc-composer .zwc-splitter.is-dragging+.zwc-right{pointer-events:none}
-            .tco-doc-composer .zwc-right{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;position:sticky;top:40px;align-self:flex-start;box-sizing:border-box;background:#f0f0f1;border:1px solid #e5e7eb;border-radius:12px;padding:8px 10px 10px}
-            /* 页头图标工具栏（参考 PDF 阅读器）：功能全在页头，预览内不放按钮与说明。 */
-            .tco-doc-composer .zwc-pv-head{display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:0 0 auto;padding:0 0 8px;margin:0 0 8px;border-bottom:1px solid #e0e3e8}
-            .tco-doc-composer .zwc-pv-title{font-size:14px;font-weight:600;color:#1d2327;white-space:nowrap;margin:0}
-            .tco-doc-composer .zwc-pv-tools{display:flex;align-items:center;gap:2px;flex-wrap:wrap;margin-left:auto}
-            .tco-doc-composer .zwc-pv-btn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;min-height:32px;padding:0;border:1px solid transparent;border-radius:6px;background:transparent;color:#50575e;cursor:pointer;box-sizing:border-box;line-height:1}
-            .tco-doc-composer .zwc-pv-btn svg{display:block;width:18px;height:18px}
-            .tco-doc-composer .zwc-pv-btn:disabled{opacity:.4;cursor:default}
-            @media(hover:hover){.tco-doc-composer .zwc-pv-btn:hover:not(:disabled){background:#fff;border-color:#dcdcde;color:#1d2327}}
-            .tco-doc-composer .zwc-pv-btn:active:not(:disabled){background:#e8eaed}
-            .tco-doc-composer .zwc-pv-btn:focus-visible{outline:2px solid #2271b1;outline-offset:1px}
-            .tco-doc-composer .zwc-pv-sep{flex:0 0 auto;width:1px;height:18px;background:#dcdcde;margin:0 4px}
-            .tco-doc-composer .zwc-pv-page,.tco-doc-composer .zwc-pv-zoom{flex:0 0 auto;min-width:46px;text-align:center;font-size:12px;color:#50575e;font-variant-numeric:tabular-nums;white-space:nowrap}
-            .tco-doc-composer .zwc-pv-box{flex:1 1 auto;min-height:240px;border:1px solid #dcdcde;border-radius:6px;background:#e9e9ec;overflow:hidden;position:relative}
-            .tco-doc-composer .zwc-pv-box iframe{display:block;width:100%;height:100%;border:0;background:#e9e9ec}
-            .tco-doc-composer .zwc-pv-foot{flex:0 0 auto;padding:8px 0 0}
-            .tco-doc-composer .zwc-pv-state{display:block;min-height:16px;margin:0 0 2px;font-size:12px;line-height:1.5;color:#646970}
-            .tco-doc-composer .zwc-pv-note{margin:0;font-size:12px;line-height:1.6;color:#646970}
-            @media(pointer:coarse){.tco-doc-composer .zwc-pv-btn{width:44px;height:44px;min-height:44px}.tco-doc-composer .zwc-pv-btn svg{width:22px;height:22px}}
+            /* OA-2531：预览面板的样式与结构**唯一出处** = `zw_doc_preview_panel_css()` / `_html()` / `_script()`，
+               撰写页与发文详情页共用（用户口径「版式和样式完全对齐」）。 */
+            <?php echo zw_doc_preview_panel_css(); // phpcs:ignore WordPress.Security.EscapeOutput -- 模块内固定 CSS ?>
+            .tco-doc-composer .zwc-right{flex:1 1 auto;min-width:0}
             @media (max-width:1099px){
                 .tco-doc-composer .zwc-grid{flex-wrap:wrap}
                 .tco-doc-composer .zwc-splitter{display:none}
@@ -2165,184 +2150,48 @@ if (!function_exists('zw_doc_render_composer_page')) {
                          title="拖拽调整左右占比（聚焦后可用 ← → 微调）"></div>
 
                     <?php
-                    // OA-2529（用户 2026-11-18 截图指令）：「快捷功能…图标化，都放在页头（参考 pdf 编辑器）；
-                    // 注释放在版式预览下方，即预览中不放功能和注释」。故右栏 = 页头图标工具栏 + 预览框（只放纸面）
-                    // + 页脚状态/说明；按钮一律 `type="button"`（不触发表单提交），唯一例外是「新窗口打开」。
-                    // 图标用内联 SVG（本仓无图标字体依赖，避免与主题 ceofont 耦合）；16~18px 线稿，hot area ≥32px。
-                    $zwc_pv_icon = array(
-                        'refresh'  => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v4h-4"/></svg>',
-                        'open'     => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14 4h6v6"/><path d="M20 4l-8 8"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
-                        'prev'     => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 15l6-6 6 6"/></svg>',
-                        'next'     => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6"/></svg>',
-                        'zoom_out' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/><path d="M8 11h6"/></svg>',
-                        'zoom_in'  => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/><path d="M8 11h6"/><path d="M11 8v6"/></svg>',
-                        'fit'      => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 9V4h5"/><path d="M20 9V4h-5"/><path d="M4 15v5h5"/><path d="M20 15v5h-5"/></svg>',
-                        'print'    => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M7 9V3h10v6"/><rect x="4" y="9" width="16" height="8" rx="1.5"/><path d="M7 17h10v4H7z"/></svg>',
-                        'save'     => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3v11"/><path d="M8 10l4 4 4-4"/><path d="M5 20h14"/></svg>',
-                    );
+                    // OA-2531（用户口径「参考新建发文，版式和样式完全对齐」）：预览面板改为**唯一出处**组件
+                    // `zw_doc_preview_panel_html()` —— 撰写页与发文详情页共用同一份页头图标工具栏 / 预览框 / 页脚说明。
+                    // TASK-1987：预览语义标记 `zw_doc_preview=1` 随本次提交到达服务端；
+                    // 通用分发器见到即跳过 ⇒ 预览永远不会被当成「保存正文 / 新建发文」。该按钮由组件的 open=submit 生成。
                     ?>
-                    <aside class="zwc-right" id="zwc-prev-card" aria-label="版式预览">
-                        <div class="zwc-pv-head">
-                            <h3 class="zwc-pv-title">版式预览</h3>
-                            <div class="zwc-pv-tools" role="toolbar" aria-label="预览工具栏">
-                                <button type="button" class="zwc-pv-btn" id="zwc-preview-refresh" title="刷新预览" aria-label="刷新预览"><?php echo $zwc_pv_icon['refresh']; // phpcs:ignore WordPress.Security.EscapeOutput -- 模块内固定 SVG 字符串 ?></button>
-                                <?php
-                                // TASK-1987：`name="zw_doc_preview" value="1"` 是**预览语义的显式标记** ——
-                                // 它随本次提交一起到达服务端，通用分发器（`zw_doc_handle_admin_post()`）见到即跳过，
-                                // 保证「预览」永远不会被当成「保存正文 / 新建发文」（否则会跳详情页）。
-                                // `formaction + formtarget + formmethod` 让整张表单 POST 到预览端点并在新窗口打开。
-                                ?>
-                                <button type="submit" class="zwc-pv-btn" name="zw_doc_preview" value="1" formaction="<?php echo esc_url(zw_doc_composer_preview_url()); ?>" formtarget="_blank" formmethod="post" title="在新窗口打开完整预览" aria-label="在新窗口打开完整预览"><?php echo $zwc_pv_icon['open']; // phpcs:ignore WordPress.Security.EscapeOutput -- 模块内固定 SVG 字符串 ?></button>
-                                <span class="zwc-pv-sep" aria-hidden="true"></span>
-                                <button type="button" class="zwc-pv-btn" data-zw-pv="prev" title="上一页" aria-label="上一页" disabled><?php echo $zwc_pv_icon['prev']; // phpcs:ignore WordPress.Security.EscapeOutput -- 模块内固定 SVG 字符串 ?></button>
-                                <span class="zwc-pv-page" id="zwc-pv-page" aria-live="polite">1 / 1</span>
-                                <button type="button" class="zwc-pv-btn" data-zw-pv="next" title="下一页" aria-label="下一页" disabled><?php echo $zwc_pv_icon['next']; // phpcs:ignore WordPress.Security.EscapeOutput -- 模块内固定 SVG 字符串 ?></button>
-                                <span class="zwc-pv-sep" aria-hidden="true"></span>
-                                <button type="button" class="zwc-pv-btn" data-zw-pv="zoom-out" title="缩小" aria-label="缩小"><?php echo $zwc_pv_icon['zoom_out']; // phpcs:ignore WordPress.Security.EscapeOutput -- 模块内固定 SVG 字符串 ?></button>
-                                <span class="zwc-pv-zoom" id="zwc-pv-zoom">100%</span>
-                                <button type="button" class="zwc-pv-btn" data-zw-pv="zoom-in" title="放大" aria-label="放大"><?php echo $zwc_pv_icon['zoom_in']; // phpcs:ignore WordPress.Security.EscapeOutput -- 模块内固定 SVG 字符串 ?></button>
-                                <button type="button" class="zwc-pv-btn" data-zw-pv="fit" title="适应页面（显示整页）" aria-label="适应页面"><?php echo $zwc_pv_icon['fit']; // phpcs:ignore WordPress.Security.EscapeOutput -- 模块内固定 SVG 字符串 ?></button>
-                                <span class="zwc-pv-sep" aria-hidden="true"></span>
-                                <button type="button" class="zwc-pv-btn" data-zw-pv="print" title="打印 / 另存为 PDF" aria-label="打印"><?php echo $zwc_pv_icon['print']; // phpcs:ignore WordPress.Security.EscapeOutput -- 模块内固定 SVG 字符串 ?></button>
-                                <button type="button" class="zwc-pv-btn" data-zw-pv="save" title="另存为 HTML 文件" aria-label="另存为 HTML 文件"><?php echo $zwc_pv_icon['save']; // phpcs:ignore WordPress.Security.EscapeOutput -- 模块内固定 SVG 字符串 ?></button>
-                            </div>
-                        </div>
-                        <?php
-                        // TASK-2014：与「公文版式」同源的**内嵌预览**；OA-2529 起内嵌口径为**单页整页（fit-page）**，
-                        // 初始为空，由脚本按当前表单内容 POST 到预览端点后写入 srcdoc（不刷新页面、不占号）。
-                        ?>
-                        <div class="zwc-pv-box" id="zwc-preview-box">
-                            <iframe id="zwc-preview-frame" title="版式预览" style="width:100%;height:100%;border:0;background:#e9e9ec"></iframe>
-                        </div>
-                        <div class="zwc-pv-foot">
-                            <span class="zwc-pv-state" id="zwc-preview-state"></span>
-                            <p class="zwc-pv-note">预览与打印 / DOCX 同一渲染器，按当前输入生成，不保存、不占号；停手 0.9 秒自动更新。</p>
-                        </div>
+                    <aside class="zwc-right zwc-pv-card" id="zwc-prev-card" aria-label="版式预览">
+                        <?php echo zw_doc_preview_panel_html(array(
+                            'open'  => array('type' => 'submit', 'name' => 'zw_doc_preview', 'value' => '1', 'url' => zw_doc_composer_preview_url(), 'label' => '在新窗口打开完整预览'),
+                            'print' => 'js',
+                            'save'  => true,
+                            'note'  => '预览与打印 / DOCX 同一渲染器，按当前输入生成，不保存、不占号；停手 0.9 秒自动更新。',
+                        )); // phpcs:ignore WordPress.Security.EscapeOutput -- 组件内部逐字段转义 ?>
                     </aside>
                 </div>
             </form>
             <script>
-            // ===== TASK-2014 / OA-2529：标题手动折行（≤3 行） + 内嵌单页预览 + 页头图标工具栏 =====
+            // ===== OA-2531：预览面板驱动（与发文详情页**同一份**脚本；撰写页用 form 模式） =====
+            <?php echo zw_doc_preview_panel_script(array(
+                'mode'          => 'form',
+                'form_selector' => '#zwc-form',
+                'preview_url'   => zw_doc_composer_preview_url(),
+                'card_id'       => 'zwc-prev-card',
+                'min_width'     => 1100,
+            )); // phpcs:ignore WordPress.Security.EscapeOutput -- 组件内固定 JS + JSON 编码参数 ?>
+            // ===== TASK-2014：标题手动折行（≤3 行） =====
             (function () {
                 var ta = document.getElementById('zwc-title');
                 var counter = document.getElementById('zwc-title-lines');
-                var frame = document.getElementById('zwc-preview-frame');
-                var stateEl = document.getElementById('zwc-preview-state');
-                var refreshBtn = document.getElementById('zwc-preview-refresh');
-                var pageEl = document.getElementById('zwc-pv-page');
-                var zoomEl = document.getElementById('zwc-pv-zoom');
-                var prevBtn = document.querySelector('[data-zw-pv="prev"]');
-                var nextBtn = document.querySelector('[data-zw-pv="next"]');
-                var form = ta ? ta.form : null;
-                var previewUrl = <?php echo wp_json_encode(zw_doc_composer_preview_url()); ?>;
-                var lastHtml = '';
-                var pv = { page: 1, pages: 1, zoom: 1, ready: false };
-
-                if (ta) {
-                    ta.addEventListener('input', function () {
-                        var lines = String(ta.value).replace(/\r/g, '').split('\n');
-                        if (lines.length > 3) {
-                            ta.value = lines.slice(0, 3).join('\n');
-                            lines = lines.slice(0, 3);
-                        }
-                        if (counter) { counter.textContent = String(lines.length); }
-                    });
-                }
-
-                function setState(t) { if (stateEl) { stateEl.textContent = t || ''; } }
-                function paint() {
-                    if (pageEl) { pageEl.textContent = pv.page + ' / ' + pv.pages; }
-                    if (zoomEl) { zoomEl.textContent = Math.round(pv.zoom * 100) + '%'; }
-                    if (prevBtn) { prevBtn.disabled = !pv.ready || pv.page <= 1; }
-                    if (nextBtn) { nextBtn.disabled = !pv.ready || pv.page >= pv.pages; }
-                }
-                function send(action, value) {
-                    if (!frame || !frame.contentWindow) { return; }
-                    frame.contentWindow.postMessage({ type: 'zw-pdf-command', action: action, value: value }, '*');
-                }
-                // 预览页（paged 模式）在翻页 / 缩放后回传状态 —— 页码与缩放百分比只由它给出，父页不自算。
-                window.addEventListener('message', function (e) {
-                    if (!frame || e.source !== frame.contentWindow) { return; }
-                    var d = e.data || {};
-                    if (d.type !== 'zw-pdf-state') { return; }
-                    pv.ready = true;
-                    pv.page = parseInt(d.page, 10) || 1;
-                    pv.pages = parseInt(d.pages, 10) || 1;
-                    pv.zoom = parseFloat(d.zoom) || 1;
-                    paint();
+                if (!ta) { return; }
+                ta.addEventListener('input', function () {
+                    var lines = String(ta.value).replace(/\r/g, '').split('\n');
+                    if (lines.length > 3) {
+                        ta.value = lines.slice(0, 3).join('\n');
+                        lines = lines.slice(0, 3);
+                    }
+                    if (counter) { counter.textContent = String(lines.length); }
                 });
-
-                function saveHtml() {
-                    if (!lastHtml) { setState('预览尚未生成，稍候再点「另存为」'); return; }
-                    var d = new Date();
-                    function p2(n) { return (n < 10 ? '0' : '') + n; }
-                    var name = '公文预览-' + d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate())
-                        + '-' + p2(d.getHours()) + p2(d.getMinutes()) + '.html';
-                    var blob = new Blob([lastHtml], { type: 'text/html;charset=utf-8' });
-                    var url = URL.createObjectURL(blob);
-                    var a = document.createElement('a');
-                    a.href = url;
-                    a.download = name;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
-                    setState('已另存为 ' + name);
-                }
-
-                document.querySelectorAll('[data-zw-pv]').forEach(function (btn) {
-                    btn.addEventListener('click', function () {
-                        var act = btn.getAttribute('data-zw-pv');
-                        if (act === 'save') { saveHtml(); return; }
-                        send(act); // prev / next / zoom-in / zoom-out / fit / print 一律交给预览页执行
-                    });
-                });
-
-                if (!frame || !form) { return; }
-                var timer = null, inflight = false, pending = false;
-                function render() {
-                    if (inflight) { pending = true; return; }
-                    inflight = true;
-                    setState('更新中…');
-                    var data = new FormData(form);
-                    data.set('zw_doc_preview', '1');
-                    data.set('zw_doc_preview_mode', 'paged');
-                    fetch(previewUrl, { method: 'POST', body: data, credentials: 'same-origin' })
-                        .then(function (r) {
-                            if (!r.ok) { throw new Error('HTTP ' + r.status); }
-                            return r.text();
-                        })
-                        .then(function (html) {
-                            lastHtml = html;
-                            pv.ready = false; pv.page = 1; pv.pages = 1; pv.zoom = 1;
-                            paint();
-                            frame.srcdoc = html;
-                            setState('已按当前输入更新（' + new Date().toLocaleTimeString() + '）');
-                        })
-                        .catch(function () {
-                            setState('预览更新失败：可点页头「刷新预览」重试；仍失败请用「在新窗口打开」核对正文。');
-                        })
-                        .finally(function () {
-                            inflight = false;
-                            if (pending) { pending = false; render(); }
-                        });
-                }
-                function schedule() {
-                    if (timer) { clearTimeout(timer); }
-                    timer = setTimeout(render, 900);
-                }
-                form.addEventListener('input', schedule);
-                form.addEventListener('change', schedule);
-                if (refreshBtn) { refreshBtn.addEventListener('click', function (e) { e.preventDefault(); render(); }); }
-                paint();
-                // 首屏渲染一次（拿到「已保存内容」的版式，再随输入更新）。
-                setTimeout(render, 250);
             })();
-            // ===== OA-2529：左右分栏（可拖拽 / 比例持久化） + 预览卡高度自适应（sticky 时铺满视口） =====
+            // ===== OA-2529：左右分栏（可拖拽 / 比例持久化） =====
             (function () {
                 var grid = document.getElementById('zwc-grid');
                 var splitter = document.getElementById('zwc-splitter');
-                var card = document.getElementById('zwc-prev-card');
                 if (!grid || !splitter) { return; }
                 var SPLIT_KEY = 'zwDocComposerSplitPct';
                 var MIN = 38, MAX = 78;
@@ -2395,22 +2244,7 @@ if (!function_exists('zw_doc_render_composer_page')) {
                     if (e.key === 'ArrowRight') { applySplit(cur + 2, true); e.preventDefault(); }
                     if (e.key === 'Home') { applySplit(60, true); e.preventDefault(); }
                 });
-                if (!card) { return; }
-                var raf = 0, lastH = 0;
-                function sizeCard() {
-                    raf = 0;
-                    if (window.innerWidth < 1100) { card.style.height = ''; lastH = 0; return; }
-                    // sticky 生效后卡片顶边固定在 40px ⇒ 高度按「当前可见顶边」算，滚到哪都铺满视口。
-                    var top = Math.max(40, card.getBoundingClientRect().top);
-                    var h = Math.floor(window.innerHeight - top - 12);
-                    h = Math.max(420, Math.min(h, window.innerHeight));
-                    if (Math.abs(h - lastH) > 1) { card.style.height = h + 'px'; lastH = h; }
-                }
-                function scheduleSize() { if (!raf) { raf = window.requestAnimationFrame(sizeCard); } }
-                window.addEventListener('scroll', scheduleSize, { passive: true });
-                window.addEventListener('resize', scheduleSize);
-                window.addEventListener('load', scheduleSize);
-                scheduleSize();
+                // 卡片高度自适应已收敛到 `zw_doc_preview_panel_script()`（与详情页共用）。
             })();
             function zwcEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
             // ===== TASK-1291（SPEC-87 §20.12）：「任」字文种 人员任命配置（JS 前缀 zwcAp*）=====
@@ -3185,6 +3019,342 @@ if (!function_exists('zw_doc_render_composer_page')) {
     }
 }
 
+if (!function_exists('zw_doc_preview_panel_icons')) {
+    /**
+     * 预览面板图标集（内联 SVG，唯一出处；不走主题 ceofont，避免跨仓图标依赖）。
+     *
+     * 尺寸由 CSS 决定（`.zwc-pv-btn svg{18px}`，触屏 22px），这里只给几何。
+     *
+     * @return array<string,string>
+     */
+    function zw_doc_preview_panel_icons() {
+        return array(
+            'refresh'  => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v4h-4"/></svg>',
+            'open'     => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14 4h6v6"/><path d="M20 4l-8 8"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
+            'prev'     => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 15l6-6 6 6"/></svg>',
+            'next'     => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6"/></svg>',
+            'zoom_out' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/><path d="M8 11h6"/></svg>',
+            'zoom_in'  => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/><path d="M8 11h6"/><path d="M11 8v6"/></svg>',
+            'fit'      => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 9V4h5"/><path d="M20 9V4h-5"/><path d="M4 15v5h5"/><path d="M20 15v5h-5"/></svg>',
+            'print'    => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M7 9V3h10v6"/><rect x="4" y="9" width="16" height="8" rx="1.5"/><path d="M7 17h10v4H7z"/></svg>',
+            'save'     => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3v11"/><path d="M8 10l4 4 4-4"/><path d="M5 20h14"/></svg>',
+            'docx'     => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M9 12l1.2 5 1.3-3.4 1.3 3.4L14 12"/></svg>',
+            'edit'     => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 20h4L20 8l-4-4L4 16z"/><path d="M14 6l4 4"/></svg>',
+        );
+    }
+}
+
+if (!function_exists('zw_doc_preview_panel_css')) {
+    /**
+     * 预览面板样式（唯一出处）—— 撰写页与详情页共用，保证「版式和样式完全对齐」。
+     *
+     * 类名固定 `zwc-pv-*`；一页只放一个面板，元素 id 也固定（`zwc-preview-*` / `zwc-pv-*`）。
+     *
+     * @return string CSS（不含 <style>）。
+     */
+    function zw_doc_preview_panel_css() {
+        return <<<'CSS'
+.zwc-pv-card{display:flex;flex-direction:column;position:sticky;top:40px;align-self:flex-start;box-sizing:border-box;background:#f0f0f1;border:1px solid #e5e7eb;border-radius:12px;padding:8px 10px 10px}
+.zwc-pv-head{display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:0 0 auto;padding:0 0 8px;margin:0 0 8px;border-bottom:1px solid #e0e3e8}
+.zwc-pv-title{font-size:14px;font-weight:600;color:#1d2327;white-space:nowrap;margin:0}
+.zwc-pv-tools{display:flex;align-items:center;gap:2px;flex-wrap:wrap;margin-left:auto}
+.zwc-pv-btn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;min-height:32px;padding:0;border:1px solid transparent;border-radius:6px;background:transparent;color:#50575e;cursor:pointer;box-sizing:border-box;line-height:1;text-decoration:none}
+.zwc-pv-btn svg{display:block;width:18px;height:18px}
+.zwc-pv-btn:disabled{opacity:.4;cursor:default}
+@media(hover:hover){.zwc-pv-btn:hover:not(:disabled){background:#fff;border-color:#dcdcde;color:#1d2327}}
+.zwc-pv-btn:active:not(:disabled){background:#e8eaed}
+.zwc-pv-btn:focus-visible{outline:2px solid #2271b1;outline-offset:1px}
+.zwc-pv-sep{flex:0 0 auto;width:1px;height:18px;background:#dcdcde;margin:0 4px}
+.zwc-pv-page,.zwc-pv-zoom{flex:0 0 auto;min-width:46px;text-align:center;font-size:12px;color:#50575e;font-variant-numeric:tabular-nums;white-space:nowrap}
+.zwc-pv-box{flex:1 1 auto;min-height:240px;border:1px solid #dcdcde;border-radius:4px;background:#e9e9ec;overflow:hidden;position:relative}
+.zwc-pv-box iframe{display:block;width:100%;height:100%;border:0;background:#e9e9ec}
+.zwc-pv-foot{flex:0 0 auto;padding:8px 0 0}
+.zwc-pv-state{display:block;min-height:16px;margin:0 0 2px;font-size:12px;line-height:1.5;color:#646970}
+.zwc-pv-note{margin:0;font-size:12px;line-height:1.6;color:#646970}
+@media(pointer:coarse){.zwc-pv-btn{width:44px;height:44px;min-height:44px}.zwc-pv-btn svg{width:22px;height:22px}}
+CSS;
+    }
+}
+
+if (!function_exists('zw_doc_preview_panel_html')) {
+    /**
+     * 预览面板主体（页头图标工具栏 + 预览框 + 下方状态/说明）—— 唯一出处。
+     *
+     * 撰写页与详情页都调用本函数；差异只由参数表达（数据来源、额外入口），
+     * 从而保证两处「版式和样式完全对齐」且不会再出现第二套预览实现。
+     *
+     * @param array $args {
+     *   @type string       $title      面板标题，默认「版式预览」。
+     *   @type string       $iframe_src 详情页的预览 URL（撰写页留空，由脚本写入 srcdoc）。
+     *   @type array        $open       新窗口入口：`submit`（表单提交）或 `link`；含 `url` / `label`。
+     *   @type array        $extra      额外图标入口：每项 `url` + `label` + `icon`（docx/edit/…）。
+     *   @type string|array $print      `js`（打印 iframe）或 `array('url'=>…,'label'=>…)`（新窗口打印）。
+     *   @type bool         $save       是否提供「另存为 HTML」。
+     *   @type string       $note       页脚说明。
+     * }
+     * @return string HTML。
+     */
+    function zw_doc_preview_panel_html($args = array()) {
+        $icons = zw_doc_preview_panel_icons();
+        $title = (isset($args['title']) && (string) $args['title'] !== '') ? (string) $args['title'] : '版式预览';
+        $src   = isset($args['iframe_src']) ? (string) $args['iframe_src'] : '';
+        $note  = isset($args['note']) ? (string) $args['note'] : '';
+        $save  = !empty($args['save']);
+        $print = isset($args['print']) ? $args['print'] : 'js';
+
+        $open_html = '';
+        $open      = (isset($args['open']) && is_array($args['open'])) ? $args['open'] : array();
+        if (!empty($open['url'])) {
+            $open_label = isset($open['label']) ? (string) $open['label'] : '在新窗口打开完整预览';
+            if (isset($open['type']) && $open['type'] === 'submit') {
+                $open_html = '<button type="submit" class="zwc-pv-btn"'
+                    . ' name="' . esc_attr(isset($open['name']) ? (string) $open['name'] : 'zw_doc_preview') . '"'
+                    . ' value="' . esc_attr(isset($open['value']) ? (string) $open['value'] : '1') . '"'
+                    . ' formaction="' . esc_url((string) $open['url']) . '" formtarget="_blank" formmethod="post"'
+                    . ' title="' . esc_attr($open_label) . '" aria-label="' . esc_attr($open_label) . '">' . $icons['open'] . '</button>';
+            } else {
+                $open_html = '<a class="zwc-pv-btn" href="' . esc_url((string) $open['url']) . '" target="_blank" rel="noopener"'
+                    . ' title="' . esc_attr($open_label) . '" aria-label="' . esc_attr($open_label) . '">' . $icons['open'] . '</a>';
+            }
+        }
+
+        if (is_array($print) && !empty($print['url'])) {
+            $print_label = isset($print['label']) ? (string) $print['label'] : '打印 / 另存为 PDF';
+            $print_html  = '<a class="zwc-pv-btn" href="' . esc_url((string) $print['url']) . '" target="_blank" rel="noopener"'
+                . ' title="' . esc_attr($print_label) . '" aria-label="' . esc_attr($print_label) . '">' . $icons['print'] . '</a>';
+        } else {
+            $print_html = '<button type="button" class="zwc-pv-btn" data-zw-pv="print" title="打印 / 另存为 PDF" aria-label="打印">' . $icons['print'] . '</button>';
+        }
+
+        $extra_html = '';
+        foreach ((array) (isset($args['extra']) ? $args['extra'] : array()) as $item) {
+            if (empty($item['url'])) {
+                continue;
+            }
+            $item_label = isset($item['label']) ? (string) $item['label'] : '打开';
+            $item_icon  = (isset($item['icon']) && isset($icons[(string) $item['icon']])) ? $icons[(string) $item['icon']] : $icons['open'];
+            $extra_html .= '<a class="zwc-pv-btn" href="' . esc_url((string) $item['url']) . '"'
+                . ' title="' . esc_attr($item_label) . '" aria-label="' . esc_attr($item_label) . '">' . $item_icon . '</a>';
+        }
+
+        return '<div class="zwc-pv-head">'
+            . '<h3 class="zwc-pv-title">' . esc_html($title) . '</h3>'
+            . '<div class="zwc-pv-tools" role="toolbar" aria-label="预览工具栏">'
+            . '<button type="button" class="zwc-pv-btn" id="zwc-preview-refresh" title="刷新预览" aria-label="刷新预览">' . $icons['refresh'] . '</button>'
+            . $open_html
+            . '<span class="zwc-pv-sep" aria-hidden="true"></span>'
+            . '<button type="button" class="zwc-pv-btn" data-zw-pv="prev" title="上一页" aria-label="上一页" disabled>' . $icons['prev'] . '</button>'
+            . '<span class="zwc-pv-page" id="zwc-pv-page" aria-live="polite">1 / 1</span>'
+            . '<button type="button" class="zwc-pv-btn" data-zw-pv="next" title="下一页" aria-label="下一页" disabled>' . $icons['next'] . '</button>'
+            . '<span class="zwc-pv-sep" aria-hidden="true"></span>'
+            . '<button type="button" class="zwc-pv-btn" data-zw-pv="zoom-out" title="缩小" aria-label="缩小">' . $icons['zoom_out'] . '</button>'
+            . '<span class="zwc-pv-zoom" id="zwc-pv-zoom">100%</span>'
+            . '<button type="button" class="zwc-pv-btn" data-zw-pv="zoom-in" title="放大" aria-label="放大">' . $icons['zoom_in'] . '</button>'
+            . '<button type="button" class="zwc-pv-btn" data-zw-pv="fit" title="适应页面（显示整页）" aria-label="适应页面">' . $icons['fit'] . '</button>'
+            . '<span class="zwc-pv-sep" aria-hidden="true"></span>'
+            . $print_html
+            . ($save ? '<button type="button" class="zwc-pv-btn" data-zw-pv="save" title="另存为 HTML 文件" aria-label="另存为 HTML 文件">' . $icons['save'] . '</button>' : '')
+            . $extra_html
+            . '</div>'
+            . '</div>'
+            . '<div class="zwc-pv-box" id="zwc-preview-box">'
+            . '<iframe id="zwc-preview-frame" class="tco-doc-prev-frame" title="版式预览"'
+            . ($src !== '' ? ' src="' . esc_url($src) . '"' : '')
+            . ' style="display:block;width:100%;height:100%;border:0;background:#e9e9ec"></iframe>'
+            . '</div>'
+            . '<div class="zwc-pv-foot">'
+            . '<span class="zwc-pv-state" id="zwc-preview-state"></span>'
+            . '<p class="zwc-pv-note">' . esc_html($note) . '</p>'
+            . '</div>';
+    }
+}
+
+if (!function_exists('zw_doc_preview_panel_script')) {
+    /**
+     * 预览面板驱动脚本（唯一出处）—— 返回**纯 JS**（不含 `<script>` 标签），由调用方包裹。
+     *
+     * 两种数据来源：
+     *   - `form`：撰写页。按表单当前值 POST 到预览端点，写入 iframe `srcdoc`，随输入自动更新；
+     *   - `url`：详情页。iframe 已经带 `src`（`?embed=1&mode=paged`），刷新只重载 src。
+     * 两者共用同一套页头按钮协议与「翻页 / 缩放状态回传」（`zw-pdf-command` / `zw-pdf-state`）。
+     *
+     * @param array $args {
+     *   @type string $mode          form|url。
+     *   @type string $preview_url   form 模式的 POST 端点。
+     *   @type string $form_selector form 模式的表单选择器。
+     *   @type string $card_id       需要按视口高度自适应的面板 id（空则不启用）。
+     *   @type int    $min_width     低于该宽度不做高度自适应（与页面断点一致）。
+     *   @type string $save_url      url 模式下「另存为」取 HTML 的地址。
+     * }
+     * @return string JS。
+     */
+    function zw_doc_preview_panel_script($args = array()) {
+        $mode          = (isset($args['mode']) && (string) $args['mode'] === 'url') ? 'url' : 'form';
+        $preview_url   = isset($args['preview_url']) ? (string) $args['preview_url'] : '';
+        $form_selector = isset($args['form_selector']) ? (string) $args['form_selector'] : '';
+        $card_id       = isset($args['card_id']) ? (string) $args['card_id'] : '';
+        $save_url      = isset($args['save_url']) ? (string) $args['save_url'] : '';
+        $min_width     = isset($args['min_width']) ? (int) $args['min_width'] : 1100;
+
+        $js = <<<'ZWPV'
+(function () {
+  var MODE = __MODE__;
+  var PREVIEW_URL = __PREVIEW_URL__;
+  var FORM_SELECTOR = __FORM_SELECTOR__;
+  var CARD_ID = __CARD_ID__;
+  var SAVE_URL = __SAVE_URL__;
+  var MIN_WIDTH = __MIN_WIDTH__;
+  var frame = document.getElementById('zwc-preview-frame');
+  var stateEl = document.getElementById('zwc-preview-state');
+  var refreshBtn = document.getElementById('zwc-preview-refresh');
+  var pageEl = document.getElementById('zwc-pv-page');
+  var zoomEl = document.getElementById('zwc-pv-zoom');
+  var prevBtn = document.querySelector('[data-zw-pv="prev"]');
+  var nextBtn = document.querySelector('[data-zw-pv="next"]');
+  var pv = { page: 1, pages: 1, zoom: 1, ready: false };
+  var lastHtml = '';
+
+  function setState(t) { if (stateEl) { stateEl.textContent = t || ''; } }
+  function paint() {
+    if (pageEl) { pageEl.textContent = pv.page + ' / ' + pv.pages; }
+    if (zoomEl) { zoomEl.textContent = Math.round(pv.zoom * 100) + '%'; }
+    if (prevBtn) { prevBtn.disabled = !pv.ready || pv.page <= 1; }
+    if (nextBtn) { nextBtn.disabled = !pv.ready || pv.page >= pv.pages; }
+  }
+  function send(action, value) {
+    if (!frame || !frame.contentWindow) { return; }
+    frame.contentWindow.postMessage({ type: 'zw-pdf-command', action: action, value: value }, '*');
+  }
+  window.addEventListener('message', function (e) {
+    if (!frame || e.source !== frame.contentWindow) { return; }
+    var d = e.data || {};
+    if (d.type !== 'zw-pdf-state') { return; }
+    pv.ready = true;
+    pv.page = parseInt(d.page, 10) || 1;
+    pv.pages = parseInt(d.pages, 10) || 1;
+    pv.zoom = parseFloat(d.zoom) || 1;
+    paint();
+  });
+  function download(html) {
+    var d = new Date();
+    function p2(n) { return (n < 10 ? '0' : '') + n; }
+    var name = '公文预览-' + d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate())
+      + '-' + p2(d.getHours()) + p2(d.getMinutes()) + '.html';
+    var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    setState('已另存为 ' + name);
+  }
+  function saveHtml() {
+    if (lastHtml) { download(lastHtml); return; }
+    if (!SAVE_URL) { setState('预览尚未生成，稍候再点「另存为」'); return; }
+    setState('正在准备另存为…');
+    fetch(SAVE_URL, { credentials: 'same-origin' })
+      .then(function (r) { if (!r.ok) { throw new Error('HTTP ' + r.status); } return r.text(); })
+      .then(download)
+      .catch(function () { setState('另存为失败：可改用「打印 / 另存为 PDF」'); });
+  }
+  document.querySelectorAll('[data-zw-pv]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var act = btn.getAttribute('data-zw-pv');
+      if (act === 'save') { saveHtml(); return; }
+      send(act); // prev / next / zoom-in / zoom-out / fit / print 一律交给预览页执行
+    });
+  });
+
+  if (MODE === 'form') {
+    var form = FORM_SELECTOR ? document.querySelector(FORM_SELECTOR) : null;
+    var timer = null, inflight = false, pending = false;
+    var render = function () {
+      if (!frame || !form) { return; }
+      if (inflight) { pending = true; return; }
+      inflight = true;
+      setState('更新中…');
+      var data = new FormData(form);
+      data.set('zw_doc_preview', '1');
+      data.set('zw_doc_preview_mode', 'paged');
+      fetch(PREVIEW_URL, { method: 'POST', body: data, credentials: 'same-origin' })
+        .then(function (r) { if (!r.ok) { throw new Error('HTTP ' + r.status); } return r.text(); })
+        .then(function (html) {
+          lastHtml = html;
+          pv.ready = false; pv.page = 1; pv.pages = 1; pv.zoom = 1;
+          paint();
+          frame.srcdoc = html;
+          setState('已按当前输入更新（' + new Date().toLocaleTimeString() + '）');
+        })
+        .catch(function () {
+          setState('预览更新失败：可点页头「刷新预览」重试；仍失败请用「在新窗口打开」核对正文。');
+        })
+        .finally(function () {
+          inflight = false;
+          if (pending) { pending = false; render(); }
+        });
+    };
+    var schedule = function () { if (timer) { clearTimeout(timer); } timer = setTimeout(render, 900); };
+    if (form) {
+      form.addEventListener('input', schedule);
+      form.addEventListener('change', schedule);
+    }
+    if (refreshBtn) { refreshBtn.addEventListener('click', function (e) { e.preventDefault(); render(); }); }
+    paint();
+    setTimeout(render, 250);
+  } else {
+    var baseSrc = frame ? (frame.getAttribute('src') || '') : '';
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        if (!frame) { return; }
+        pv.ready = false;
+        paint();
+        var u = baseSrc.split(/[?&]zw_t=/)[0];
+        var sep = u.indexOf('?') >= 0 ? '&' : '?';
+        frame.setAttribute('src', u + sep + 'zw_t=' + Date.now());
+        setState('已刷新（' + new Date().toLocaleTimeString() + '）');
+      });
+    }
+    paint();
+  }
+
+  if (CARD_ID) {
+    var card = document.getElementById(CARD_ID);
+    if (card) {
+      var raf = 0, lastH = 0;
+      var sizeCard = function () {
+        raf = 0;
+        if (window.innerWidth < MIN_WIDTH) { card.style.height = ''; lastH = 0; return; }
+        // sticky 生效后卡片顶边固定在 40px ⇒ 高度按「当前可见顶边」算，滚到哪都铺满视口。
+        var top = Math.max(40, card.getBoundingClientRect().top);
+        var h = Math.floor(window.innerHeight - top - 12);
+        h = Math.max(420, Math.min(h, window.innerHeight));
+        if (Math.abs(h - lastH) > 1) { card.style.height = h + 'px'; lastH = h; }
+      };
+      var scheduleSize = function () { if (!raf) { raf = window.requestAnimationFrame(sizeCard); } };
+      window.addEventListener('scroll', scheduleSize, { passive: true });
+      window.addEventListener('resize', scheduleSize);
+      window.addEventListener('load', scheduleSize);
+      scheduleSize();
+    }
+  }
+})();
+ZWPV;
+
+        return strtr($js, array(
+            '__MODE__'          => wp_json_encode($mode),
+            '__PREVIEW_URL__'   => wp_json_encode($preview_url),
+            '__FORM_SELECTOR__' => wp_json_encode($form_selector),
+            '__CARD_ID__'       => wp_json_encode($card_id),
+            '__SAVE_URL__'      => wp_json_encode($save_url),
+            '__MIN_WIDTH__'     => (string) $min_width,
+        ));
+    }
+}
+
 if (!function_exists('zw_doc_preview_fit_script')) {
     /**
      * 预览页「A4 等比缩放」片段（TASK-2012 / TASK-2014 / OA-2529，唯一出处）。
@@ -3441,6 +3611,11 @@ if (!function_exists('zw_doc_preview_fit_html')) {
      */
     function zw_doc_preview_fit_html($html, $mode = 'continuous') {
         $html = (string) $html;
+        // OA-2531：打印端点在内嵌预览（`mode=paged`）时会在文档头声明该 meta；
+        // 这里据此选 paged 脚本 ⇒ 详情页与撰写页共用同一面板观感，同时保持单参调用（跨仓断言零改动）。
+        if ((string) $mode === 'continuous' && strpos($html, 'name="zw-doc-preview-fit" content="paged"') !== false) {
+            $mode = 'paged';
+        }
         $fit  = zw_doc_preview_fit_script($mode);
         if (strpos($html, '</body>') !== false) {
             return str_replace('</body>', $fit . '</body>', $html);

@@ -1119,7 +1119,7 @@ if (!function_exists('zw_doc_handle_seal_view')) {
 
 if (!function_exists('zw_doc_assets_admin_url')) {
     /**
-     * 「红头与印章」页 URL。
+     * 「印章管理」页 URL（原「红头与印章」，OA-2531 改为只保留印章）。
      *
      * @param array $args 查询参数。
      * @return string
@@ -1131,7 +1131,7 @@ if (!function_exists('zw_doc_assets_admin_url')) {
 
 if (!function_exists('zw_doc_assets_handle_post')) {
     /**
-     * 「红头与印章」页 POST 处理（在 admin_init 阶段执行）。
+     * 「印章管理」页 POST 处理（在 admin_init 阶段执行）。
      *
      * @return void
      */
@@ -1219,10 +1219,6 @@ if (!function_exists('zw_doc_assets_handle_post')) {
             $result = zw_doc_seal_edit_unlock($doc_id, get_current_user_id());
             $notice = is_wp_error($result) ? $result->get_error_message() : '已同版本解锁编辑（用印记录与完成文件保留，再次用印前请勿触发任命同步 / 证书生成）。';
             $back   = zw_doc_admin_url(array('view' => 'detail', 'doc_id' => $doc_id));
-        } elseif (strpos($action, 'letterhead_') === 0 && function_exists('zw_doc_letterhead_handle_post')) {
-            // nonce 已在上方校验；红头动作由红头模块处理（TASK-770）
-            zw_doc_letterhead_handle_post($action);
-            return;
         } else {
             $notice = '未知操作。';
         }
@@ -1234,7 +1230,7 @@ if (!function_exists('zw_doc_assets_handle_post')) {
 
 if (!function_exists('zw_doc_render_seal_admin_section')) {
     /**
-     * 印章管理区块（供「红头与印章」页的印章 Tab 使用）。
+     * 印章管理区块（「印章管理」页主体）。
      *
      * @return void
      */
@@ -1372,7 +1368,7 @@ if (!function_exists('zw_doc_render_seal_admin_section')) {
 
 if (!function_exists('zw_doc_page_assets')) {
     /**
-     * 「发文管理 → 红头与印章」页（印章 Tab；红头 Tab 由 TASK-770 补齐）。
+     * 「发文管理 → 印章管理」页（OA-2531：红头配置下线，本页只保留印章管理）。
      *
      * @return void
      */
@@ -1380,23 +1376,13 @@ if (!function_exists('zw_doc_page_assets')) {
         if (!current_user_can('manage_options')) {
             wp_die('无权限', '禁止访问', array('response' => 403));
         }
-        $tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : 'seal';
+        // OA-2531（用户 2026-11-18 指令）：本栏目只保留**印章管理**——
+        // 红头改为系统自动生成，红头模板 Tab 与红头配置整体下线（渲染逻辑与已上传素材保留，不再有入口）。
         ?>
         <div class="wrap tco-doc-assets">
             <?php echo zw_doc_admin_ui_style(); // 唯一出处：SPEC-10 §1.9 卡片范式（TASK-778） ?>
-            <style>
-            .tco-doc-assets .nav-tab-wrapper{margin-bottom:16px}
-            </style>
-            <h1>红头与印章</h1>
-            <h2 class="nav-tab-wrapper">
-                <a class="nav-tab <?php echo $tab === 'seal' ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(zw_doc_assets_admin_url(array('tab' => 'seal'))); ?>">印章</a>
-                <a class="nav-tab <?php echo $tab === 'letterhead' ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(zw_doc_assets_admin_url(array('tab' => 'letterhead'))); ?>">红头模板</a>
-            </h2>
-            <?php if ($tab === 'letterhead') : ?>
-                <?php if (function_exists('zw_doc_render_letterhead_admin_section')) { zw_doc_render_letterhead_admin_section(); } ?>
-            <?php else : ?>
-                <?php zw_doc_render_seal_admin_section(); ?>
-            <?php endif; ?>
+            <h1>印章管理</h1>
+            <?php zw_doc_render_seal_admin_section(); ?>
         </div>
         <?php
     }
