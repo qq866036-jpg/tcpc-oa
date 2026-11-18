@@ -1128,7 +1128,12 @@ if (!function_exists('zw_doc_render_detail_page')) {
                 // 首屏给出到「纸面要素 / 流转 / 法务审核 / 用印 / 完成文件」的**锚点跳转**。
                 // TASK-1412：**逐项按目标存在性渲染** —— 目标卡片不存在时该链接**一律不渲染**，
                 // 避免出现「点了没反应」的死锚点（用户报障根因）。
-                $ov_jump = array('<a href="#tco-doc-face">纸面要素</a>', '<a href="#tco-doc-flow">流转</a>');
+                $ov_jump = array('<a href="#tco-doc-face">纸面要素</a>');
+                // OA-2519：锚点覆盖**全部**区块（此前只有 4 个），并补「版式预览」「流转记录」。
+                if (!empty($doc['body'])) {
+                    $ov_jump[] = '<a href="#tco-doc-preview">版式预览</a>';
+                }
+                $ov_jump[] = '<a href="#tco-doc-flow">流转</a>';
                 if ($ov_has_legal_card) {
                     $ov_jump[] = '<a href="#tco-doc-legal">法务审核</a>';
                 }
@@ -1142,7 +1147,50 @@ if (!function_exists('zw_doc_render_detail_page')) {
                     // TASK-1644 阶段四：关联网盘文件存在时才给锚点（逐项按目标存在性渲染，无死链）。
                     $ov_jump[] = '<a href="#tco-doc-netdisk">归档文件</a>';
                 }
+                $ov_jump[] = '<a href="#tco-doc-events">流转记录</a>';
                 ?>
+                <?php
+                // OA-2519：**流程步骤条 + 下一步主行动**。为什么不搬动卡片顺序：现有「完成文件在流转之后、
+                // 法务/用印之前」是 TASK-1382 ③ 的既定决策（用户要求首屏能看到已完成文件），
+                // 真正缺的是**页面没有把真实顺序说出来** ⇒ 这里显式化步骤与前置关系，而不是推翻既定 IA。
+                $zw_step_state  = (string) $doc['status'];
+                $zw_step_legal  = function_exists('zw_doc_legal_status') ? (string) zw_doc_legal_status($doc['id'])['status'] : 'none';
+                $zw_step_sealed = ((string) $doc['seal_mode'] === 'formal');
+                // PDF 是否已生成：走既有唯一取值（`zw_doc_pdf_versions()`），不新造字段。
+                $zw_step_pdf    = function_exists('zw_doc_pdf_versions') ? (count((array) zw_doc_pdf_versions($doc['id'])) > 0) : false;
+                $zw_steps = array(
+                    array('label' => '审核', 'done' => in_array($zw_step_state, array('approved', 'sealed', 'archived'), true), 'hint' => '待审核'),
+                    array('label' => '法务', 'done' => ($zw_step_legal === 'pass'), 'hint' => '未通过法务'),
+                    array('label' => '用印', 'done' => $zw_step_sealed, 'hint' => '未用印'),
+                    array('label' => '完成文件', 'done' => $zw_step_pdf, 'hint' => '未生成加密 PDF'),
+                );
+                ?>
+                <div class="tco-doc-steps" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0 0">
+                    <?php foreach ($zw_steps as $zw_i => $zw_step) : ?>
+                        <span class="tco-doc-step<?php echo $zw_step['done'] ? ' is-done' : ''; ?>"
+                              style="display:inline-block;padding:4px 10px;border-radius:999px;border:1px solid <?php echo $zw_step['done'] ? '#00a32a' : '#dcdcde'; ?>;background:<?php echo $zw_step['done'] ? '#edfaef' : '#fff'; ?>;font-size:13px">
+                            <?php echo (int) ($zw_i + 1); ?>. <?php echo esc_html($zw_step['label']); ?>
+                            <span class="tco-doc-muted" style="font-size:12px"><?php echo $zw_step['done'] ? '已完成' : esc_html($zw_step['hint']); ?></span>
+                        </span>
+                    <?php endforeach; ?>
+                </div>
+                <?php
+                // 「下一步」= 一条且只一条推荐动作（不新增权限：按钮只在对应卡片里本来就有，这里只做定位）。
+                $zw_next = array('text' => '流程已走完，可直接下载完成文件', 'anchor' => '#tco-doc-files', 'action' => '查看完成文件');
+                if ($zw_step_state !== 'approved' && $zw_step_state !== 'sealed' && $zw_step_state !== 'archived') {
+                    $zw_next = array('text' => '先完成「审核」：审核通过后才会进入法务与用印', 'anchor' => '#tco-doc-flow', 'action' => '去审核');
+                } elseif ($zw_step_legal !== 'pass') {
+                    $zw_next = array('text' => '下一步是「法务」：未通过法务不能加盖印章', 'anchor' => '#tco-doc-legal', 'action' => '去法务审核');
+                } elseif (!$zw_step_sealed) {
+                    $zw_next = array('text' => '下一步是「用印」：用印后正文锁定，并据此生成完成文件', 'anchor' => '#tco-doc-seal', 'action' => '去用印');
+                } elseif (!$zw_step_pdf) {
+                    $zw_next = array('text' => '下一步是「完成文件」：生成加密 PDF 后即为正式用印件', 'anchor' => '#tco-doc-files', 'action' => '去生成');
+                }
+                ?>
+                <p style="margin:10px 0 0;font-size:14px">
+                    <strong>下一步：</strong><?php echo esc_html($zw_next['text']); ?>
+                    <a class="button button-small" href="<?php echo esc_attr($zw_next['anchor']); ?>" style="margin-left:8px"><?php echo esc_html($zw_next['action']); ?></a>
+                </p>
                 <p class="tco-doc-muted" style="margin:10px 0 0">
                     快速跳转：<?php echo implode(' ｜ ', $ov_jump); // phpcs:ignore WordPress.Security.EscapeOutput -- 静态锚点，逐项按目标存在性渲染 ?>
                 </p>
@@ -1285,7 +1333,7 @@ if (!function_exists('zw_doc_render_detail_page')) {
                             ? zw_control_file_icon(array('name' => '完成文件.pdf', 'size' => 'sm')) // phpcs:ignore WordPress.Security.EscapeOutput -- canonical 控件自带转义
                             : '';
                         ?>
-                        <h2 id="tco-doc-files">完成文件（正式用印件（加密 PDF））</h2>
+                        <h2 id="tco-doc-files">完成文件（正式用印件（加密 PDF））<?php if ((string) $doc['seal_mode'] !== 'formal') : ?><span class="tco-doc-muted" style="font-weight:400;font-size:13px"> — 需先完成「用印」，用印后才能生成</span><?php endif; ?></h2>
                     </div>
                     <p>
                         <strong>状态：</strong><?php echo esc_html(zw_doc_pdf_status_label($pdf['status'])); ?>
@@ -1776,7 +1824,7 @@ if (!function_exists('zw_doc_render_detail_page')) {
             <?php endif; ?>
 
             <div class="tco-doc-card">
-                <h2>流转记录</h2>
+                <h2 id="tco-doc-events">流转记录</h2>
                 <?php
                 // TASK-1410：自动流转轨迹 meta（`_zw_doc_auto_flow`）。与事件表并列展示 ——
                 // 事件回答「发生了什么」，轨迹回答「系统自动推进到哪一步 / 为何停住 / 依据哪个开关」。
