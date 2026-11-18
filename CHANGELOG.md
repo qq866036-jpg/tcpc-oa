@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+### Added
+
+- **配置漂移门禁 `scripts/config-drift-gate.py`（OA-2521）**，接入 `ci-check` 第 ⑨ 项（现共九项）：
+  - 判据 1｜**数据字典 ⇄ 源码**：字典每行 `control` 里的 `name=xxx` 必须在源码里以真实控件出现
+    （整行注释先剔除，防"注释骗过门禁"）；`reader` 里的 `zw_*()` 必须真实存在；
+  - 判据 2｜**版式页 ⇄ 渲染层**：`doc-layout-designer.php` 的 63 个 `path` 必须命中
+    「整键 `get()/gap_lines()`」「渲染通道按末段取值」「动态拼键模式」「具名豁免」之一；
+    豁免清单 `scripts/config-drift-allow.txt` 只降不升（源码已能命中的陈旧豁免同样判红）；
+  - 反向控制：`--root` 指向夹具仓（错 reader / 幽灵控件 / 死 path）必须判红并点名。
+
+### Fixed
+
+- **数据字典四处登记与源码不符（OA-2521）**：
+  - 「公文标题」控件：`input[type=text]` → **`textarea`（3 行）**（TASK-2014 起可手动折行）；
+  - 「页码方式」控件：`radio` → **`select`**；reader 由已删除的 `zw_doc_render_html()` → **`zw_doc_render_pageno_html()`**；
+  - 「附件说明」控件：`input[type=text]` → **`textarea`**；reader → **`zw_doc_body_attach_plan()`**（OA-2515 唯一出处）；
+  - 「密级 / 保密期限」reader：`zw_doc_composer_secret_split()`（**该函数不存在**）→ **`zw_doc_composer_secret_parse()`**。
+- **两条死配置接线（OA-2521）**：
+  - `sign.date_no_leading_zero`（版式页「成文日期月日不补零」）此前**全仓 0 处读取**（永远不补零），
+    现由 `zw_doc_iso_to_cn_date()` 读取：关掉即输出 `2026年10月04日`；
+  - `footer.default_mode`（页码默认模式）此前有键无读取、撰写页写死 `standard`；
+    现作为「未登记 `page_mode`」时的回落值（撰写页默认选中 + 渲染层回落，非法值回落 `standard`）。
+
 ## [0.1.30] - 2026-11-18
 
 本次发版上线六单（全部走 ci-check 八项 + 双端收口 + 反向控制回归）：

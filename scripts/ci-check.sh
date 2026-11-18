@@ -135,10 +135,21 @@ else
   tail -20 /tmp/zw-oa-release-lock.log
 fi
 
+echo "== ⑨ 配置漂移（数据字典 ⇄ 源码 / 版式页 ⇄ 渲染层，OA-2521）"
+# 判据本体 scripts/config-drift-gate.py（唯一出处）。为什么进 CI：2026-11-18 人工盘点实测
+# 「字典写的控件/读取函数与源码不符」4 处、「版式页有入口但 0 处读取」2 处 —— 这类漂移不会报错，
+# 只会让改配置的人以为生效、让读字典的人以为那样实现。
+if python3 scripts/config-drift-gate.py >/tmp/zw-oa-config-drift.log 2>&1; then
+  ok "配置漂移判据全绿（$(grep -m1 '字段：' /tmp/zw-oa-config-drift.log | sed 's/^ *//')）"
+else
+  bad "配置漂移判据判红（python3 scripts/config-drift-gate.py）"
+  tail -20 /tmp/zw-oa-config-drift.log
+fi
+
 echo "----------------------------------------"
 if [ "$fail" -gt 0 ]; then
   printf '✗ ci-check 未通过：%d 项判红\n' "$fail" >&2
   exit 1
 fi
-echo "✓ ci-check 八项全绿"
+echo "✓ ci-check 九项全绿"
 exit 0

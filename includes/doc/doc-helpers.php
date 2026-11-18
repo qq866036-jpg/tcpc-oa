@@ -1692,7 +1692,15 @@ if (!function_exists('zw_doc_iso_to_cn_date')) {
             return '';
         }
 
-        return (int) $m[1] . '年' . (int) $m[2] . '月' . (int) $m[3] . '日';
+        // OA-2521：月/日是否补零改由「公文版式」的 `sign.date_no_leading_zero` 决定
+        // （此前该开关**全仓 0 处读取**，实际永远不补零；国标 §7.3.5.1 口径是不补零，故默认 true）。
+        $no_leading_zero = function_exists('zw_doc_gb9704_get')
+            ? (bool) zw_doc_gb9704_get('sign.date_no_leading_zero', true)
+            : true;
+        $month = $no_leading_zero ? (string) (int) $m[2] : str_pad((string) (int) $m[2], 2, '0', STR_PAD_LEFT);
+        $day   = $no_leading_zero ? (string) (int) $m[3] : str_pad((string) (int) $m[3], 2, '0', STR_PAD_LEFT);
+
+        return (int) $m[1] . '年' . $month . '月' . $day . '日';
     }
 }
 

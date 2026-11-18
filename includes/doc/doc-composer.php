@@ -659,7 +659,8 @@ if (!function_exists('zw_doc_composer_body_from_post')) {
                 'cc'          => $get('zwc_cc', ''),
                 'print_org'   => (string) $print_fields['print_org'],
                 'print_date'  => (string) $print_fields['print_date'],
-                'page_mode'   => $get('zwc_page_mode', 'standard'),
+                // OA-2521：表单未提交时跟随版式默认（`footer.default_mode`，白名单值由 normalize 再夹一次）。
+                'page_mode'   => $get('zwc_page_mode', (string) zw_doc_gb9704_get('footer.default_mode', 'standard')),
                 'attach_note' => $attach,
                 'copy_no'     => $copy_no,
                 'secret'      => $secret,
@@ -1024,7 +1025,14 @@ if (!function_exists('zw_doc_render_composer_page')) {
             $blocks = array(array('t' => 'p', 'text' => ''));
         }
         $labels   = zw_doc_composer_block_labels();
-        $page_mode = isset($body['meta']['page_mode']) ? (string) $body['meta']['page_mode'] : 'standard';
+        // OA-2521：新建时默认选中「公文版式」的页码默认模式（`footer.default_mode`），不再写死 standard。
+        $page_mode_default = (string) zw_doc_gb9704_get('footer.default_mode', 'standard');
+        if (!in_array($page_mode_default, array('standard', 'center', 'none'), true)) {
+            $page_mode_default = 'standard';
+        }
+        $page_mode = (isset($body['meta']['page_mode']) && (string) $body['meta']['page_mode'] !== '')
+            ? (string) $body['meta']['page_mode']
+            : $page_mode_default;
 
         // ── TASK-1276（CHG-155）：版头标记三要素回填口径 ─────────────────
         // 份号：存量值原样回填（写入侧统一左补 0，见 `zw_doc_composer_copy_no()`）。

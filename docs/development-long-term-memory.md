@@ -1001,3 +1001,26 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
   必须在主题台账的本单条目不写漏 `- 版本槽位：x.y.z（预占）`，否则主题收口的版本槽位判据会红。
 - **顺序**：先 ci-check 八项 → 插件侧 finish → 主题侧 finish → dev-merge（主题载体 + 插件各一次）→
   `plugin-switch-oa.sh --dry-run` 看计划 → 正式切换（含备份与冒烟）→ `sync-remotes.sh --apply`。
+
+## 2026-11-18 · OA-2521：配置漂移门禁 + 四条字典登记纠错 + 两条死配置接线（载体单 TASK-3007）
+
+- **为什么要有门禁**：2026-11-18 人工盘点一次就查出「字典登记与源码不符」4 处（标题/附件说明是 textarea 却写
+  input、页码是 select 却写 radio、两处 reader 指向已删除的 `zw_doc_render_html()`、密级 reader 指向
+  **从未存在**的 `zw_doc_composer_secret_split()`）+「版式页有入口但 0 处读取」2 处
+  （`sign.date_no_leading_zero`、`footer.default_mode`）。这类漂移**不报错、不告警**，只让改配置的人以为生效、
+  让读字典的人以为那样实现 ⇒ 必须有判据。
+- **门禁唯一出处** `scripts/config-drift-gate.py`（ci-check 第 ⑨ 项）：判据 1 字典 control/reader ⇄ 源码；
+  判据 2 版式页 63 个 path ⇄ 渲染通道。**豁免只降不升**（`scripts/config-drift-allow.txt`，理由 ≥8 字，
+  且「源码已能命中的陈旧豁免」同样判红）——现状 **0 条豁免**。
+- **两个实现坑（都踩过，写下来别再犯）**：
+  1. 判据 1 若直接在被注释掉的代码里找 `name="xxx"`，**注释写一句就能骗过门禁**（夹具实测）⇒ 匹配前先剔除整行注释；
+  2. 动态拼键（`'fonts.' . $slot . '.weight'`）静态命不中整键 ⇒ 门禁按「前缀.*.后缀」模式识别，
+     而不是给它加一条豁免（豁免是给"说不清"的情况，不是给"能识别"的情况）。
+- **两条死配置选择"接线"而不是"摘掉"**：`sign.date_no_leading_zero` → `zw_doc_iso_to_cn_date()`（默认不补零=国标）；
+  `footer.default_mode` → 撰写页默认选中 + 渲染层回落（非法值回落 standard）。判据只覆盖"版式页可配键"，
+  **表里有、页面没入口**的键（如旧的 `footer.default_mode`）门禁看不见，仍需人工抽查。
+- **注意**：页码只在**多页**时输出（单页自动不编页码，TASK-1340），所以验证页码默认模式必须造多页夹具。
+- **回归**：`php tests/test-config-drift-gate.php`（12 项：本仓通过 + `--root` 夹具判红 + 两条接线行为），
+  撤回源码改动 → 门禁 6 处判红、测试 4 项判红。
+- **工具纪律自报**：本单有 3 处内联 `python` 改写既有文件（字典 4 行、render/composer 接线、测试夹具补丁），
+  属 PIT-012 滑点，已登记并 bump。
