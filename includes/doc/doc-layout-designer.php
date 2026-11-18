@@ -152,6 +152,11 @@ if (!function_exists('zw_doc_layout_fields')) {
             array('path' => 'text.indent_chars', 'label' => '正文首行缩进', 'group' => 'text', 'type' => 'number', 'unit' => '字', 'min' => 0, 'max' => 4, 'step' => 1, 'gb' => 'GB §7.3.3（左空二字）', 'note' => '', 'risk' => 'visual'),
             array('path' => 'title.pt', 'label' => '标题字号', 'group' => 'text', 'type' => 'number', 'unit' => 'pt', 'min' => 16, 'max' => 30, 'step' => 0.5, 'gb' => 'GB §7.3.1（2 号 = 22pt）', 'note' => '', 'risk' => 'visual'),
             array('path' => 'title.line_pt', 'label' => '标题行距', 'group' => 'text', 'type' => 'number', 'unit' => 'pt', 'min' => 22, 'max' => 50, 'step' => 0.5, 'gb' => 'GB §7.3.1', 'note' => '', 'risk' => 'visual'),
+            // OA-2517（用户「标题上间距要做成可配」）：这两个键在版式表里**一直存在且被渲染/分页读取**，
+            // 但版式页没有入口 ⇒ 想按国标「空二行」只能改代码，且规范写 2 行、实现是 1 行无人知晓原因。
+            // 现做成可配，**默认沿用 1 行**（不改变现有纸面观感）；单位是「正文行」（`text.line_pt`）。
+            array('path' => 'title.gap_below_rule_lines', 'label' => '标题上间距（红线→标题）', 'group' => 'text', 'type' => 'number', 'unit' => '行', 'min' => 0, 'max' => 4, 'step' => 1, 'gb' => 'GB §7.3.1（红线下空二行）', 'note' => '国标为 2 行；协会口径默认 1 行（2026-10-09 定）。单位是正文行，改后纸面与分页同时生效', 'risk' => 'layout'),
+            array('path' => 'title.gap_below_title_lines', 'label' => '标题下间距（标题→正文）', 'group' => 'text', 'type' => 'number', 'unit' => '行', 'min' => 0, 'max' => 4, 'step' => 1, 'gb' => 'GB §7.3.1（标题下空一行）', 'note' => '仅**无主送机关**时生效；有主送机关时该间距由主送机关承担，两者不叠加', 'risk' => 'layout'),
             array('path' => 'title.wrap_chars', 'label' => '标题每行最多字数（0=按版心自动）', 'group' => 'text', 'type' => 'number', 'unit' => '字', 'min' => 0, 'max' => 40, 'step' => 1, 'gb' => 'GB §7.3.1（回行时梯形/菱形居中）', 'note' => '0 = 按「版心宽 ÷ 标题字宽」自动推算（2 号标题约 20 字/行）', 'risk' => 'layout'),
             array('path' => 'title.wrap_mode', 'label' => '标题折行方式', 'group' => 'text', 'type' => 'select', 'unit' => '',
                 'options' => array('balanced' => '均衡（梯形/菱形，各行等宽）', 'fill' => '逐行填满（末行可短）'),
