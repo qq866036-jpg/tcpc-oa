@@ -83,6 +83,14 @@ $i_legal = strpos($src, 'id="tco-doc-legal"');
 oa_fn_chk($i_flow !== false && $i_files !== false && $i_flow < $i_files, '完成文件仍在流转之后（首屏可见，保留既定决策）');
 oa_fn_chk($i_files < $i_legal, '法务仍在完成文件之后（顺序未改，靠步骤条说明前置关系）');
 
+/* OA-2523：**下一步主行动也必须有目标存在性守卫**（死锚点 = 点了没反应）。
+   运行时覆盖在主题仓 `tests/test-doc-detail-anchors.php`（跨仓渲染断言，本仓静态测试抓不到）；
+   本仓做静态守卫，防止守卫被回退：① 白名单 `$zw_next_targets` 存在；② 被实际用于回落；
+   ③ 回落目标是常驻的「纸面要素」卡（`#tco-doc-face` 无门控）。 */
+oa_fn_chk(strpos($src, '$zw_next_targets = array(') !== false, '下一步主行动有目标存在性守卫（$zw_next_targets 白名单）');
+oa_fn_chk(strpos($src, "empty(\$zw_next_targets[\$zw_next['anchor']])") !== false, '守卫被实际用于判定锚点是否存在');
+oa_fn_chk(strpos($src, "'anchor' => '#tco-doc-face',") !== false, '目标不存在时回落到常驻的纸面要素卡');
+
 echo "\n";
 if (empty($GLOBALS['oa_fn_fail'])) {
     echo "== 全绿：{$GLOBALS['oa_fn_pass']} 项 ==\n";
