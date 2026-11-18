@@ -1556,6 +1556,24 @@ if (!function_exists('zw_doc_render_detail_page')) {
                         <?php elseif ($ap_state === 'none') : ?>
                             <p class="tco-doc-muted"><?php echo esc_html((string) $ap_sync['detail']); ?></p>
                         <?php endif; ?>
+                        <?php
+                        // OA-2525：**归档留痕** —— 这三个 meta 此前只写不读（`doc-appoint-cert.php` 写、页面上看不到），
+                        // 出事时无法区分「归档失败」与「媒体（证书图片）失败」。只读既有值，不改写入逻辑；
+                        // 三项全空 ⇒ 整段不输出（不留空壳）。文本由写入侧 sanitize_text_field 处理，这里再转义一次。
+                        $ap_media_json  = (string) get_post_meta($doc['id'], '_zw_doc_appoint_doc_media', true);
+                        $ap_media_urls  = $ap_media_json !== '' ? (array) json_decode($ap_media_json, true) : array();
+                        $ap_media_count = is_array($ap_media_urls) ? count(array_filter($ap_media_urls, 'strlen')) : 0;
+                        $ap_archive_err = (string) get_post_meta($doc['id'], '_zw_doc_appoint_archive_error', true);
+                        $ap_media_err   = (string) get_post_meta($doc['id'], '_zw_doc_appoint_media_error', true);
+                        if ($ap_media_count > 0 || $ap_archive_err !== '' || $ap_media_err !== '') :
+                            ?>
+                            <p class="tco-doc-muted">
+                                <strong>归档留痕：</strong>
+                                归档媒体 <?php echo (int) $ap_media_count; ?> 份
+                                <?php if ($ap_archive_err !== '') : ?>｜<span style="color:#b30404">归档问题：<?php echo esc_html($ap_archive_err); ?></span><?php endif; ?>
+                                <?php if ($ap_media_err !== '') : ?>｜<span style="color:#b30404">媒体问题：<?php echo esc_html($ap_media_err); ?></span><?php endif; ?>
+                            </p>
+                        <?php endif; ?>
                         <?php if (current_user_can('manage_options')) : ?>
                             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin:0">
                                 <?php wp_nonce_field('zw_doc_appoint_resync'); ?>
