@@ -1664,6 +1664,23 @@ if (!function_exists('zw_doc_render_detail_page')) {
                             <?php endforeach; ?>
                         </ul>
                     <?php endif; ?>
+                    <?php
+                    // OA-2522：**法务条款取证展示** —— 这几个键此前只写不读（写而不读等于没留痕）。
+                    // 只读既有 meta，不改判定；无数据时整段不输出（不留空壳）。
+                    $zw_clause_sources = (int) get_post_meta($doc['id'], '_zw_doc_legal_clause_sources', true);
+                    $zw_clause_missed  = (int) get_post_meta($doc['id'], '_zw_doc_legal_clause_missed_count', true);
+                    $zw_clause_trunc   = (int) get_post_meta($doc['id'], '_zw_doc_legal_clause_truncated', true);
+                    $zw_clause_gapnote = (string) get_post_meta($doc['id'], '_zw_doc_legal_clause_gap_note', true);
+                    if ($zw_clause_sources > 0 || $zw_clause_missed > 0 || $zw_clause_trunc > 0 || $zw_clause_gapnote !== '') :
+                        ?>
+                        <p class="tco-doc-muted">
+                            <strong>法务取证：</strong>
+                            参与判定条款源 <?php echo (int) $zw_clause_sources; ?> 个
+                            <?php if ($zw_clause_missed > 0) : ?>｜未取到 <?php echo (int) $zw_clause_missed; ?> 个<?php endif; ?>
+                            <?php if ($zw_clause_trunc > 0) : ?>｜条款已截断（按上限送审）<?php endif; ?>
+                            <?php if ($zw_clause_gapnote !== '') : ?>｜<?php echo esc_html($zw_clause_gapnote); ?><?php endif; ?>
+                        </p>
+                    <?php endif; ?>
                     <p class="tco-doc-muted">AI 异常/不通过一律转人工且**不自动放行**；本模块只保存结论与问题摘要，<strong>不保存正文全文</strong>。</p>
                     <?php if ($can_legal) : ?>
                         <form method="post" action="<?php echo esc_url(zw_doc_legal_admin_url()); ?>" style="display:inline">
@@ -1741,6 +1758,19 @@ if (!function_exists('zw_doc_render_detail_page')) {
                                 <input type="hidden" name="doc_id" value="<?php echo (int) $doc['id']; ?>">
                                 <button class="button" type="submit" onclick="return confirm('确认撤销用印？撤销后正文解锁，须重新审核才能再次用印。');">撤销用印</button>
                             </form>
+                            <?php
+                            // OA-2522：**同版本解锁留痕** —— `_zw_doc_edit_unlocked_*` 此前只写不读。
+                            // 这条记录决定「已用印但还能改正文」的合法性，必须让人看得到是谁、什么时候解的。
+                            $zw_unlock_at = (string) get_post_meta($doc['id'], '_zw_doc_edit_unlocked_at', true);
+                            if ($zw_unlock_at !== '') :
+                                $zw_unlock_by = (int) get_post_meta($doc['id'], '_zw_doc_edit_unlocked_by', true);
+                                ?>
+                                <p class="tco-doc-muted" style="margin-top:8px">
+                                    <strong>同版本解锁记录：</strong><?php echo esc_html($zw_unlock_at); ?>
+                                    由 <?php echo esc_html($zw_unlock_by > 0 ? zw_doc_user_label($zw_unlock_by) : '未知用户'); ?> 执行
+                                    （正文与要素已解锁，已用印记录与完成文件保留；再次用印前需重新审核）。
+                                </p>
+                            <?php endif; ?>
                         <?php endif; ?>
                     <?php endif; ?>
                     <?php if (!$is_sealed || $edit_unlocked) : ?>
