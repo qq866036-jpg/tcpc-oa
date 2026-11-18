@@ -863,3 +863,23 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
 | OA-2419 | `7f73d40` | OA-2419 parity 口径收窄 + policy 装载 7 文件（R3-2） |
 | OA-2418 | `626e5dd` | OA-2418 模块 parity 能力扩展（文件清单模式 + --exclude + 按模块 shim） |
 | OA-0001 | `507fc0d` | OA-0001 CHANGELOG 记录分仓号段门禁（与 cert 仓同构） |
+
+## 2026-11-18 · OA-2513：公文标题手动换行失效 —— `normalize()` 幂等契约覆盖 `meta.title_lines`（载体单 TASK-2999）
+
+- **症状**：新建发文填写公文标题时回车断行，撰写页右侧内嵌预览**显示**断行，但保存后详情页/打印/DOCX
+  一律按自动回行（TASK-1342 梯形/菱形）排，编辑态回填也只剩单行。生产实证：33351（中传函〔2026〕98号）
+  标题断点处残留 U+0020、`"title_lines":[]`；全库 495 篇 / 正文模型 10 篇 / 该键非空 **0** 篇。
+- **不是「公文版式」设置冲突**：`title.wrap_chars` / `title.wrap_mode` / `title.wrap_min_chars` 只在
+  `zw_doc_title_resolve_lines()` 的「自动回行」分支被读；手动优先（SPEC-87 §15.9）实现本来就对。
+  排障顺序应先查**数据是否真的落库**，再查渲染优先级 —— 这次是前者。
+- **根因（可复现的口径）**：`zw_doc_body_normalize()` 第一遍把断行写成「`meta.title` 单行（空格拼回）+
+  `title_lines` 数组」，第二遍再归一时 `meta.title` 已无 `\n` ⇒ 旧实现无条件 `title_lines = []`。
+  而**四处都在再归一**：`zw_doc_update_body()`、`zw_doc_create_document()`（写）、
+  `zw_doc_body_parse()`、`zw_doc_body_to_json()`（读/序列化）。撰写页预览只用第一遍结果、不落库 ⇒ 预览对、保存错。
+- **结论口径（后续新 meta 键必看）**：**任何新增的受控数组/结构化 meta 键，都必须同时满足「专用分支
+  （不进纯文本清洗）」与「`normalize()` 幂等」两条**，否则会被写读链路上的再归一静默改写。现仓内符合此
+  口径的是 `appointments` 与 `title_lines` 两个键；新增第三个键时照此办理，并在 `tests/` 补一条
+  `normalize(normalize(x)) === normalize(x)` 断言（比单遍断言更能抓住这类缺陷）。
+- **回归**：`php tests/test-doc-title-lines.php`（15 项；对修复前代码 9 项判红，含落库/读回与反向控制）。
+- **不要做的事**：不要靠调 `title.wrap_chars` 去「凑」手动断点 —— 那是全局固定每行字数，会连带改掉
+  所有公文标题的断行；也不要把手动断行存成 `\n` 塞进 `meta.title`（列表/检索/文件名口径会一起变）。

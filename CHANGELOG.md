@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **公文标题手动换行不生效（OA-2513）**：`zw_doc_body_normalize()` 对 `meta.title_lines`（TASK-2014 手动断行）
+  **不幂等** —— 第一遍把手动断行写成「`meta.title` 单行（空格拼回）+ `title_lines` 数组」，第二遍再归一时
+  `meta.title` 已无换行可切 ⇒ `title_lines` 被重置为 `[]`。而写读链路（`zw_doc_update_body()` / 建单 /
+  `zw_doc_body_parse()` / `zw_doc_body_to_json()`）都在再归一 ⇒ 断行在落库与读库各丢一次，
+  渲染层只能落到自动回行（TASK-1342）。表现：撰写页内嵌预览有手动换行、保存后没有；编辑态回填同样失效。
+  - 修法：`title_lines` 改为受控数组专用分支；无换行时**沿用入参 `title_lines`**（逐行清洗、去空行、≤3 行），
+    含换行时仍以原文为准（作者改断点即时生效），两者都没有才为空数组；
+  - 恢复文件头声明的幂等契约 `normalize(normalize(x)) === normalize(x)`，回归 `tests/test-doc-title-lines.php`
+    （15 项；对修复前代码 9 项判红，含"落库/读回后仍有两行"与"手动断行 ≠ 自动回行"的反向控制）；
+  - **「公文版式」三个折行键（`title.wrap_chars` / `wrap_mode` / `wrap_min_chars`）与自动回行算法零改动**
+    —— 诊断结论：本缺陷不是版式设置冲突，只在 `title_lines` 为空时才会用到这些键。
+  - 存量影响：已落库的 10 篇正文模型里 `title_lines` 全为空（生产实证），修复后**重新保存一次**即恢复手动断行；
+    旧记录标题里由「空格拼回」留下的那一个空格不做批量清洗（不在本单范围内）。
+
 ## [0.1.29] - 2026-11-15
 
 ### Added
