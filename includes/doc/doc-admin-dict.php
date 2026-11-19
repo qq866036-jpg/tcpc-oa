@@ -335,10 +335,14 @@ if (!function_exists('zw_doc_dict_field_rows')) {
             ),
             array(
                 'group' => 'compose', 'field' => '页码方式', 'meta' => 'body.meta.page_mode',
-                'type' => '文本（枚举）', 'enum' => array('standard', 'center', 'none'), 'default' => "'standard'",
+                // OA-2533：枚举取**唯一出处** `zw_doc_body_page_modes()`（= 版式页 `footer.modes`，
+                // 不再在字典里复制第二份三值列表）；默认值也随 `footer.default_mode`，不再写死 standard。
+                'type' => '文本（枚举）',
+                'enum' => zw_doc_body_page_modes(),
+                'default' => '（版式页「页码方式」默认，缺省 standard）',
                 'visibility' => '发起人 / 审核人 / 管理人',
                 'step' => '第 2 步 正文（页码区块）', 'control' => '`select`（`name=zwc_page_mode`）',
-                'reader' => '`zw_doc_render_pageno_html()`', 'source' => 'derived',
+                'reader' => '`zw_doc_body_page_modes()` / `zw_doc_render_pageno_html()`', 'source' => 'derived',
             ),
             array(
                 'group' => 'compose', 'field' => '附件说明', 'meta' => 'body.meta.attach_note',

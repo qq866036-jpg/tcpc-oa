@@ -1190,3 +1190,12 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
   还要比生产副本与 dev 的 `includes/doc/doc-admin-list.php`、`doc-composer.php` 的 md5（本次两边必须完全相同）。
 - **注意**：`plugin-switch-oa.sh` 构建只取 `git archive HEAD`，会剔除 VERSION / MIN_THEME / tests / docs 等
   治理文件（版本号以 `tcpc-oa.php` 常量与插件头为准）。
+
+## 2026-11-18 · OA-2533：页码方式枚举/默认值收口到唯一出处
+
+- **重复列表是典型漂移源**：`doc-composer.php` 用 `array('standard','center','none')` 判合法性，
+  而唯一出处是 `zw_doc_body_page_modes()`（读版式页 `footer.modes`）。版式加/减枚举时两处必然不一致。
+  现在 composer 与数据字典行都改取该函数；字典行的 `default` 也改成「版式页默认，缺省 standard」而不是写死 `'standard'`。
+- **字典页是给人看的**：它写「默认 standard」而服务端已随版式配置变（OA-2521）时，管理员会按错口径配置。
+  凡是「默认值/枚举」列，都要写清来源或直接从来源取值，不要复制一份静态文案。
+- 判据：`scripts/ci-check.sh` 的配置漂移门禁（⑨）会校验字典行 ⇄ 源码；改这两处后九项仍全绿。
