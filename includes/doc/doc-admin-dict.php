@@ -33,6 +33,13 @@ if (!defined('ABSPATH')) {
  * 一、字段字典登记表（唯一出处）
  * ══════════════════════════════════════════════════════════════════════════ */
 
+/* OA-2533：字段登记表要用 `zw_doc_body_page_modes()`（页码方式枚举的唯一出处，住 doc-body-model.php）。
+   单独 include 本文件（测试、局部加载）时它可能还没被装载 ⇒ 会 Call to undefined function。
+   这里做**依赖自足**：缺就带上兄弟文件（其函数均有 function_exists 包裹，重复 require 安全）。 */
+if (!function_exists('zw_doc_body_page_modes') && is_file(__DIR__ . '/doc-body-model.php')) {
+    require_once __DIR__ . '/doc-body-model.php';
+}
+
 if (!function_exists('zw_doc_dict_field_groups')) {
     /**
      * 字段字典分组（显示顺序即此数组顺序）。
