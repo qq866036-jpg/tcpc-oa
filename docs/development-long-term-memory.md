@@ -1179,3 +1179,14 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
   `test-doc-render-html` / `test-doc-acceptance` 的 h1 字重断言跟上 OA-2528（normal）。
 - **回归**：`php tests/test-doc-detail-preview-panel.php`（38 项）、
   `php tests/test-doc-preview-print-parity.php`（25 项）、`php tests/test-doc-preview-viewer.php`（44 项）。
+
+## 2026-11-18 · OA-2532：发版 0.1.34（详情页左右布局 + 红头配置下线 + 印章管理上生产）
+
+- 0.1.33 → **0.1.34**（`release-bump-oa.sh patch`），上线 OA-2531。OA-2529 已在 0.1.33 上线，本版不重复。
+- **发版顺序（沿用固定做法）**：卫星单提交 + OA 侧 finish → 载体单标题**不含**「发版/发布/上线/切换」
+  （不触发回读）→ 先合并载体 → 再合并插件 → 切生产（`plugin-switch-oa.sh`，备份 + 原子交换 + 冒烟 +
+  `/bhzc` 正文哈希不变）→ 最后收卫星单（此时按仓回读真实一致，不需要逃生口）。
+- **回读只比版本号，内容要抽查**：切换后除 `VERSION` / 插件头 / `TCPC_OA_VERSION` 三处一致外，
+  还要比生产副本与 dev 的 `includes/doc/doc-admin-list.php`、`doc-composer.php` 的 md5（本次两边必须完全相同）。
+- **注意**：`plugin-switch-oa.sh` 构建只取 `git archive HEAD`，会剔除 VERSION / MIN_THEME / tests / docs 等
+  治理文件（版本号以 `tcpc-oa.php` 常量与插件头为准）。
