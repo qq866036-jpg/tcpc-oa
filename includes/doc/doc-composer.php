@@ -1038,7 +1038,9 @@ if (!function_exists('zw_doc_render_composer_page')) {
         $labels   = zw_doc_composer_block_labels();
         // OA-2521：新建时默认选中「公文版式」的页码默认模式（`footer.default_mode`），不再写死 standard。
         $page_mode_default = (string) zw_doc_gb9704_get('footer.default_mode', 'standard');
-        if (!in_array($page_mode_default, array('standard', 'center', 'none'), true)) {
+        // OA-2533：合法值集合改取**唯一出处** `zw_doc_body_page_modes()`（= `footer.modes`），
+        // 不再在本处复制第二份 `array('standard','center','none')` —— 版式页改枚举时两边会漂移。
+        if (!in_array($page_mode_default, zw_doc_body_page_modes(), true)) {
             $page_mode_default = 'standard';
         }
         $page_mode = (isset($body['meta']['page_mode']) && (string) $body['meta']['page_mode'] !== '')
