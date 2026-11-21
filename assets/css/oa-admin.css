@@ -12,7 +12,11 @@
  */
 
 /* ── 后台壳：100% 宽度（本仓自有 body class `tco-oa-admin`）────────────── */
-.tco-oa-admin #wpbody-content{padding-right:20px}
+/* OA-2535：`#wpbody-content` 由 WP 核心给 `width:100%` + `box-sizing:content-box`，
+   本仓再给它 `padding-right` 时，内边距会加在 100% **之外** ⇒ 页面恒定横向溢出 20px（≤782px 时 10px）。
+   实测（四档 8 页）：`#wpbody-content` right = 视口宽 + 20/10，其余元素均未超。
+   修法：`box-sizing:border-box`（保留视觉留白，内边距计入宽度）。 */
+.tco-oa-admin #wpbody-content{box-sizing:border-box;padding-right:20px}
 .tco-oa-admin .wrap{max-width:none!important;width:auto!important;margin-right:0!important}
 .tco-oa-admin #wpfooter{padding-right:20px}
 @media(max-width:782px){.tco-oa-admin #wpbody-content{padding-right:10px}}
