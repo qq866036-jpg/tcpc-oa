@@ -706,7 +706,7 @@ if (!function_exists('zw_doc_layout_render_page')) {
                 <div id="tco-doc-layout-splitter" class="tco-doc-layout-splitter" role="separator" aria-orientation="vertical"
                      aria-label="拖拽调整左右布局占比" aria-valuemin="30" aria-valuemax="70" aria-valuenow="50" tabindex="0"
                      title="拖拽调整左右占比（也可聚焦后用 ← → 微调）"></div>
-                <div class="tco-doc-layout-params" style="flex:1 1 auto;min-width:320px;height:100%;display:flex;flex-direction:column;min-height:0;padding-left:12px">
+                <div class="tco-doc-layout-params" style="flex:1 1 auto;min-width:0;height:100%;display:flex;flex-direction:column;min-height:0;padding-left:12px">
                     <?php /* 固定操作条：滚动时也始终可点（按钮用 HTML5 `form=` 关联到下面两个表单）。 */ ?>
                     <div class="tco-doc-layout-actions" style="flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:6px 0 8px;border-bottom:1px solid #dcdcde;margin-bottom:8px;position:relative;z-index:2;background:#f0f0f1">
                         <button type="submit" form="tco-doc-layout-save-form" class="button button-primary button-small">保存版式</button>

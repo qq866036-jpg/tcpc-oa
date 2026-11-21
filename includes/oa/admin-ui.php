@@ -69,7 +69,11 @@ if (!function_exists('zw_oa_admin_ui_style')) {
 
         $css  = '<style>';
         // —— 100% 宽度：显式声明并清除历史 max-width（用户要求：发文管理所有页面 100% 宽度）——
-        $css .= $page . '{max-width:none;width:100%;box-sizing:border-box}';
+        // OA-2535：`.wrap` 由 WP 核心带 `margin:10px 20px 0 2px`（≤782px 时右边距变 10px）。
+        //   页面类强制 `width:100%` 后，这个右边距会把容器顶出视口 20px（窄屏 10px）——
+        //   实测 8 个发文页四档全部 `docOverflow=10/20`、最宽元素恒为 `#wpbody-content`。
+        //   故 100% 宽必须**同时清掉右侧让位**，否则「100% 宽度」本身就是溢出源。
+        $css .= $page . '{max-width:none;width:100%;margin-right:0;box-sizing:border-box}';
         $css .= $page_all . '{box-sizing:border-box}';
         // —— 卡片栅格（§1.9：display:grid;gap:16px；≥1200px 两列）——
         $css .= '.tco-grid{display:grid;gap:16px;grid-template-columns:minmax(0,1fr);align-items:start}';
