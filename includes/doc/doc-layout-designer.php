@@ -681,7 +681,13 @@ if (!function_exists('zw_doc_layout_render_page')) {
             // 窄屏（< 1100px）降级为上下堆叠。
             // 与 TASK-2002 的差异：此前靠 `sticky` 且整页可滚 ⇒ 实测预览仍会跟页脚一起移动（用户反馈「为什么也跟着动」）。
             ?>
-            <div class="tco-doc-layout-row" style="display:flex;gap:0;align-items:stretch;flex-wrap:nowrap;height:calc(100vh - 200px);min-height:420px;--tco-doc-split:50%">
+            <?php /* OA-2536：**这里不再写 `flex-wrap` / `height` 内联**。行内声明优先级高于样式表，
+                     会把上面 `@media (max-width:1099px)` 的 `flex-wrap:wrap;height:auto` 打成**死代码** ——
+                     实测（2026-11-21 生产四档）窄屏未堆叠，参数列被压到 12px、内容溢出视口 263px
+                     （docOverflow = 263 / 263 / 199 / 0 @ 375/768/820/1280）。
+                     `flex-wrap` 缺省即 `nowrap`（桌面行为不变）；桌面行高由 `:625` 的
+                     `body.tco-doc-layout-screen .tco-doc-layout-row{height:var(--tco-doc-row-h, calc(100vh - 200px))}` 承接。 */ ?>
+            <div class="tco-doc-layout-row" style="display:flex;gap:0;align-items:stretch;min-height:420px;--tco-doc-split:50%">
                 <?php /* TASK-2004：**不靠 sticky** —— 行容器固定为视口高，左列 `height:100%`，
                         右列内部滚动 ⇒ 整页不滚、预览物理上不可能跟着移动。 */ ?>
                 <div class="tco-doc-layout-preview" style="flex:0 0 calc(var(--tco-doc-split, 50%) - 4px);max-width:calc(var(--tco-doc-split, 50%) - 4px);height:100%;display:flex;min-width:280px">
