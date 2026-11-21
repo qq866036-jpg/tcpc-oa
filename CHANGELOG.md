@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## [0.1.37] - 2026-11-21
+
+### Fixed
+
+- **「公文版式」页窄屏（<1100px）溢出（OA-2536）**：行容器 `.tco-doc-layout-row` 的内联 `flex-wrap:nowrap` 与
+  `height:calc(100vh - 200px)` **优先级高于样式表**，把 `@media (max-width:1099px)` 里已写好的
+  `flex-wrap:wrap;height:auto` 打成**死代码** ⇒ 窄屏未堆叠、参数列被压到 12px、内容溢出视口。
+  实测（生产四档）`docOverflow` = 263 / 263 / 199 / 0（375 / 768 / 820 / 1280）；删除这两条内联声明后
+  四档 **全部 0**（桌面行高仍由 `body.tco-doc-layout-screen .tco-doc-layout-row{height:var(--tco-doc-row-h,…)}` 承接，
+  1280 档两栏 50/50 与拖拽分隔条无回归）。新增回归断言 `tests/test-oa-doc-layout-narrow-stack.php`（12 项）。
+
 ## [0.1.34] - 2026-11-18
 
 本次上线 **OA-2531**：发文详情左右布局（版式预览右侧固定、与新建发文同一面板）+ 红头界面配置下线 +

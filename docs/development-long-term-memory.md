@@ -1222,3 +1222,19 @@ secretariat.enabled 置 true（钥匙默认关）；版本 0.1.3；权限沿用 
 - **`zw-doc-layout` 另有自身问题**：`.tco-doc-layout-params` 内联 `min-width:320px`，窄屏（375/768/820）
   强制 +332px 溢出。修法：改 `min-width:0`（`flex:1 1 auto` 已能让它收缩）。
 - 教训：**「100% 宽度」本身可能就是溢出源**——容器类改宽时，必须连带清掉父级/自身的右边距让位。
+
+## 2026-11-21 · OA-2536：`zw-doc-layout` 窄屏溢出的第二层真因 —— 媒体查询被**内联样式**打成死代码
+
+- **现象**（生产 1.5.13 + 0.1.36 四档实测）：`docOverflow` = **263 / 263 / 199 / 0**（375/768/820/1280），
+  offenders 里 `div.tco-doc-layout-params` 宽仅 **12px**，其子按钮 `right=+210`、`span` `right=+263`。
+- **真因（与 OA-2535 不同层）**：OA-2535 修掉的是 `min-width:320px`；本次是**行容器内联样式压过媒体查询** ——
+  `.tco-doc-layout-row` 行内写 `flex-wrap:nowrap;height:calc(100vh - 200px)`，而 `@media (max-width:1099px)`
+  里**早就写了** `flex-wrap:wrap;height:auto`（无 `!important`）⇒ 窄屏「上下堆叠」分支**从未生效**，
+  页面仍是「预览 100% + 参数列被压缩」，参数列压到 12px、内容溢出视口 263px。
+- **修法**：删掉该行这两条内联声明 —— `flex-wrap` 缺省即 `nowrap`（桌面不变），桌面行高由
+  `body.tco-doc-layout-screen .tco-doc-layout-row{height:var(--tco-doc-row-h, calc(100vh - 200px))}` 承接，
+  窄屏媒体查询**同选择器、后出现** ⇒ 自然胜出。**不新增 `!important`**（避免进入"内联 vs 样式表"军备竞赛）。
+- **可复现的验证姿势（不必先发版）**：`admin-h5-probe.js --prepare '<移除该行内联两条声明的 JS>'`，
+  四档即全 0 —— 先用探针**预验证修法**，再决定发不发版；避免"改了代码才发现没用"。
+- **教训（可推广）**：`@media` 分支失效的常见形态不是"没写媒体查询"，而是**被内联样式遮蔽**；
+  判据必须落在「该元素的内联 style 是否含媒体查询要覆盖的属性」，见 `tests/test-oa-doc-layout-narrow-stack.php`。
